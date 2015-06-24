@@ -1,0 +1,10 @@
+[
+	{"base" : "}scorch1", "replace" : "resource/tga/maps/scorch1.dds"},
+	{"base" : "}scorch2", "replace" : "resource/tga/maps/scorch1.dds"},
+	{"base" : "}scorch3", "replace" : "resource/tga/maps/scorch1.dds"},
+	{"base" : "}shot1", "replace" : "resource/tga/maps/shot1.dds", "replacescale" : "0.075 0.075"},
+	{"base" : "}shot2", "replace" : "resource/tga/maps/shot2.dds", "replacescale" : "0.075 0.075"},
+	{"base" : "}shot3", "replace" : "resource/tga/maps/shot3.dds", "replacescale" : "0.075 0.075"},
+	{"base" : "}shot4", "replace" : "resource/tga/maps/shot4.dds", "replacescale" : "0.075 0.075"},
+	{"base" : "}shot5", "replace" : "resource/tga/maps/shot5.dds", "replacescale" : "0.075 0.075"}
+]
