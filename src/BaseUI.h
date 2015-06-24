@@ -1,0 +1,1 @@
+void BaseUI_InstallHook(void);

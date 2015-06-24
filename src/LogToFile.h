@@ -1,0 +1,1 @@
+int LogToFile(char *szLogText, ...);

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="gb2312"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="CSBTE"
+	ProjectGUID="{A17A7B18-45D0-4C10-8E66-A86EF822DF53}"
+	VCNestedProjectGUID="{FBF9CAF6-8DED-4EB0-8E7B-18294607C5C5}"
+	VCNestedProjectFileName="CSBTE.vcproj">
+	<Configurations>
+		<Configuration
+			Name="Release|Win32">
+			<Tool
+				Name="GeneralTool"
+				CompilerName="0"/>
+		</Configuration>
+	</Configurations>
+	<Files/>
+</VisualStudioProject>

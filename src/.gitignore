@@ -1,0 +1,23 @@
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Custom file
+_UpgradeReport_Files/
+Backup/
+BuildPack/
+Debug/
+NewTest/
+OLDTest/
+OLDTest_OLD/
+Release/
+Test/
+Test4554/
+CSBTE.ncb
+CSBTE.sdf

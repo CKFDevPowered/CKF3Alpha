@@ -1,0 +1,12 @@
+void COM_Init(void);
+char *COM_Parse(char *data);
+char *COM_ParseFile(char *data, char *token, int maxtoken);
+char *COM_GetToken(void);
+void COM_CreatePath(char *path);
+char *COM_TimeString(void);
+char *COM_SkipPath(char *pathname);
+void COM_FileBase(const char *in, char *out);
+char *COM_VarArgs(char *format, ...);
+unsigned char COM_Nibble(char c);
+void COM_HexConvert(const char *pszInput, int nInputLength, unsigned char *pOutput);
+char *COM_BinPrintf(unsigned char *buf, int nLen);

@@ -1,0 +1,1 @@
+void SecureClient_InstallHook(void);

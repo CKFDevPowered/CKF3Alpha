@@ -1,0 +1,404 @@
+* = 已修改, 效果未鉴定
+~ = 暂时不作修改
++ = 已完成
+
+致命问题:
+x64 一些机器会出现兼容性问题 (需要找到机器调试, 可以先打开 DisableSteamClient 测试
+偶尔会开枪出现 HUD 闪烁 (不知道什么问题尝试关闭 configs.ini 里的几项.. (貌似在系统资源吃满的情况下才会出现? XP 下笔记本已出现!, 该问题已长眠!!
+偶尔会丢失输入焦点 (这个.. in_focusdebug 开启按住空格加鼠标中键调试吧...T_T, g_fActiveApp == 0!!, 还是会有..!? 难道是调试器的问题??, 该问题已长眠!!
+
+WIN8.1 兼容性问题:
+鼠标迟缓... (原版 CS 也会有
+无法重新启动游戏.. (已解决, UAC 清单文件控制管理员权限运行，也许有另一种解决方法?
+偶尔会无法结束游戏的进程.
+
+服务端要做的:
+双协议支持!!
+独立 Master!!
+
+客户端接口:
+画 SPR, TGA
+更改视角特效
+显示文字
+显示 ScreenFade
+
++观察者的回合时间需要点才能更新
++观察者的菜单方块显示较小
++BOT 的命令执行间隔需要加限制，不然太卡
++LoadingDialog 的提示显示不完全, 并且会自动点击掉
++记分牌的地图剩余时间好象不准 (暂时不要了)
++Ctrl 切出观察者菜单时 焦点会变
++amx_loadlist "what"
+*观察某人时好象会显示他的人物模型
++CHS
+*雷达上的 C4 显示不对
++显示玩家名字在左下角会和聊天重叠
++验证 MD5 后再解压 (现在是验证编译时间, 为了加快速度)
++背景音乐
++游戏主菜单貌似不太对 (暗色才是选中的)
+*游戏内的菜单要加声音
++MOTD 偶尔回车不会触发掉 (不要乱点啦)
++没有 EnableGameUI 的 HintMessage 更清晰 (有些电脑上 HintMessage 不管开没开 EnableGameUI 都一样不清晰, 已经在主题里启用 FreeType)
++观察者高级菜单没打开时下方偶尔不会显示玩家的名和血
++Client.dll 检查如果没有使用 BTE.dll 则会自动使用 BTE.dll
++雷达上的喇叭不会跟着人走
++C4 下面没有小图标 (MP Patched)
++换图时 LoadingDialog 四周会显示成白色, 因为只画某个控件的 BUG (已改成方块 "BackgroundType 0", 11.13 日彻底修复)
++换图的时候 intermiss? 视角貌似可以动. (限制命令)
+*观察者偶尔 g_ShellQueue Steam__105558__2013_8_20T18_44_35C15787500.mdmp, 试试关闭新的观察者界面
++游戏退出了或加载中, 或者 GameUIIsVisible(如果搞不定) 的时候不要显示某些 UI.
+*切出去时间太长可能导致自动按住左键.
++CommandMenu 的对号后边能看到背景颜色
+*貌似偶尔选人菜单的 12345 会失效.
+ 第一次开枪的时候貌似会小卡一下
+ BOT 语音的时候也会小卡一下
++雷达下面没有 location (MP Patched)
++_restart 后 MOTD 会提示下载文件. (重启游戏改成杀自身进程)
++换图后选不了队伍. (是 mp_timelimit 设置小于 0.01, 太短了原因)
++无线电语言未被翻译! (MP Patched)
++_restart 重启后有一定几率崩溃. (重启游戏改成杀自身进程)
++控制台拖拽文件会导致游戏崩溃. (取消定义 VGUI_USEDRAGDROP)
++加 BOT 时的进度条没有做.
++Steam 版本的控制台字体好象小了一点.. (无法从注册表中读取语言, 已改成 SteamAPI)
+*雷达重新设计框架..
++GameUI.dll Steam 版本的会被载入.. (家里电脑会崩溃)
++BOT 路点 Steam 会有问题!
+*Steam 版本偶尔游戏 UI 会无法接收按键输入响应..
+*Steam 版本以 MOD 形式启动会出现 MDMP.. (可能是 GameUI.dll 没处理好导致的, 取消了 ClientProxy 的 FreeLibrary (CSBTE.dll))
+*Steam 版本的服务端模块退出会崩溃 (bte_serversleep, 导致客户端出现问题.. 已修复)
++MOTD 标题栏..
++记分牌 T 的延迟好象颜色不对...
+*MOTD, TeamMenu, 好象上次选择按钮的焦点会存在. (可以先不算成一个 BUG, 因为合理)
++Steam 版本 MOTD 会失效, 应该尝试用新的 ChromeHTML! (暂时使用旧版本的 HTML, 因为新的 V 社给的接口太少还要链接 Chrome 库)
+ Steam 版本 setmaster 会失效.
++服务端没有打中文名补丁.
++有些地图载入会出错, 可能是缓存破解的问题.
++有的时候关游戏可能会要卡很久, 不明原因.. 已关掉 FMOD 测试. 一个月内无此情况说明是 FMOD 的问题. (之前的没算, 从 11.25 到 12.25 重新算起. 已解决)
++观察者的右上角时间好象失效.
++BOT 进度条位置不对. (已改正 res 位置)
+ 如果从 HL Change Game 切换过来会无效.
+ MOTD 無法點擊鏈接.
+*WIN7x64 下进入游戏 LoadingDialog 可能会未被关闭
+*偶尔键盘失灵.. (VID_ClearButtons, try
++CSO 主题文字未启用不向下偏移
++CSO 主题文字会按照控件自动偏移
+ CSO 主题增加关闭按钮, 整个主题需要修改
++玩家名字不支持中文..
++记分牌的的列表间距需要修改.
++4554 的语言判定存在问题..
++WIN7 WIN8 兼容性问题...
++观察者会崩溃, 01311463, 还是老问题..
++换图后聊天记录和无线电不会被清空
++雷达边缘会模糊
++CSO 主題的观察者的时间图标貌似会偏
++Steam 版本的鼠標在程序非激活狀態下有問題, 並且點完 VGUI 會自動修改..
++狙擊開鏡不顯示雞..
++換圖後選人有問題
++SteamAPI 要把 Inline Hook 改成导入表 Hook
++MDMP 发现新方法..
++加载的时候不要让背景闪烁
++去除 steamclient.dll
++增加垂直同步选项..
++换图后无线电内容会残留
++g_ShellQueue (已經完全解決!!
++內存池 (VGUI
++觀察者試圖寬屏存在嚴重問題
++增加一個視頻高級選項..
+ 最好解決聲音卡頓問題..
++BOT 沒有語音標籤?
++LoadingDialog 提示沒有了
+ 進入一個服務器後無法建立新遊戲.. (hlds 后新建本地游戏)
+ 錯誤的特征码..
++語音標籤不顯示地區..
++觀察者崩潰..
++選項不會讀取.. (已经修改成, 每次打开选项菜单默认切换到多人选项, 每次切换页会恢复成默认值
+ 有些版本加 BOT 會崩潰..
++H 菜單關閉後無法用鼠標移動..
+*內部破解.. (去除 SteamClient 的时候就没有内部破解了..)
++語音標籤亂碼.
++打到地上没有火花
+*打开记分牌的时候没办法按 Q 切枪 (已测试, 是键盘问题)
+*金钱偶尔颜色很奇怪..
++奇怪的崩溃问题 (关闭 ClientUI) Steam__105558__2014_3_15T19_2_21C53024
++修复观察者 Overview 宽屏问题
++奇怪的崩溃问题2  (关闭 ClientUI) csbte_crash_20140316030444_1
++Steam 版本图标还是会显示成 CS 的
++服务端强制 BOT 不能使用盾牌!
+*客户端屏蔽服务端需要更新的消息.
++死后可以旋转尸体.
++观察者小视图看不到 V 模型
++观察者菜单打开的情况下按蹲无法关闭
++观察者菜单在自杀的情况下下面不会显示名字, 显示的时候后边面也不会消失..
++局域网好象刷不出服务器.
++Steam 版本开本地服务器非 HLDS 不允许连接 master!! (会提示: MasterRequestRestart)
+ Usage: Setmaster unavailable, start a server first. (太早了去不掉
++按住记分牌时打开观察者菜单会关掉记分牌.
++MOTD 没关闭的时候再 restart 会出现两个.
++修复搜索服务器延迟显示不对, 内存无法干净释放的问题. 搜索服务器会影响游戏的问题.
++修复搜索服务器填加服务器窗口没有显示滚动条的箭头!!
++修复载入条出错不会关闭..
++修复搜索服务器, 连接时会打开一个新的信息框!!
++有的时候按 K 会出现奇怪的框框 (好像是和下面一起的
++按 ~ 打不开记分牌了...
++进游戏的时候按 TAB 好像会把队伍选择菜单给隐藏掉
++重置按键的时候会提示 "\\" isn't a valid key
++切换窗口模式的时候计算任务栏中心位置, SystemParametersInfo(SPI_GETWORKAREA,0,(PVOID)&rt,0);
++DeathMsg 位置感觉偏上
+*VidInit 到 MOTD 的那个时间如果按住 alt 扫射模式可能会一直持续扫射模式.
+ 有的时候 Z 菜单会按不出来
++GetVideoMode 函数在 EngineD3D 为 1 的时候永远返回 2
+*一个命令可以把字体缓冲区输出!
+*选项还是有问题.. (鼠标, 键盘
+*搜索局域网还是有问题..
+*原始鼠标输入在窗口未激活情况下可能会无限被锁住. (好象就是因为切换出去换图了所以才一直被锁住
+ WIN64 位还是存在兼容性问题..
+ Invalid CD Key..
+*广播包 Sleep 测试... 
+*Bogus key length on CD Key...
+*没有任何注册表好象屏幕大小会变得非常怪.
+ 标题偶尔设置不完全
++HLDS 需要在标题栏显示详细的数据 (已添加服务器名称!!
+*原版 FPS 可以达到 1000... (D3D 模式的问题
++SourceScheme 的 Glock 买枪图小了一点..
+*控制台的渐变关闭时, 无法快速按 ~ 切换比较差劲..
++买 M249 时金钱不对...
++加一个雾是否可以覆盖天空的选项...
+ Direct9 模拟 OpenGL 代替 D3D 模式?
++不支持的分辨率会变的很小...
+ 检查显存..
++第三方技术支持..
+*SourceScheme 双击 x 快速关闭..
++SourceScheme 保存买枪有问题..
++HLDS 记得添加 commandline.h
++加参数设置分辨率时, 只设置了一个 -w 什么的高度可能不会变.
++控制台全中文支持!!
++控制台复制好象有点问题..
++未知的命令: meta
++双协议 ServerBroswer
+ Renderer 不要用 GetClientTime 啦!! (引擎拒绝
+ condebug 加时间记录..
+ viewdem 好象有问题..
++1280 * 1024 的 DeathMsg 好象有一些问题..
+ MP3 切换出去不播放..
++钱大于六位数会自动向左移动.
+ 修复全部可炸服漏洞..
+*AMXX 编译会显示错误的行数?
+*插件如果是无效的版本的话, (例如 ZP43, 新建游戏第二次会崩溃.. (没发现了, 难道是 debug? 模式才会出现的?
+*INFOSTRING 会影响 AMXX 的 get_configsdir.. (客户端的 info.cpp 过滤问题..
++ZP 测试 HUDMessage 好象会有问题..
++ZP 测试菜单不是彩色.
+ ZP 测试记分牌要做下拉栏? (还是显示老版菜单?
++ZP 显示聊天记录覆盖住其他窗口.
+ 在高于 VC8 的版本下禁用 CDbgMemAlloc (*那个是警告等级, 弄了好象也没有用.
++最小化后在任务栏点击会无法切换回来.. (已修复, 顺便修复了窗口激活鼠标位置被设置到左上角的小小问题..
+ 控制台加上搜索功能!!
++尸体渐变消失, 修复尸体位置..
++修复选项菜单中一些东西会自动保存的和鼠标有一些选不上的问题
++cvar_t cl_name = { "name", "unnamed", 131,  0.0, NULL };
++购买菜单按的太快引起买错物品..
+*FreeType 字体太小可能崩溃???
++Steam 版本好象无法在观察者菜单上开启组建模式..
+*观察者菜单可能还有 VGUI 焦点问题.
+*记分牌先被观察者菜单覆盖掉.
++第一个字符颜色太深.
++那个小闹钟分辨率低的情况下好象会上移..
+*FreeType 字体好象无法缩太小.
+*MOTD 有时候会显示 overview..
+*Chat 英文下字体很怪. (也不会吖 (ya...
++按下 H 菜单后按 ESC 会出现奇怪问题
++Re 窗口开控制台的时候可以被按下.
++新的 Surface 会乱码
++Steam 下重启崩溃. (退出游戏的时候噢? 好象开调试模式才会
++CSO 进度条右边的图片小于左边会很难看.
++ChromeHTML 补完记得用之前备份的 CPP 重新覆盖一下!!
++刚进游戏控制台如果按了的话会焦点回出现问题.
++修复正版注册表 D3D 被识别成 D3D 模式.
++如果 Money Delta 显示时间重叠, 就显示总的叠加钱.
+ noifty 显示不再乱码
++烟雾弹没有效果
+ WON UI 切换  -wonui
+ 完整破解..
++MOTD 颜色不对
+ userinfo 更新前比对是否需要更新... (检查之前的
+*ClientUI 和 GameUI 关闭的时候才可以打中文字
+ ClientUI 和 GameUI 关闭时 ChatText 不正常
+ 金钱偶尔颜色变成紫色.
++SayText 有问题, 大分辨率下会按 ESC 或者退出游戏会出现异常, Radar 的 Localize 显示要改成新的 m_VGUI2Print 显示
+~像 Source 一样的 VGUI 音效, 拾取和打开
+ 现在的雷达位置被画在最前端
+ 游戏网络可以希望支持 TCP
++原版无线电覆盖正版脑残无线电
++买枪信息使用 Source 或者把 "10千克" 里面全部用空格格式化
++在点击退出游戏时, 先关闭所有 VGUI 窗口
+~BuyMenu 的时候不会取消最后被选择的信息
+*加载模型后自动 delete 模型文件的贴图 (好象不是这样的, 再想想是哪里浪费的内存吧.
+~ViewModel 模型在宽屏模式下自动上移修复.
++盗版服务器将不支持互联网联机, 去掉 Master 等一些功能.
+ 准心可以自己调节颜色.
++主题配置文件最好把路径里祛除掉主题目录.
++地图结束后请第一时间关闭记分牌不然刚换完地图可以被看到.
+*地图结束后不能按任何键 (slot...
+*重新写加载 SEQ 功能
+~声音引擎希望可以换成 FMOD, 取消 mss, A3D 一些声音库
+ 不建议使用小型分辨率, 最好可以检查系统支持的分辨率自动设置, 非全屏. 以 800 * 600 为基础, 在注册表没有任何分辨率记录时初始化设置
+ SourceScheme ScoreBoard 名字位置在不同分辨率下感觉不太对..
+ TGA 加载最好可以最多线程优化.
+ 正版不允许使用 csbte.exe 启动
+*点退出，整个 GameUI 会闪烁
+*Steam 下退出好象会出 MDMP 文件 (看样子是跟上面的一样问题, 已修复
++ServerBrowser 和 OptionsDialog 没有在游戏打开的时候初始化每个 TAB 子窗口.
+ 游戏中释放 BIK.
++如果在没有 nav 的地图上使用无线电则会使用 titiles 里的那个难看的“%s (RADIO): %s”，看起来已经修复了
+ 跟上面有关, (括号看起来会不会很难受
+ 英文的 ChatDialog 框看起来比较丑, 分辨率在 1024 * 768
+*去掉 MH_Shutdown 里的 MH_FreeAllHook 后出现新的问题，一些钩子还是需要在结束的时候释放好.. 类似于 Module.cpp 里的 Hook_GetProcAddress，这样的会无限被递归调用.
++先使用 cs_bloodstrike 再使用 cs_dust 无线电的话, 可能会出现堆栈问题的
++正版支持刷服噢！
++出了购买区关闭购买菜单呢?
++点击主菜单的退出按钮的时候整个 UI 都会闪烁, 还有取消退出按钮时
+ CSO 的顶部记分牌平局做的细化一点点, 检查声音和文字, 然后等下一回合增加回合数.
+*ChromeHTML 没有边框?
++繁体的服务器连接可能缺字.
++DevMsg 用 SourceSDK 的！
+*打开游戏马上按 ~ 控制台焦点很奇怪
+ 新版本修改窗口大小 VGUI 也会缩放
+*水面反射在 WIN8 下有一些问题 (偶尔会出现问题?
+ 声音加载最好也可以多线程优化
+ 游戏加载的时候去除 FPS 限制
++手动关闭控制台的时候有淡出效果, 按 ~ 也是跟 ESC 一样，具体参考 CSS
++res 里面的 hidef
+ server reject message need translate to 
+*FreeType 去掉后考虑是否用 "custom"?
+ HintMessage 字体问题
+ 滚动条颜色和边框有点奇怪.
+*字体少字
+ 第三方视频技术在更换地图时不会自动关闭
+ quit 游戏的时候关闭所有 VGUI 窗口
+ 主菜单上面的文字
+ 观察者左下方 StatusText 会显示被观察的状态
++invalid sound MRAD_FIREINHOLE烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫烫
++S_LoadSound: Couldn't load /MRAD_ctwinwav
+ CSO 创建游戏页面上看不见分割条
+ 新的 CVAR 注册 cvar.cpp
+
+准备改进的:
+ 武器脚本重新整理 (防 hack)
++CSO 主题废除
++bte_ 参数废除
++Bink 废除
++LoadingDialog 还原
++Gamma 设置到 Video
+ CSS 的窗口标题很清晰
+ 退出时不显示 Loading
+ 开启时 GameMenu 淡出效果
+
+如果可以做到 client.dll mp.dll 和 GameUI.dll 完美反编译
+gConfigs.bEnableUnlimitedTGA 和 不要 Hook GL 的函数
+TeamMenu 观察者
+
+New Core:
+缓存无限制
+VGUI 新接口
+文件系统新接口
+更先进的载入器
+天空无限制
+渲染效果
+贴图、声音加载优化
+服务端内部消息优化
+武器系统预测优化
+
+ValveSDKCode/public/vgui/IVGuiV06.h
+画字 FPS 不高
+vgui.cpp 还有那几个好好看一下
+偶尔刚打开游戏时 GameMenu 会闪烁
+边框问题，输入文字延迟问题，中文字问题，拖放问题
+保留文件原始性 Unicode, VGUI, SourceSDK
+DEMO 对话框
+软件模式可以进行游戏最好像 1.6 一样，边框四周全是角
+TextEntry 的准心位置不要按照字体的高度
+
+控件:
+AnalogBar
+Menu
+Divider
+HTML
+ChromeHTML
+
+// VGUI 控件还原性能问题
+
+void TextImage::SetDrawWidth(int width)
+{
+	_drawWidth = width;
+	m_bRecalculateTruncation = true;
+}
+
+// direct delete is never safe because even if ivgui is shutdown we manually do RunFrame()
+// and we can enter here in a think traverse and then delete from underneath ourselves
+/*else
+{
+	delete this;
+}*/
+
+virtual void InitFromDefault( Panel *panel, PanelAnimationMapEntry *entry )
+{
+	void *data = ( void * )( (*entry->m_pfnLookup)( panel ) );
+
+	int currentId = -1;
+
+	char const *texturename = entry->defaultvalue();
+	if ( texturename && texturename[ 0 ] )
+	{
+		currentId = surface()->DrawGetTextureId( texturename );
+		if ( currentId == -1 )
+		{
+			currentId = surface()->CreateNewTextureID();
+		}
+		surface()->DrawSetTextureFile( currentId, texturename, false, true );
+	}
+
+	*(int *)data = currentId;
+}
+
+void RichText::RecalculateLineBreaks()
+{
+
+最后请搜索 Copyright ?1996-2005
+
+DEP 保护 sys_launcher.cpp
+ev_hldm.cpp 检查参数
+M 菜单观察者
+HtmlWindow 释放的时候好象有问题
+errorlogs \\
+
+void CSurface::DrawQuad(const Vertex_t &ul, const Vertex_t &lr, unsigned char *pColor)
+{
+	if (m_iBoundTexture)
+		qglEnable(GL_TEXTURE_2D);
+	else
+		qglDisable(GL_TEXTURE_2D);
+
+	gEngfuncs.pTriAPI->RenderMode(kRenderTransAlpha);
+	//qglColor4ub(pColor[0], pColor[1], pColor[2], pColor[3]);
+	gEngfuncs.pTriAPI->Color4f(pColor[0] / 255.0, pColor[1] / 255.0, pColor[2] / 255.0, pColor[3] / 255.0);
+	gEngfuncs.pTriAPI->Begin(TRI_QUADS);
+	gEngfuncs.pTriAPI->TexCoord2f(ul.m_TexCoord.x, ul.m_TexCoord.y);
+	gEngfuncs.pTriAPI->Vertex3f(ul.m_Position.x, ul.m_Position.y, m_flZPos);
+	gEngfuncs.pTriAPI->TexCoord2f(lr.m_TexCoord.x, ul.m_TexCoord.y);
+	gEngfuncs.pTriAPI->Vertex3f(lr.m_Position.x, ul.m_Position.y, m_flZPos);
+	gEngfuncs.pTriAPI->TexCoord2f(lr.m_TexCoord.x, lr.m_TexCoord.y);
+	gEngfuncs.pTriAPI->Vertex3f(lr.m_Position.x, lr.m_Position.y, m_flZPos);
+	gEngfuncs.pTriAPI->TexCoord2f(ul.m_TexCoord.x, lr.m_TexCoord.y);
+	gEngfuncs.pTriAPI->Vertex3f(ul.m_Position.x, lr.m_Position.y, m_flZPos);
+	gEngfuncs.pTriAPI->End();
+
+	qglEnable(GL_TEXTURE_2D);
+	qglDisable(GL_BLEND);
+
+Steam 版本 HTML!! (RGB & BGR)
+
+Vector
+
+WIN7 DirectSound!!
+
+DeleteTextureByID 恢复
+weapon_csbase.h

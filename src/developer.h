@@ -1,0 +1,1 @@
+extern struct cvar_s *developer;
