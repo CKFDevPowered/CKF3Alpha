@@ -1,0 +1,154 @@
+// NOTE:  THIS FILE IS AUTOMATICALLY REGENERATED, 
+//DO NOT EDIT THIS HEADER, YOUR COMMENTS WILL BE LOST IF YOU DO
+// User options script
+//
+// Format:
+//  Version [float]
+//  Options description followed by 
+//  Options defaults
+//
+// Option description syntax:
+//
+//  "cvar" { "Prompt" { type [ type info ] } { default } }
+//
+//  type = 
+//   BOOL   (a yes/no toggle)
+//   STRING
+//   NUMBER
+//   LIST
+//
+// type info:
+// BOOL                 no type info
+// NUMBER       min max range, use -1 -1 for no limits
+// STRING       no type info
+// LIST          delimited list of options value pairs
+//
+//
+// default depends on type
+// BOOL is "0" or "1"
+// NUMBER is "value"
+// STRING is "value"
+// LIST is "index", where index "0" is the first element of the list
+
+
+// Half-Life User Info Configuration Layout Script (stores last settings chosen, too)
+// File generated:  Tue Feb 26 06:28:06 PM
+//
+//
+// Cvar	-	Setting
+
+VERSION 1.0
+
+DESCRIPTION INFO_OPTIONS
+{
+	"cl_corpsestay"
+	{
+		"#Cstrike_Corpse_Stay"
+		{ NUMBER 0 600 }
+		{ "600" }
+	}
+
+	"mp_decals"
+	{
+		"#Valve_Multiplayer_Decal_Limit"
+		{ NUMBER 0 4096 }
+		{ "300" }
+	}
+
+	"max_shells"
+	{
+		"#Cstrike_Max_Shells"
+		{ NUMBER 0 -1 }
+		{ "50" }
+	}
+
+	"max_smokepuffs"
+	{
+		"#Cstrike_Max_Smoke_Puffs"
+		{ NUMBER 0 -1 }
+		{ "20" }
+	}
+
+	"fastsprites"
+	{
+		"#Cstrike_Smoke_Quality"
+		{
+			LIST
+			"#Cstrike_Smoke_Best" "0"
+			"#Cstrike_Smoke_Medium" "1"
+			"#Cstrike_Smoke_Worst" "2"
+		}
+		{ "1" }
+	}
+
+	"cl_righthand"
+	{
+		"#Cstrike_Weapon_Alignment"
+		{
+			LIST
+			"#Cstrike_Left_Handed" "0"
+			"#Cstrike_Right_Handed" "1"
+		}
+		{ "1" }
+	}
+
+	"_vgui_menus"
+	{
+		"#Cstrike_Buy_Menu_Type"
+		{
+			LIST
+			"#Cstrike_Old_Style_Menus" "0"
+			"#Cstrike_VGUI_Menus" "1"
+		}
+		{ "1" }
+		SetInfo
+	}
+
+	"_cl_autowepswitch"
+	{
+		"#Cstrike_Automatic_Weapon_Switch"
+		{ BOOL }
+		{ "1" }
+		SetInfo
+	}
+
+	"hud_centerid"
+	{
+		"#Valve_Center_Player_Names"
+		{ BOOL }
+		{ "1" }
+	}
+
+	"_ah"
+	{
+		"#Cstrike_AutoHelp"
+		{ BOOL }
+		{ "1" }
+		SetInfo
+	}
+
+	"hud_takesshots"
+	{
+		"#Valve_Automatic_Screenshots"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"cl_observercrosshair"
+	{
+		"#Valve_Observer_Crosshair"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"cl_radartype"
+	{
+		"#Cstrike_RadarType"
+		{
+			LIST
+			"#Cstrike_Transparent" "0"
+			"#Cstrike_Solid" "1"
+		}
+		{ "0" }
+	}
+}

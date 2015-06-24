@@ -1,0 +1,175 @@
+// NOTE:  THIS FILE IS AUTOMATICALLY REGENERATED, 
+//DO NOT EDIT THIS HEADER, YOUR COMMENTS WILL BE LOST IF YOU DO
+// Multiplayer options script
+//
+// Format:
+//  Version [float]
+//  Options description followed by 
+//  Options defaults
+//
+// Option description syntax:
+//
+//  "cvar" { "Prompt" { type [ type info ] } { default } }
+//
+//  type = 
+//   BOOL   (a yes/no toggle)
+//   STRING
+//   NUMBER
+//   LIST
+//
+// type info:
+// BOOL                 no type info
+// NUMBER       min max range, use -1 -1 for no limits
+// STRING       no type info
+// LIST          delimited list of options value pairs
+//
+//
+// default depends on type
+// BOOL is "0" or "1"
+// NUMBER is "value"
+// STRING is "value"
+// LIST is "index", where index "0" is the first element of the list
+
+
+// Half-Life Server Configuration Layout Script (stores last settings chosen, too)
+// File generated:  Mon Jun 15 09:56:43 PM
+//
+//
+// Cvar	-	Setting
+
+VERSION 1.0
+
+DESCRIPTION SERVER_OPTIONS
+{
+	"hostname"
+	{
+		"#Valve_Hostname"
+		{ STRING }
+		{ "Counter-Strike: BreakThrough Edition" }
+	}
+
+	"maxplayers"
+	{
+		"#Valve_Max_Players"
+		{ NUMBER 1 32 }
+		{ "32" }
+	}
+
+	"sv_password"
+	{
+		"#Valve_Server_Password"
+		{ STRING }
+		{ "" }
+	}
+
+	"mp_timelimit"
+	{
+		"#Cstrike_Timelimit"
+		{ NUMBER 0 -1 }
+		{ "20" }
+	}
+
+	"mp_winlimit"
+	{
+		"#Cstrike_WinLimit"
+		{ NUMBER 0 -1 }
+		{ "0" }
+	}
+
+	"mp_maxrounds"
+	{
+		"#Cstrike_RoundLimit"
+		{ NUMBER 0 -1 }
+		{ "0" }
+	}
+
+	"mp_roundtime"
+	{
+		"#Cstrike_RoundTime"
+		{ NUMBER 0 15 }
+		{ "5" }
+	}
+
+	"mp_freezetime"
+	{
+		"#Cstrike_FreezeTime"
+		{ NUMBER 0 60 }
+		{ "6" }
+	}
+
+	"mp_buytime"
+	{
+		"#Cstrike_BuyTime"
+		{ NUMBER 0.25 -1 }
+		{ "1.5" }
+	}
+
+	"mp_startmoney"
+	{
+		"#Cstrike_StartMoney"
+		{ NUMBER 800 16000 }
+		{ "800" }
+	}
+
+	"mp_footsteps"
+	{
+		"#Valve_Footsteps"
+		{ BOOL }
+		{ "1" }
+	}
+
+	"mp_forcecamera"
+	{
+		"#Cstrike_Death_Camera_Type"
+		{
+			LIST
+			"#Cstrike_Spectate_Anyone" "0"
+			"#Cstrike_Spectate_Team_Only" "1"
+			"#Cstrike_Only_First_Person" "2"
+		}
+		{ "0" }
+	}
+
+	"mp_fadetoblack"
+	{
+		"#Cstrike_Fade_To_Black"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"mp_friendlyfire"
+	{
+		"#Valve_Friendly_Fire"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"mp_tkpunish"
+	{
+		"#Cstrike_TK_Punish"
+		{ BOOL }
+		{ "1" }
+	}
+
+	"mp_autokick"
+	{
+		"#Cstrike_AutoKick"
+		{ BOOL }
+		{ "0" }
+	}
+
+	"mp_hostagepenalty"
+	{
+		"#Cstrike_Hostage_Penalty"
+		{ NUMBER 0 -1 }
+		{ "5" }
+	}
+
+	"mp_flashlight"
+	{
+		"#Cstrike_Allow_Flashlight"
+		{ BOOL }
+		{ "0" }
+	}
+
+}
