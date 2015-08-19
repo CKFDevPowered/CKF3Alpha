@@ -1,4 +1,4 @@
-"Resource/UI/TFTextWindow.res"
+"Resource/UI/TFTeamMenu.res"
 {
 	"teammenu"
 	{
@@ -36,7 +36,7 @@
 		"fieldName"		"teambutton0"
 		"xpos"			"c-29"
 		"ypos"			"101"
-		"zpos"			"3"
+		"zpos"			"5"
 		"wide"			"125"
 		"tall"			"310"
 		"autoResize"	"0"
@@ -52,7 +52,7 @@
 		"command"		"jointeam 2"
 		"team"				"2"		// team blue
 		"associated_model"	"bluedoor"
-		"hover"				"2.0"
+		"hover"				"0.334"
 		"fgcolor_override"		"Black"
 	}
 
@@ -62,7 +62,7 @@
 		"fieldName"		"teambutton1"
 		"xpos"			"c159"
 		"ypos"			"101"
-		"zpos"			"3"
+		"zpos"			"5"
 		"wide"			"125"
 		"tall"			"310"
 		"autoResize"	"0"
@@ -78,7 +78,7 @@
 		"command"		"jointeam 1"
 		"team"				"1"		// team red
 		"associated_model"	"reddoor"	
-		"hover"				"2.0"
+		"hover"				"0.334"
 		"fgcolor_override"		"Black"
 	}
 
@@ -88,7 +88,7 @@
 		"fieldName"		"teambutton2"
 		"xpos"			"c-290"
 		"ypos"			"101"
-		"zpos"			"3"
+		"zpos"			"5"
 		"wide"			"125"
 		"tall"			"310"
 		"autoResize"	"0"
@@ -103,6 +103,7 @@
 		"paintborder"	"0"
 		"command"		"jointeam 0"
 		"associated_model"	"autodoor"
+		"hover"				"0.334"
 		"fgcolor_override"		"Black"
 	}
 	
@@ -111,8 +112,8 @@
 		"ControlName"	"TFTeamButton"
 		"fieldName"		"teambutton3"
 		"xpos"			"c-140"
-		"ypos"			"232"
-		"zpos"			"3"
+		"ypos"			"235"
+		"zpos"			"5"
 		"wide"			"82"
 		"tall"			"57"
 		"autoResize"	"0"
@@ -126,7 +127,7 @@
 		"brighttext"	"0"
 		"paintborder"	"0"
 		"command"		"jointeam 3"
-		"associated_model"	"spectate"	
+		"associated_model"	"spectate"
 		"fgcolor_override"		"Black"
 	}
 	"CancelButton"
@@ -202,7 +203,7 @@
 		"fieldName"		"TeamMenuSpectate"
 		"xpos"			"c-112"
 		"ypos"			"255"
-		"zpos"			"1"
+		"zpos"			"5"
 		"wide"			"44"
 		"tall"			"20"
 		"autoResize"	"0"
@@ -321,10 +322,10 @@
 	
 	"spectate"
 	{
-		"ControlName"	"ImagePanel"
+		"ControlName"	"ModelPanel"
 		"fieldName"		"spectate"
 		"xpos"			"c-140"
-		"ypos"			"232"
+		"ypos"			"235"
 		"zpos"			"4"		
 		"wide"			"82"
 		"tall"			"57"
@@ -332,24 +333,10 @@
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		"image"			"resource/tga/btn_selspe_1440_0"
-		"scaleImage"	"1"
-		"drawcolor"		"255 255 255 255"		
-	}
-
-	"bluedisable"
-	{
-		"ControlName"	        "ImagePanel"
-		"fieldName"		        "bluedisable"
-		"xpos"		            "c-10"
-		"ypos"		            "c-10"
-		"zpos"					"5"
-		"wide"		            "32"
-		"tall"		            "32"
-		"visible"				"1"
-		"enabled"				"1"
-		"image"					"team/ico_disable"
-		"scaleImage"			"1"
-		"drawcolor"				"255 255 255 255"
+		
+		"model"			"models/CKF_III/ui_selteam_tv.mdl"
+		"skin"			"0"
+		"angles" 		"0 0 0"
+		"origin" 		"49 0 0"
 	}
 }

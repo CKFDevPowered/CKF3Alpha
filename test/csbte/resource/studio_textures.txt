@@ -16,5 +16,11 @@
 				"replace" : "resource/tga/btn_selred_1440_0.tga"
 			}
 		]
+	},
+	{
+		"modelname" : "models/CKF_III/ui_selteam_tv.mdl",
+		"textures" : 
+		[
+		]
 	}
 ]

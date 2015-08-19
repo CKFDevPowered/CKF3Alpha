@@ -1,4 +1,4 @@
-"Resource/UI/TFTextWindow.res"
+"Resource/UI/TFMapInfo.res"
 {
 	"mapinfo"
 	{

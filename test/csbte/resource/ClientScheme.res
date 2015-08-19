@@ -455,6 +455,63 @@ Scheme
 			}
 		}
 
+		"HudFontSmall"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"14"
+				"tall_lodef"	"16"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" 	"1"
+			}
+		}	
+		"HudFontSmallishBold"
+		{
+			"1"
+			{
+				"name"		"TF2 Build"
+				"tall"		"16"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
+		"HudFontSmallBold"
+		{
+			"1"
+			{
+				"name"		"TF2 Build"
+				"tall"		"14"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
+		"HudFontSmallBoldShadow"
+		{
+			"1"
+			{
+				"name"		"TF2 Build"
+				"tall"		"14"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" "1"
+				"dropshadow"	"1"
+			}
+		}
+		"HudFontMediumSmallSecondary"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"18"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
 		// this is the symbol font
 		"Marlett"
 		{
@@ -486,7 +543,26 @@ Scheme
 				"weight"	"500"
 			}
 		}
-
+		"MenuClassBuckets"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"11"
+				"antialias" "1"
+				"weight"	"500"
+			}
+		}
+		"MenuKeys"
+		{
+			"1"
+			{
+				"name"		"TF2"
+				"tall"		"12"
+				"antialias" "1"
+				"weight"	"500"
+			}
+		}
 		"ChatFont"
 		{
 			"1"
