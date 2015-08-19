@@ -102,7 +102,8 @@ private:
 	vgui::DHANDLE<vgui::Frame> m_hCreateMultiplayerGameDialog;
 	vgui::DHANDLE<vgui::QueryBox> m_hQuitQueryBox;
 	EBackgroundState m_eBackgroundState;
-	bimage_t m_ImageID[BACKGROUND_ROWS][BACKGROUND_COLUMNS];
+	//bimage_t m_ImageID[BACKGROUND_ROWS][BACKGROUND_COLUMNS];
+	bimage_t m_ImageID;
 	int m_ExitingFrameCount;
 	int m_iLoadingImageID;
 	bool m_bLevelLoading;

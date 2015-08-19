@@ -62,12 +62,14 @@ void CTFTextWindow::ApplySchemeSettings(IScheme *pScheme)
 	Update();
 }
 
+int fuckup_checker = true;
+
 void CTFTextWindow::OnCommand( const char *command )
 {
 	if ( !Q_strcmp( command, "okay" ) )
 	{
-		g_pViewPort->ShowPanel( this, false );
 		g_pViewPort->ShowPanel( PANEL_MAPINFO, true );
+		g_pViewPort->ShowPanel( this, false );
 	}
 	else
 	{
@@ -86,12 +88,14 @@ void CTFTextWindow::ShowPanel(bool bShow)
 	{
 		SetVisible(true);
 		MoveToFront();
-		SetMouseInputEnabled(true);
+		if (!IsMouseInputEnabled())
+			SetMouseInputEnabled(true);
 	}
 	else
 	{
 		SetVisible(false);
-		SetMouseInputEnabled(false);
+		//if (IsMouseInputEnabled())
+		//	SetMouseInputEnabled(false);
 	}
 }
 

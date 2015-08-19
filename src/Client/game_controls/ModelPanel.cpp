@@ -88,18 +88,40 @@ int LookupSequence(void *pmodel, const char *label)
 	return 0;
 }
 
-void ModelPanel::SetModel(void)
+void ModelPanel::SetModel(const char *szModel)
+{
+	Q_strncpy(m_szModel, szModel, 63);
+	m_szModel[63] = '\0';
+}
+
+void ModelPanel::LoadModel(model_t *mod)
+{
+	_entity.model = mod;
+	if(_entity.model)
+	{
+		_entity.model->needload = 3;
+	}
+}
+
+void ModelPanel::LoadModel(void)
 {
 	if(!IEngineStudio.Mod_ForName || !m_szModel[0])
 		return;
-	_entity.model = IEngineStudio.Mod_ForName(m_szModel, true);
-	_entity.model->needload = 3;
+
+	_entity.model = IEngineStudio.Mod_ForName(m_szModel, false);
+	if(_entity.model)
+	{
+		_entity.model->needload = 3;
+	}
 }
 
 void ModelPanel::SetAnimation(const char *szAnim)
 {
-	if(!_entity.model)
+	if(!_entity.model || !IEngineStudio.Mod_Extradata)
 		return;
+	_entity.curstate.frame = 0;
+	_entity.curstate.animtime = gEngfuncs.GetClientTime();
+	_entity.curstate.framerate = 1;
 	_entity.curstate.sequence = LookupSequence(IEngineStudio.Mod_Extradata(_entity.model), szAnim);
 }
 
@@ -108,7 +130,7 @@ void ModelPanel::InitEntity(void)
 	memset(&_entity, 0, sizeof(cl_entity_t));
 	_entity.curstate.rendermode = kRenderNormal;
 	_entity.curstate.renderfx = kRenderFxNone;
-	_entity.curstate.renderamt = 255;	
+	_entity.curstate.renderamt = 255;
 	_entity.curstate.framerate = 1;
 	_entity.curstate.frame = 0;
 	_entity.curstate.skin = 0;

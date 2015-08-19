@@ -33,8 +33,9 @@
 class CHudLayer;
 
 class CCSBackGroundPanel;
-class CCSClassMenu_TER;
-class CCSClassMenu_CT;
+//class CCSClassMenu_TER;
+//class CCSClassMenu_CT;
+class CTFClassMenu;
 //class CCSTextWindow;
 class CCSClientScoreBoardDialog;
 class CCSTeamMenu;
@@ -155,14 +156,16 @@ private:
 	int m_iTeamScores[4];
 	char m_szServerName[MAX_SERVERNAME_LENGTH];
 	char m_szMOTD[MAX_MOTD_LENGTH];
+	int m_iMousePos[2];
 
 private:
 	CommandMenu *m_pCommandMenu;
 	CNavProgress *m_pNavProgress;
 	//CCSTeamMenu *m_pTeamMenu;
 	CTFTeamMenu *m_pTeamMenu;
-	CCSClassMenu_TER *m_pClassMenu_TER;
-	CCSClassMenu_CT *m_pClassMenu_CT;
+	//CCSClassMenu_TER *m_pClassMenu_TER;
+	//CCSClassMenu_CT *m_pClassMenu_CT;
+	CTFClassMenu *m_pClassMenu;
 	CTFTextWindow *m_pTextWindow;
 	CCSClientScoreBoardDialog *m_pScoreBoard;
 	CCSSpectatorGUI *m_pSpectatorGUI;

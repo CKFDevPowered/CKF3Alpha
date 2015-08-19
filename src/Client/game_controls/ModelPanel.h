@@ -1,11 +1,12 @@
-#ifndef TFRICHTEXT_H
-#define TFRICHTEXT_H
+#ifndef TFMODELPANEL_H
+#define TFMODELPANEL_H
 
 #ifdef _WIN32
 #pragma once
 #endif
 
 #include <vgui_controls/Panel.h>
+#include <com_model.h>
 
 namespace vgui
 {
@@ -23,7 +24,9 @@ public:
 
 	virtual void PaintTraverse(bool Repaint, bool allowForce = true);
 	virtual void Think();
-	void SetModel(void);
+	void LoadModel(void);
+	void LoadModel(model_t *mod);
+	void SetModel(const char *szModel);
 	void SetAnimation(const char *szAnim);
 	void InitEntity(void);
 	cl_entity_t *GetEntity(void){return &_entity;};

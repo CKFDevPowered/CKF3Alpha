@@ -298,8 +298,8 @@ int CHudTextMessage::MsgFunc_TextMsg(const char *pszName, int iSize, void *pbuf)
 		case HUD_PRINTNOTIFY:
 		{
 			psz[0] = 1;
-			safe_sprintf(psz + 1, MSG_BUF_SIZE, msg_text, sstr1, sstr2, sstr3, sstr4);
-			ConsolePrint(ConvertCRtoNL(psz));
+			//safe_sprintf(psz + 1, MSG_BUF_SIZE, msg_text, sstr1, sstr2, sstr3, sstr4);
+			//ConsolePrint(ConvertCRtoNL(psz));
 			break;
 		}
 

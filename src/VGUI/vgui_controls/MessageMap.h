@@ -366,6 +366,14 @@ private:
 	static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className );\
 	className *g_##className##LinkerHack = NULL;
 
+#define DECLARE_BUILD_FACTORY_PANEL( className )			\
+	static vgui::Panel *Create_##className( void )							\
+		{																		\
+			return new className( NULL, NULL, NULL );					\
+		};																		\
+	static vgui::CBuildFactoryHelper g_##className##_Helper( #className, Create_##className );\
+	className *g_##className##LinkerHack = NULL;
+
 // This one allows passing in a special function with calls new panel( xxx ) with arbitrary default parameters
 #define DECLARE_BUILD_FACTORY_CUSTOM( className, createFunc )					\
 	static vgui::CBuildFactoryHelper g_##className##_Helper( #className, createFunc );\

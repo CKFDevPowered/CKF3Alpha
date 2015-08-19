@@ -109,12 +109,13 @@ void CTFMapInfoMenu::ShowPanel( bool bShow )
 	if ( bShow )
 	{
 		Activate();
-		SetMouseInputEnabled( true );
+		if(!IsMouseInputEnabled())
+			SetMouseInputEnabled( true );
 	}
 	else
 	{
 		SetVisible( false );
-		SetMouseInputEnabled( false );
+		//SetMouseInputEnabled( false );
 	}
 }
 
@@ -151,7 +152,7 @@ void CTFMapInfoMenu::OnCommand( const char *command )
 		if ( g_iTeamNumber == TEAM_UNASSIGNED )
 		{
 			g_pViewPort->ShowPanel( PANEL_INFO, true );
-			g_pViewPort->ShowPanel(this, false);
+			g_pViewPort->ShowPanel(this, false);			
 		}
 	}
 	else if ( !Q_strcmp( command, "continue" ) )

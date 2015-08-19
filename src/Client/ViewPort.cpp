@@ -1,6 +1,7 @@
 #include "hud.h"
 #include "parsemsg.h"
 #include "cdll_dll.h"
+#include "cl_util.h"
 #include "player.h"
 #include "perf_counter.h"
 #include "vgui_int.h"
@@ -16,7 +17,7 @@
 #include "game_controls/NavProgress.h"
 
 //#include "vgui/cstriketeammenu.h"
-#include "vgui/cstrikeclassmenu.h"
+//#include "vgui/cstrikeclassmenu.h"
 #include "vgui/cstrikeclientscoreboard.h"
 //#include "vgui/cstriketextwindow.h"
 #include "vgui/cstrikespectatorgui.h"
@@ -26,6 +27,7 @@
 #include "vgui/tftextwindow.h"
 #include "vgui/tfmapinfomenu.h"
 #include "vgui/tfteammenu.h"
+#include "vgui/tfclassmenu.h"
 
 Panel *g_lastPanel = NULL;
 Button *g_lastButton = NULL;
@@ -67,6 +69,9 @@ CViewport::CViewport(void) : Panel(NULL, "NewClientViewport")
 	m_iTeamScores[1] = 0;
 	m_iTeamScores[2] = 0;
 	m_iTeamScores[3] = 0;
+
+	m_iMousePos[0] = 0;
+	m_iMousePos[1] = 0;
 }
 
 CViewport::~CViewport(void)
@@ -204,16 +209,14 @@ bool CViewport::ShowVGUIMenu(int iMenu)
 
 	switch (iMenu)
 	{
-		case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
-		case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
-		case MENU_TEAM: 
-			{
-				panel = m_pTeamMenu; break;
-			}
+		//case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
+		//case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
 
 		case MENU_INTRO:panel = m_pTextWindow;break;
 		case MENU_MAPINFO: panel = m_pMapInfoMenu;break;
-
+		case MENU_TEAM: panel = m_pTeamMenu; break;
+		case MENU_CLASS_RED: panel = m_pClassMenu;m_pClassMenu->SetTeam(TEAM_RED);break;
+		case MENU_CLASS_BLUE: panel = m_pClassMenu;m_pClassMenu->SetTeam(TEAM_BLUE);break;
 		case MENU_BUY:
 		case MENU_BUY_PISTOL:
 		case MENU_BUY_SHOTGUN:
@@ -249,12 +252,12 @@ bool CViewport::HideVGUIMenu(int iMenu)
 
 	switch (iMenu)
 	{
-		case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
-		case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
-		case MENU_TEAM: panel = m_pTeamMenu; break;
-
+		//case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
+		//case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
 		case MENU_INTRO:panel = m_pTextWindow;break;
 		case MENU_MAPINFO: panel = m_pMapInfoMenu;break;
+		case MENU_TEAM: panel = m_pTeamMenu; break;
+		case MENU_CLASS: panel = m_pClassMenu;break;
 
 		case MENU_BUY:
 		case MENU_BUY_PISTOL:
@@ -553,6 +556,8 @@ void CViewport::ShowPanel(const char *pName, bool state)
 	ShowPanel(panel, state);
 }
 
+extern BOOL (WINAPI *g_pfnSetCursorPos)(int X, int Y);
+
 void CViewport::ShowPanel(CViewPortPanel *pPanel, bool state)
 {
 	if (state)
@@ -566,7 +571,7 @@ void CViewport::ShowPanel(CViewPortPanel *pPanel, bool state)
 		}
 		else
 		{
-			if (m_PendingDialogs.Count() != 0)
+			/*if (m_PendingDialogs.Count() != 0)
 			{
 				if (!m_PendingDialogs.Check(pPanel))
 				{
@@ -578,7 +583,7 @@ void CViewport::ShowPanel(CViewPortPanel *pPanel, bool state)
 			else
 			{
 				m_PendingDialogs.Insert(pPanel);
-			}
+			}*/
 		}
 
 		if (pPanel->HasInputElements())
@@ -620,8 +625,9 @@ void CViewport::CreateDefaultPanels(void)
 	m_pCommandMenu = (CommandMenu *)AddNewPanel(new CommandMenu);
 	m_pNavProgress = (CNavProgress *)AddNewPanel(new CNavProgress);
 	m_pTeamMenu = (CTFTeamMenu *)AddNewPanel(new CTFTeamMenu);
-	m_pClassMenu_TER = (CCSClassMenu_TER *)AddNewPanel(new CCSClassMenu_TER);
-	m_pClassMenu_CT = (CCSClassMenu_CT *)AddNewPanel(new CCSClassMenu_CT);
+	//m_pClassMenu_TER = (CCSClassMenu_TER *)AddNewPanel(new CCSClassMenu_TER);
+	//m_pClassMenu_CT = (CCSClassMenu_CT *)AddNewPanel(new CCSClassMenu_CT);
+	m_pClassMenu = (CTFClassMenu *)AddNewPanel(new CTFClassMenu);
 	m_pTextWindow = (CTFTextWindow *)AddNewPanel(new CTFTextWindow);
 	m_pScoreBoard = (CCSClientScoreBoardDialog *)AddNewPanel(new CCSClientScoreBoardDialog);
 	m_pSpectatorGUI = (CCSSpectatorGUI *)AddNewPanel(new CCSSpectatorGUI);

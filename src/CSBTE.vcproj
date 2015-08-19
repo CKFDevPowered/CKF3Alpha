@@ -1279,6 +1279,14 @@
 					Name="tf2"
 					>
 					<File
+						RelativePath=".\Client\VGUI\tfclassmenu.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\tfclassmenu.h"
+						>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\tfmapinfomenu.cpp"
 						>
 					</File>
@@ -1525,6 +1533,22 @@
 				</File>
 				<File
 					RelativePath=".\Client\game_controls\teammenu.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Client\game_controls\TFClassTips.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Client\game_controls\TFClassTips.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Client\game_controls\TFImageButton.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Client\game_controls\TFImageButton.h"
 					>
 				</File>
 				<File

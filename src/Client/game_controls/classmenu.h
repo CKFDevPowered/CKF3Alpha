@@ -20,6 +20,8 @@ namespace vgui
 	class TextEntry;
 }
 
+class TeamFortressViewport;
+
 class CClassMenu : public vgui::Frame, public CViewPortPanel
 {
 private:

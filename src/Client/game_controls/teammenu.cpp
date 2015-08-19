@@ -106,7 +106,9 @@ void CTeamMenu::ShowPanel(bool bShow)
 	if (bShow)
 	{
 		Activate();
-		SetMouseInputEnabled(true);
+
+		if(!IsMouseInputEnabled())
+			SetMouseInputEnabled( true );
 
 		for (int i = 0; i < m_mouseoverButtons.Count(); ++i)
 		{
@@ -125,7 +127,7 @@ void CTeamMenu::ShowPanel(bool bShow)
 	else
 	{
 		SetVisible(false);
-		SetMouseInputEnabled(false);
+		//SetMouseInputEnabled(false);
 	}
 
 	g_pViewPort->ShowBackGround(bShow);

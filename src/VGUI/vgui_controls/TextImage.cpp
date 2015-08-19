@@ -656,7 +656,6 @@ void TextImage::RecalculateNewLinePositions()
 			// end the word
 			hasWord = false;
 		}
-		
 		// get the width
 #if USE_GETKERNEDCHARWIDTH
 		wchar_t chBefore = 0;

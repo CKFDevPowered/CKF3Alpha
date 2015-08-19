@@ -155,6 +155,7 @@ private:
 	// the wide and tall to which all controls are locked - used for autolayout deltas
 	char *m_pszConfigName;
 	int m_iConfigID;
+protected:
 	bool m_bShouldSkipAutoResize;
 };
 

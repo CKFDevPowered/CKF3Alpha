@@ -11,7 +11,6 @@
 #include <cl_entity.h>
 #include <cdll_dll.h>
 
-#include <vgui_controls/TextEntry.h>
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/ImagePanel.h>
@@ -62,7 +61,7 @@ void TFTeamButton::ApplySchemeSettings( vgui::IScheme *pScheme )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void TFTeamButton::SendAnimation( const char *pszAnimation )
+void TFTeamButton::SendAnimation( const char * pszAnimation, bool reverse )
 {
 	Panel *pParent = GetParent();
 	if ( pParent )
@@ -70,7 +69,28 @@ void TFTeamButton::SendAnimation( const char *pszAnimation )
 		ModelPanel *pModel = dynamic_cast< ModelPanel* >(pParent->FindChildByName( m_szModelPanel ));
 		if ( pModel )
 		{
-			pModel->SetAnimation(pszAnimation);
+			if(strstr(pszAnimation, "opening"))
+			{
+				pModel->SetAnimation(pszAnimation);
+				if(m_flHoverTime > 0)
+				{
+					float frame;
+					frame = 255 -  255 * (m_flHoverTime - gEngfuncs.GetClientTime()) / m_flHoverTimeToWait;
+					pModel->GetEntity()->curstate.frame = frame;
+				}
+				if(reverse)
+				{
+					pModel->GetEntity()->curstate.framerate = -1;
+					if(m_flHoverTime <= 0)
+					{
+						pModel->GetEntity()->curstate.frame = 255;;
+					}
+				}
+			}
+			else
+			{
+				pModel->SetAnimation(pszAnimation);
+			}
 		}
 	}
 }
@@ -123,6 +143,11 @@ void TFTeamButton::SetMouseEnteredState( bool state )
 	{
 		m_bMouseEntered = true;
 
+		if(strstr(m_szModelPanel, "door"))
+			SendAnimation("door_opening");
+		else
+			SendAnimation("TV_ON");
+
 		if ( m_flHoverTimeToWait > 0 )
 		{
 			m_flHoverTime = gEngfuncs.GetClientTime() + m_flHoverTimeToWait;
@@ -131,28 +156,23 @@ void TFTeamButton::SetMouseEnteredState( bool state )
 		{
 			m_flHoverTime = -1;
 		}
-
-		if ( m_bTeamDisabled )
-		{
-			SendAnimation( "enter_disabled" );
-		}
-		else
-		{
-			SendAnimation( "enter_enabled" );
-		}
 	}
 	else
 	{
 		m_bMouseEntered = false;
-		m_flHoverTime = -1;
 
-		if ( m_bTeamDisabled )
+		if(strstr(m_szModelPanel, "door"))
+			SendAnimation("door_opening", true);
+		else
+			SendAnimation("TV_OFF");
+
+		if ( m_flHoverTimeToWait > 0 )
 		{
-			SendAnimation( "exit_disabled" );
+			m_flHoverTime = gEngfuncs.GetClientTime() + m_flHoverTimeToWait;
 		}
 		else
 		{
-			SendAnimation( "exit_enabled" );
+			m_flHoverTime = -1;
 		}
 	}
 }
@@ -179,11 +199,17 @@ void TFTeamButton::OnTick()
 			// the mouse isn't currently over the button, but we should update the status
 			if ( m_bTeamDisabled )
 			{
-				SendAnimation( "idle_disabled" );
+				if(strstr(m_szModelPanel, "door"))
+					SendAnimation("disabled");
+				else
+					SendAnimation("TV_disabled");
 			}
 			else
 			{
-				SendAnimation( "idle_enabled" );
+				if(strstr(m_szModelPanel, "door"))
+					SendAnimation("door_closed");
+				else
+					SendAnimation("TV_OFF");
 			}
 		}
 	}
@@ -194,11 +220,27 @@ void TFTeamButton::OnTick()
 
 		if ( m_bTeamDisabled )
 		{
-			SendAnimation( "hover_disabled" );
+			if(strstr(m_szModelPanel, "door"))
+				SendAnimation("disabled");
+			else
+				SendAnimation("TV_disabled");
 		}
 		else
 		{
-			SendAnimation( "hover_enabled" );
+			if(m_bMouseEntered)
+			{
+				if(strstr(m_szModelPanel, "door"))
+					SendAnimation( "door_opened" );
+				else
+					SendAnimation( "TV_ON" );
+			}
+			else
+			{
+				if(strstr(m_szModelPanel, "door"))
+					SendAnimation( "door_closed" );
+				else
+					SendAnimation( "TV_OFF" );
+			}
 		}
 	}
 }
@@ -216,19 +258,14 @@ CTFTeamMenu::CTFTeamMenu(void) : CTeamMenu()
 	m_pModelPanel[0] = new ModelPanel( this, "autodoor");
 	m_pModelPanel[1] = new ModelPanel( this, "bluedoor");
 	m_pModelPanel[2] = new ModelPanel( this, "reddoor");
-	m_pSpectateImage = new ImagePanel( this, "spectate");
-
-	m_bRedDisabled = false;
-	m_bBlueDisabled = false;
+	m_pModelPanel[3] = new ModelPanel( this, "spectate");
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 
+	SetPaintBackgroundEnabled(false);
+
 	LoadControlSettings("Resource/UI/TFTeamMenu.res");
 	InvalidateLayout();
-}
-
-CTFTeamMenu::~CTFTeamMenu(void)
-{
 }
 
 bool CTFTeamMenu::IsTeamDisabled(int iTeam)
@@ -251,9 +288,10 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 		if (gHUD.m_iIntermission || gEngfuncs.IsSpectateOnly())
 			return;
 
-		m_pModelPanel[0]->SetModel();
-		m_pModelPanel[1]->SetModel();
-		m_pModelPanel[2]->SetModel();
+		m_pModelPanel[0]->LoadModel();
+		m_pModelPanel[1]->LoadModel();
+		m_pModelPanel[2]->LoadModel();
+		m_pModelPanel[3]->LoadModel();
 	}
 
 	BaseClass::ShowPanel(bShow);
@@ -261,6 +299,16 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 
 void CTFTeamMenu::Update(void)
 {
+	if (gViewPortInterface->GetAllowSpectators())
+	{
+		if (g_iTeamNumber == TEAM_UNASSIGNED || g_iFreezeTimeOver || (g_PlayerExtraInfo[gHUD.m_iPlayerNum].dead))
+			m_pSpecTeamButton->SetVisible( true );
+		else
+			m_pSpecTeamButton->SetVisible( false );
+	}
+	else
+		m_pSpecTeamButton->SetVisible( false );
+
 	if ( g_iTeamNumber != TEAM_UNASSIGNED )
 	{
 		if ( m_pCancelButton )
@@ -286,15 +334,47 @@ void CTFTeamMenu::OnCommand(const char *command)
 {
 	if (Q_stricmp(command, "vguicancel"))
 	{
-		engine->pfnClientCmd(const_cast<char *>(command));
+		//engine->pfnClientCmd(const_cast<char *>(command));
+
+		// we're selecting a team, so make sure it's not the team we're already on before sending to the server
+		if ( Q_strstr( command, "jointeam " ) )
+		{
+			const char *pTeam = command + Q_strlen( "jointeam " );
+			int iTeam = TEAM_UNASSIGNED;
+
+			if ( Q_stricmp( pTeam, "spectate" ) == 0 || Q_stricmp( pTeam, "3" ) == 0)
+			{
+				iTeam = TEAM_SPECTATOR;
+			}
+			else if ( Q_stricmp( pTeam, "red" ) == 0 || Q_stricmp( pTeam, "1" ) == 0)
+			{
+				iTeam = TEAM_RED;
+			}
+			else if ( Q_stricmp( pTeam, "blue" ) == 0 || Q_stricmp( pTeam, "2" ) == 0)
+			{
+				iTeam = TEAM_BLUE;
+			}
+			else if ( Q_stricmp( pTeam, "random" ) == 0 || Q_stricmp( pTeam, "4" ) == 0 || Q_stricmp( pTeam, "0" ) == 0)
+			{
+				iTeam = TEAM_RANDOM;
+			}
+			// are we selecting the team we're already on?
+			if ( g_iTeamNumber != iTeam )
+			{
+				engine->pfnClientCmd( (char *)command );
+				engine->pfnClientCmd( "\n" );
+			}
+		}
+		else if ( Q_strstr( command, "jointeam_nomenus " ) )
+		{
+			engine->pfnClientCmd( (char *)command );
+			engine->pfnClientCmd( "\n" );
+		}
 	}
 
 	BaseClass::OnCommand(command);
-}
-
-void CTFTeamMenu::PaintBackground(void)
-{
-	BaseClass::PaintBackground();
+	ShowPanel( false );
+	OnClose();
 }
 
 void CTFTeamMenu::PerformLayout(void)

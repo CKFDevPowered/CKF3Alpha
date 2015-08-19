@@ -2866,3 +2866,49 @@ const char *ISurface::GetBitmapFontName(const char *pName)
 {
 	return g_Surface.GetBitmapFontName(pName);
 }
+
+//void TestFuckup(void)
+//{
+//		int i;
+//		int _needMouse = false;
+//		int _needKB = false;
+//
+//		for(i = 0 ; i < surface()->GetPopupCount() ; i++ )
+//		{
+//			VPanel *pop = (VPanel *)surface()->GetPopup( i ) ;
+//
+//			bool isVisible=pop->IsVisible();
+//
+//			if (pop)
+//			{
+//				const char *name = pop->GetName();
+//				if (name && strlen(name) > 0)
+//					Msg("!!!!!!!!!!TestFuckup:%s isVisible:%d\n", name, isVisible);
+//			}
+//
+//			VPanel *p= pop->GetParent();
+//
+//			while(p && isVisible)
+//			{
+//				if( p->IsVisible()==false)
+//				{
+//					isVisible=false;
+//					break;
+//				}
+//				p=p->GetParent();
+//			}
+//
+//			if (p)
+//			{
+//				const char *name = p->GetName();
+//				if (name && strlen(name) > 0)
+//					Msg("TestFuckup:%s isVisible:%d\n", name, isVisible);
+//			}
+//			if(isVisible)
+//			{
+//				_needMouse |= pop->IsMouseInputEnabled();
+//				_needKB |= pop->IsKeyBoardInputEnabled();
+//			}
+//		}
+//		Msg("TestFuckup:%d %d\n", _needMouse, _needKB);
+//}

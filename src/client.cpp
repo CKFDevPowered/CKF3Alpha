@@ -162,6 +162,7 @@ void CL_Init(void)
 	{
 		cl_name->flags &= ~FCVAR_PRINTABLEONLY;
 	}
+
 }
 
 void CL_VidInit(void)

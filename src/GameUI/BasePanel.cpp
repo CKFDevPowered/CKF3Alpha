@@ -33,6 +33,8 @@
 #include "CreateMultiplayerGameDialog.h"
 #include "GameMenu.h"
 
+#include <metahook.h>
+
 using namespace vgui;
 
 extern vgui::DHANDLE<CLoadingDialog> g_hLoadingDialog;
@@ -303,7 +305,7 @@ void CBasePanel::DrawBackgroundImage(void)
 
 	if (IsPC() && (m_bRenderingBackgroundTransition || (m_eBackgroundState == BACKGROUND_LOADING || m_eBackgroundState == BACKGROUND_MAINMENU)))
 	{
-		float xScale = swide / 800.0f;
+		/*float xScale = swide / 800.0f;
 		float yScale = stall / 600.0f;
 
 		int ypos = 0;
@@ -335,7 +337,11 @@ void CBasePanel::DrawBackgroundImage(void)
 			}
 
 			ypos += m_ImageID[y][0].height;
-		}
+		}*/
+
+		surface()->DrawSetColor(255, 255, 255, alpha);
+		surface()->DrawSetTexture(m_ImageID.imageID);
+		surface()->DrawTexturedRect(swide/2 - (16 * tall / 9) / 2, 0, swide/2 + (16 * tall / 9) / 2, stall);
 
 		if (m_eBackgroundState == BACKGROUND_LOADING)
 		{
@@ -467,7 +473,7 @@ void CBasePanel::ApplySchemeSettings(IScheme *pScheme)
 	m_flFrameFadeInTime = atof(pScheme->GetResourceString("Frame.TransitionEffectTime"));
 	m_BackdropColor = pScheme->GetColor("mainmenu.backdrop", Color(0, 0, 0, 128));
 
-	for (int y = 0; y < BACKGROUND_ROWS; y++)
+	/*for (int y = 0; y < BACKGROUND_ROWS; y++)
 	{
 		for (int x = 0; x < BACKGROUND_COLUMNS; x++)
 		{
@@ -479,7 +485,13 @@ void CBasePanel::ApplySchemeSettings(IScheme *pScheme)
 			surface()->DrawSetTextureFile(bimage.imageID, filename, false, false);
 			surface()->DrawGetTextureSize(bimage.imageID, bimage.width, bimage.height);
 		}
-	}
+	}*/
+
+	m_ImageID.imageID = surface()->CreateNewTextureID();
+	char filename[MAX_PATH];
+	sprintf(filename, "gfx/vgui/console/background%02d_widescreen", gEngfuncs.pfnRandomLong(1, 2));	
+	surface()->DrawSetTextureFile(m_ImageID.imageID, filename, false, false);
+	surface()->DrawGetTextureSize(m_ImageID.imageID, m_ImageID.width, m_ImageID.height);
 
 	if (IsPC())
 	{

@@ -37,7 +37,7 @@ public:
 
 private:
 	bool IsDisabled();
-	void SendAnimation( const char *pszAnimation );
+	void SendAnimation( const char * pszAnimation, bool reverse = false );
 	void SetMouseEnteredState( bool state );
 
 private:
@@ -47,7 +47,7 @@ private:
 	float	m_flHoverTimeToWait;	// length of time to wait before reporting a "hover" message (-1 = no hover)
 	float	m_flHoverTime;			// when should a "hover" message be sent?
 	bool	m_bMouseEntered;		// used to track when the mouse is over a button
-	bool	m_bTeamDisabled;		// used to keep track of whether our team is a valid team for selection
+	bool	m_bTeamDisabled;
 };
 
 class CTFTeamMenu : public CTeamMenu
@@ -57,7 +57,6 @@ private:
 
 public:
 	CTFTeamMenu(void);
-	~CTFTeamMenu(void);
 
 public:
 	void Update(void);
@@ -75,7 +74,6 @@ private:
 private:
 
 public:
-	virtual void PaintBackground(void);
 	virtual void PerformLayout(void);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 
@@ -83,12 +81,14 @@ public:
 	TFTeamButton	*m_pRedTeamButton;
 	TFTeamButton	*m_pAutoTeamButton;
 	TFTeamButton	*m_pSpecTeamButton;
-	vgui::ImagePanel		*m_pSpectateImage;
-	vgui::ModelPanel		*m_pModelPanel[3];
-	vgui::Label		*m_pSpecLabel;
+
+	vgui::ImagePanel		*m_pBlueDisableImage;
+	vgui::ImagePanel		*m_pRedDisableImage;
+	vgui::ImagePanel		*m_pSpecDisableImage;
+
+	vgui::ModelPanel		*m_pModelPanel[4];
+	vgui::Label			*m_pSpecLabel;
 	vgui::Button		*m_pCancelButton;
-	bool m_bRedDisabled;
-	bool m_bBlueDisabled;
 
 	vgui::KeyCode	m_iTeamMenuKey;
 };

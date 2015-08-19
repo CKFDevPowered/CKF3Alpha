@@ -23,7 +23,7 @@ public:
 	MouseOverButton(vgui::Panel *parent, const char *panelName, T *templatePanel) : Button(parent, panelName, "MouseOverButton")
 	{
 		m_pPanel = new T(parent, NULL);
-		m_pPanel ->SetVisible(false);
+		m_pPanel->SetVisible(false);
 
 		int x, y, wide, tall;
 		templatePanel->GetBounds(x, y, wide, tall);

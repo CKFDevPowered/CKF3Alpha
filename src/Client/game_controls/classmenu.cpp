@@ -96,6 +96,7 @@ void CClassMenu::OnCommand(const char *command)
 	if (Q_stricmp(command, "vguicancel"))
 	{
 		engine->pfnClientCmd(const_cast<char *>(command));
+		engine->pfnClientCmd("\n");
 	}
 
 	Close();
