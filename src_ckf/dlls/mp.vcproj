@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="E:\CSBTE\Test\csbte\dlls\mp.dll"
+				OutputFile="..\..\Test\csbte\dlls\mp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="mp.def"
@@ -216,7 +216,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\mp.dll ..\..\ckf3\ckf3\dlls\mp.dll&#x0D;&#x0A;copy $(OutDir)\mp.dll F:\CSBTE\Test\csbte\dlls\mp.dll&#x0D;&#x0A;"
+				CommandLine="copy $(OutDir)\mp.dll ..\..\Test\csbte\dlls\mp.dll&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

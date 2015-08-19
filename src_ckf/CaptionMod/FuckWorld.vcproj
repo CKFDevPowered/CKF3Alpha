@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib"
-				OutputFile="F:\CSBTE\Test\csbte\ckf3.dll"
+				OutputFile="..\..\Test\ckf3.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\..\ckf3\ckf3\metahook\ckf3.dll&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll F:\CSBTE\Test\csbte\ckf3.dll&#x0D;&#x0A;"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\..\test\metahook\ckf3.dll&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll ..\..\Test\csbte\ckf3.dll"
 			/>
 		</Configuration>
 	</Configurations>
