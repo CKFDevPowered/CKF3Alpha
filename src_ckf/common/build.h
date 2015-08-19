@@ -1,0 +1,1 @@
+int getbuildnum(void);

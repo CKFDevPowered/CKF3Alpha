@@ -1,0 +1,1 @@
+typedef float vec3_t[3];
