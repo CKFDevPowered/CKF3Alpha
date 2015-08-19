@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="F:\CSBTE\Test\csbte\dlls\mp.dll"
+				OutputFile="E:\CSBTE\Test\csbte\dlls\mp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="mp.def"

@@ -36,6 +36,7 @@
 #define TEAM_CT 2
 #define TEAM_RED 1
 #define TEAM_BLU 2
+#define TEAM_BLUE 2
 #define TEAM_SPECTATOR 3
 
 #define CLASS_UNASSIGNED 0
@@ -79,6 +80,8 @@
 #define MENU_CLASS 11
 #define MENU_INTRO 12
 #define MENU_MAPINFO 13
+#define MENU_CLASS_RED 14
+#define MENU_CLASS_BLUE 15
 
 #define MENUBUF_MOTD 1
 #define MENUBUF_MAPINFO 2

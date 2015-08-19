@@ -647,7 +647,7 @@ extern int gmsgStatusIcon;
 int HandleMenu_ChooseClass(CBasePlayer *pPlayer, int keys)
 {
 	char *model;
-	if(keys >= 10)
+	if(keys <= 0 || keys >= 10)
 		keys = RANDOM_LONG(1,9);
 
 	if(pPlayer->m_iNewClass == keys)
@@ -939,7 +939,7 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 
 	if(pPlayer->m_iNewClass == 0)
 	{
-		ShowMGUIMenu(pPlayer, MENU_CLASS, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0);
+		ShowVGUIMenu(pPlayer, (team == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLUE, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 	}
 
 	if (team != TEAM_UNASSIGNED)
@@ -1368,11 +1368,11 @@ if (FStrEq(pcmd, "fullupdate"))
 		return;
 	}
 
-	if (FStrEq(pcmd, "chooseclass"))
+	if (FStrEq(pcmd, "chooseclass") || FStrEq(pcmd, "changeclass") )
 	{
 		if(pPlayer->m_iMenu == MENU_TEAM || pPlayer->m_iMenu == MENU_INTRO)
 			return;
-		ShowVGUIMenu(pPlayer, MENU_CLASS, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
+		ShowVGUIMenu(pPlayer, (pPlayer->m_iTeam == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLUE, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 		//ShowVGUIMenu(pPlayer, MENU_TEAM, 0, "");
 		return;
 	}
@@ -1393,7 +1393,7 @@ if (FStrEq(pcmd, "fullupdate"))
 		ShowVGUIMenu(pPlayer, MENU_CLASS, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 	}
 
-	if (FStrEq(pcmd, "chooseteam"))
+	if (FStrEq(pcmd, "chooseteam") || FStrEq(pcmd, "changeteam"))
 	{
 		if(pPlayer->m_iMenu == MENU_CLASS)
 			return;
@@ -1422,7 +1422,7 @@ if (FStrEq(pcmd, "fullupdate"))
 		if (HandleMenu_ChooseTeam(pPlayer, keys)) return;
 
 		int menukeys = KEY_1 | KEY_2 | KEY_3 | KEY_4 | KEY_0;
-		if (!allow_spectators.value)
+		if (!allow_spectators.value)//these keys are only for text menus
 			menukeys &= ~KEY_2;
 		if(pPlayer->m_iJoiningState != JOINED)
 			menukeys &= ~KEY_0;
