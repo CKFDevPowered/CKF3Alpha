@@ -232,6 +232,8 @@ void CHudStatusBar::ParseStatusString(int line_num)
 
 int CHudStatusBar::Draw(float fTime)
 {
+	return 0;
+
 	if (m_bReparseString)
 	{
 		for (int i = 0; i < MAX_STATUSBAR_LINES; i++)

@@ -126,7 +126,7 @@ void CTFMapInfoMenu::CheckBackContinueButtons()
 {
 	if ( m_pBack && m_pContinue )
 	{
-		if ( g_iTeamNumber == TEAM_UNASSIGNED )
+		if ( (*gCKFVars.g_iTeam) == TEAM_UNASSIGNED )
 		{
 			m_pBack->SetVisible( true );
 			m_pContinue->SetText( "#CKF3_Continue" );

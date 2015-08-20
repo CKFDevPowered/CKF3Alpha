@@ -15,8 +15,8 @@ int CHudBattery::Init(void)
 	m_iFlags = 0;
 	m_iArmorType = 0;
 
-	g_pfnMSG_Battery = HOOK_MESSAGE(Battery);
-	g_pfnMSG_ArmorType = HOOK_MESSAGE(ArmorType);
+	//g_pfnMSG_Battery = HOOK_MESSAGE(Battery);
+	//g_pfnMSG_ArmorType = HOOK_MESSAGE(ArmorType);
 
 	gHUD.AddHudElem(this);
 
@@ -65,6 +65,8 @@ int CHudBattery::MsgFunc_ArmorType(const char *pszName, int iSize, void *pbuf)
 
 int CHudBattery::Draw(float flTime)
 {
+	return 0;
+
 	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || g_iUser1)
 		return 1;
 

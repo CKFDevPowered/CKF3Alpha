@@ -196,11 +196,8 @@ void CCounterStrikeViewport::DeathMsg(int killer, int victim)
 	m_pfnCounterStrikeViewpot_DeathMsg(this, 0, killer, victim);
 }
 
-extern void CKF_ShowScoreBoard(bool state);
-
 void CCounterStrikeViewport::ShowScoreBoard(void)
 {
-	//CKF_ShowScoreBoard(true);
 	g_pViewPort->ShowScoreBoard();
 }
 
@@ -225,7 +222,6 @@ bool CCounterStrikeViewport::IsScoreBoardVisible(void)
 
 void CCounterStrikeViewport::HideScoreBoard(void)
 {
-	//CKF_ShowScoreBoard(false);
 	g_pViewPort->HideScoreBoard();
 }
 

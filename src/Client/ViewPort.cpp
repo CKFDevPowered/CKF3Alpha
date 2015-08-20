@@ -29,6 +29,10 @@
 #include "vgui/tfteammenu.h"
 #include "vgui/tfclassmenu.h"
 
+#include <ICKFClient.h>
+
+extern ICKFClient *g_pCKFClient;
+
 Panel *g_lastPanel = NULL;
 Button *g_lastButton = NULL;
 
@@ -174,7 +178,8 @@ void CViewport::Think(void)
 {
 	m_flCurrentTime = gEngfuncs.GetAbsoluteTime();
 
-	if (!m_pScoreBoard->IsVisible())
+	//if (!m_pScoreBoard->IsVisible())
+	if (!g_pCKFClient->IsScoreBoardVisible())
 	{
 		if (m_PendingDialogs.Count() > 1 && !m_PendingDialogs.Head()->IsVisible())
 		{
@@ -191,8 +196,8 @@ void CViewport::Think(void)
 		}
 	}
 
-	if (m_pScoreBoard->IsVisible() && m_pScoreBoard->NeedsUpdate())
-		m_pScoreBoard->Update();
+	//if (m_pScoreBoard->IsVisible() && m_pScoreBoard->NeedsUpdate())
+	//	m_pScoreBoard->Update();
 
 	if (m_pSpectatorGUI->IsVisible() && m_pSpectatorGUI->NeedsUpdate())
 		m_pSpectatorGUI->Update();
@@ -209,14 +214,11 @@ bool CViewport::ShowVGUIMenu(int iMenu)
 
 	switch (iMenu)
 	{
-		//case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
-		//case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
-
 		case MENU_INTRO:panel = m_pTextWindow;break;
 		case MENU_MAPINFO: panel = m_pMapInfoMenu;break;
 		case MENU_TEAM: panel = m_pTeamMenu; break;
 		case MENU_CLASS_RED: panel = m_pClassMenu;m_pClassMenu->SetTeam(TEAM_RED);break;
-		case MENU_CLASS_BLUE: panel = m_pClassMenu;m_pClassMenu->SetTeam(TEAM_BLUE);break;
+		case MENU_CLASS_BLU: panel = m_pClassMenu;m_pClassMenu->SetTeam(TEAM_BLUE);break;
 		case MENU_BUY:
 		case MENU_BUY_PISTOL:
 		case MENU_BUY_SHOTGUN:
@@ -252,12 +254,10 @@ bool CViewport::HideVGUIMenu(int iMenu)
 
 	switch (iMenu)
 	{
-		//case MENU_CLASS_T: panel = m_pClassMenu_TER; break;
-		//case MENU_CLASS_CT: panel = m_pClassMenu_CT; break;
 		case MENU_INTRO:panel = m_pTextWindow;break;
 		case MENU_MAPINFO: panel = m_pMapInfoMenu;break;
 		case MENU_TEAM: panel = m_pTeamMenu; break;
-		case MENU_CLASS: panel = m_pClassMenu;break;
+		case MENU_CLASS_RED:case MENU_CLASS_BLU: panel = m_pClassMenu;break;
 
 		case MENU_BUY:
 		case MENU_BUY_PISTOL:
@@ -422,7 +422,8 @@ int CViewport::GetSpectatorTopBarHeight(void)
 
 bool CViewport::IsScoreBoardVisible(void)
 {
-	return m_pScoreBoard->IsVisible();
+	//return m_pScoreBoard->IsVisible();
+	return g_pCKFClient->IsScoreBoardVisible();
 }
 
 void CViewport::ShowScoreBoard(void)
@@ -430,10 +431,11 @@ void CViewport::ShowScoreBoard(void)
 	if (!IsInLevel())
 		return;
 
-	if (m_pScoreBoard->IsVisible())
-		return;
+	//if (m_pScoreBoard->IsVisible())
+	//	return;
 
-	ShowPanel(m_pScoreBoard, true);
+	//ShowPanel(m_pScoreBoard, true);
+	g_pCKFClient->ShowScoreBoard(true);
 }
 
 void CViewport::HideScoreBoard(void)
@@ -441,10 +443,11 @@ void CViewport::HideScoreBoard(void)
 	if (!IsInLevel())
 		return;
 
-	if (!m_pScoreBoard->IsVisible())
-		return;
+	//if (!m_pScoreBoard->IsVisible())
+	//	return;
 
-	ShowPanel(m_pScoreBoard, false);
+	//ShowPanel(m_pScoreBoard, false);
+	g_pCKFClient->ShowScoreBoard(false);
 }
 
 CViewPortPanel *CViewport::AddNewPanel(CViewPortPanel *pPanel, char const *pchDebugName)

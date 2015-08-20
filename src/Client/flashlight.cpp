@@ -79,6 +79,8 @@ int CHudFlashlight::MsgFunc_Flashlight(const char *pszName, int iSize, void *pbu
 
 int CHudFlashlight::Draw(float flTime)
 {
+	return 0;
+
 	if (gHUD.m_iHideHUDDisplay & (HIDEHUD_FLASHLIGHT | HIDEHUD_ALL))
 		return 1;
 

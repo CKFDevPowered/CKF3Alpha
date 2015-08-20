@@ -5,6 +5,18 @@
 #pragma once
 #endif
 
+#include "ckfvars.h"
+
+typedef void (*xcommand_t)(void);
+
+typedef struct
+{
+	int (*GetHUDFov)(void);
+	float *(*GetPunchAngles)(void);
+	pfnUserMsgHook (*HookUserMsg)(char *pMsgName, pfnUserMsgHook pfnHook);
+	xcommand_t (*HookCmd)(char *cmd_name, xcommand_t newfuncs);
+}bte_funcs_t;
+
 class ICKFClient : public IBaseInterface
 {
 public:
@@ -17,8 +29,10 @@ public:
 	virtual void GetClientFuncs(cl_exportfuncs_t *pExportfuncs);
 	virtual void GetBTEFuncs(bte_funcs_t *pBTEFuncs);
 	virtual void ShowScoreBoard(bool state);
+	virtual bool IsScoreBoardVisible(void);
 	virtual int SwitchWeapon(int slot);
 	virtual void Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h);
+	virtual void GetCKFVars(ckf_vars_t *pCKFVars);
 };
 
 #define CKFCLIENT_API_VERSION "CKFCLIENT_API_VERSION001"

@@ -602,7 +602,7 @@ void CL_CreateMove(float frametime, struct usercmd_s *cmd, int active)
 
 	gEngfuncs.GetViewAngles((float *)viewangles);
 
-	if (gHUD.m_Health.m_iHealth > 0)
+	if ((*gCKFVars.g_iHealth) > 0)
 	{
 		VectorCopy(viewangles, cmd->viewangles);
 		VectorCopy(viewangles, oldangles);
@@ -618,7 +618,7 @@ void CL_CreateMove(float frametime, struct usercmd_s *cmd, int active)
 
 int CL_IsDead(void)
 {
-	return (gHUD.m_Health.m_iHealth <= 0) ? 1 : 0;
+	return ((*gCKFVars.g_iHealth) <= 0) ? 1 : 0;
 }
 
 int CL_ButtonBits(int bResetState)
@@ -700,7 +700,7 @@ int CL_ButtonBits(int bResetState)
 		bits |= IN_SCORE;
 	}
 
-	if (CL_IsDead() || gHUD.m_iIntermission)
+	if (CL_IsDead() && gHUD.m_iIntermission)
 	{
 		bits |= IN_SCORE;
 	}

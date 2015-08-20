@@ -146,6 +146,8 @@ int CHudHealth::Draw(float flTime)
 	int a = 0, x, y;
 	int HealthWidth;
 
+	return 0;
+
 	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || g_iUser1)
 		return 1;
 

@@ -45,6 +45,8 @@ int CHudGeiger::Draw(float flTime)
 	int rg[3];
 	int i;
 
+	return 0;
+
 	if (m_iGeigerRange < 1000 && m_iGeigerRange > 0)
 	{
 		if (m_iGeigerRange > 800)

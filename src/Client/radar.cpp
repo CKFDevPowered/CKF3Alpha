@@ -103,6 +103,8 @@ int CHudRadar::MsgFunc_Radar(const char *pszName, int iSize, void *pbuf)
 
 int CHudRadar::Draw(float flTime)
 {
+	return 0;
+
 	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_HEALTH) || g_iUser1)
 		return 1;
 

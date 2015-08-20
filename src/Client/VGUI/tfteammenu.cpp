@@ -270,11 +270,11 @@ CTFTeamMenu::CTFTeamMenu(void) : CTeamMenu()
 
 bool CTFTeamMenu::IsTeamDisabled(int iTeam)
 {
-	if(iTeam == TEAM_RED && g_iTeamNumber == TEAM_RED)
+	if(iTeam == TEAM_RED && (*gCKFVars.g_iTeam) == TEAM_RED)
 	{
 		return true;
 	}
-	if(iTeam == TEAM_BLUE && g_iTeamNumber == TEAM_BLUE)
+	if(iTeam == TEAM_BLUE && (*gCKFVars.g_iTeam) == TEAM_BLUE)
 	{
 		return true;
 	}
@@ -292,6 +292,9 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 		m_pModelPanel[1]->LoadModel();
 		m_pModelPanel[2]->LoadModel();
 		m_pModelPanel[3]->LoadModel();
+
+		if (m_iTeamMenuKey == KEY_NONE)
+			m_iTeamMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeteam");
 	}
 
 	BaseClass::ShowPanel(bShow);
@@ -301,15 +304,15 @@ void CTFTeamMenu::Update(void)
 {
 	if (gViewPortInterface->GetAllowSpectators())
 	{
-		if (g_iTeamNumber == TEAM_UNASSIGNED || g_iFreezeTimeOver || (g_PlayerExtraInfo[gHUD.m_iPlayerNum].dead))
-			m_pSpecTeamButton->SetVisible( true );
+		if ((*gCKFVars.g_iTeam) == TEAM_UNASSIGNED || g_iFreezeTimeOver || (!gCKFVars.g_PlayerInfo[gHUD.m_iPlayerNum].bIsAlive))
+			SetVisibleButton("specbutton", true);
 		else
-			m_pSpecTeamButton->SetVisible( false );
+			SetVisibleButton("specbutton", false);
 	}
 	else
-		m_pSpecTeamButton->SetVisible( false );
+		SetVisibleButton("specbutton", false);
 
-	if ( g_iTeamNumber != TEAM_UNASSIGNED )
+	if ( (*gCKFVars.g_iTeam) != TEAM_UNASSIGNED )
 	{
 		if ( m_pCancelButton )
 		{
@@ -334,8 +337,6 @@ void CTFTeamMenu::OnCommand(const char *command)
 {
 	if (Q_stricmp(command, "vguicancel"))
 	{
-		//engine->pfnClientCmd(const_cast<char *>(command));
-
 		// we're selecting a team, so make sure it's not the team we're already on before sending to the server
 		if ( Q_strstr( command, "jointeam " ) )
 		{
@@ -371,10 +372,8 @@ void CTFTeamMenu::OnCommand(const char *command)
 			engine->pfnClientCmd( "\n" );
 		}
 	}
-
-	BaseClass::OnCommand(command);
+	engine->pfnClientCmd( "closemenu\n" );
 	ShowPanel( false );
-	OnClose();
 }
 
 void CTFTeamMenu::PerformLayout(void)
@@ -387,4 +386,43 @@ void CTFTeamMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	Update();
+}
+
+void CTFTeamMenu::SetVisibleButton(const char *textEntryName, bool state)
+{
+	Button *entry = dynamic_cast<Button *>(FindChildByName(textEntryName));
+
+	if (entry)
+		entry->SetVisible(state);
+}
+
+void CTFTeamMenu::OnKeyCodePressed( KeyCode code )
+{
+	if ( m_iTeamMenuKey != KEY_NONE && m_iTeamMenuKey == code )
+	{
+		if ( (*gCKFVars.g_iTeam) != TEAM_UNASSIGNED )
+		{
+			ShowPanel( false );
+		}
+	}
+	else if( code == KEY_1 )
+	{
+		m_pAutoTeamButton->PostActionSignal(m_pAutoTeamButton->GetCommand());
+	}
+	else if( code == KEY_2 )
+	{
+		m_pSpecTeamButton->PostActionSignal(m_pSpecTeamButton->GetCommand());
+	}
+	else if( code == KEY_3 )
+	{
+		m_pBlueTeamButton->PostActionSignal(m_pBlueTeamButton->GetCommand());
+	}
+	else if( code == KEY_3 )
+	{
+		m_pRedTeamButton->PostActionSignal(m_pRedTeamButton->GetCommand());
+	}
+	else
+	{
+		BaseClass::OnKeyCodePressed( code );
+	}
 }

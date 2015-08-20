@@ -82,6 +82,8 @@ int CHudScoreboard::MsgFunc_TeamScore(const char *pszName, int iSize, void *pbuf
 
 int CHudScoreboard::Draw(float flTime)
 {
+	return 0;
+
 	if (!cl_scoreboard->value)
 		return 1;
 

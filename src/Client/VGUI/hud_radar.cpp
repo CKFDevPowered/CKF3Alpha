@@ -287,6 +287,8 @@ void CHudRadar::CalcRefdef(struct ref_params_s *pparams)
 
 void CHudRadar::Paint(void)
 {
+	return;
+
 	if (!cl_newradar->value)
 		return;
 

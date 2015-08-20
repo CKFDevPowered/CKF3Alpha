@@ -32,6 +32,10 @@ typedef float vec3_t[3];
 #include <ref_int.h>
 #include <game_controls/ModelPanel.h>
 
+#include <ICKFClient.h>
+
+extern ICKFClient *g_pCKFClient;
+
 using namespace vgui;
 
 extern engine_studio_api_t IEngineStudio;
@@ -164,8 +168,6 @@ void ModelPanel::Think()
 	VectorCopy(_angles, _entity.angles);
 }
 
-void CKF_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h);
-
 void ModelPanel::PaintTraverse(bool Repaint, bool allowForce)
 {
 	int w, h;
@@ -178,5 +180,5 @@ void ModelPanel::PaintTraverse(bool Repaint, bool allowForce)
 	int clipRect[4];
 	ipanel()->GetClipRect( GetVPanel(), clipRect[0], clipRect[1], clipRect[2], clipRect[3] );
 
-	CKF_Draw3DHUDStudioModel(&_entity, clipRect[0], clipRect[1], clipRect[2]-clipRect[0], clipRect[3]-clipRect[1]);
+	g_pCKFClient->Draw3DHUDStudioModel(&_entity, clipRect[0], clipRect[1], clipRect[2]-clipRect[0], clipRect[3]-clipRect[1]);
 }

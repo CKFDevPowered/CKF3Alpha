@@ -550,7 +550,8 @@ void V_CalcNormalRefdef(struct ref_params_s *pparams)
 	}
 
 	VectorAdd(pparams->viewangles, pparams->punchangle, pparams->viewangles);
-	VectorAdd(pparams->punchangle, ev_punchangle, pparams->punchangle);
+	VectorAdd(pparams->viewangles, ev_punchangle, pparams->viewangles);
+	V_DropPunchAngle ( pparams->frametime, (float *)&ev_punchangle );
 
 #if 1
 	if (!pparams->smoothing && pparams->onground && pparams->simorg[2] - oldz > 0)
@@ -1389,7 +1390,7 @@ void V_DropPunchAngle(float frametime, float *ev_punch)
 
 float *EV_GetPunchAngles(void)
 {
-	return ev_punchangle;
+	return &ev_punchangle.x;
 }
 
 void V_PunchAxis(int axis, float punch)

@@ -7,6 +7,9 @@
 #include "weapons.h"
 #include "configs.h"
 #include "CounterStrikeViewport.h"
+#include <ICKFClient.h>
+
+extern ICKFClient *g_pCKFClient;
 
 WEAPON *gpActiveSel;
 WEAPON *gpLastSel;
@@ -373,6 +376,8 @@ int CHudAmmo::VidInit(void)
 
 void CHudAmmo::Think(void)
 {
+	return;
+
 	if (gHUD.m_fPlayerDead)
 		return;
 
@@ -436,8 +441,6 @@ HSPRITE *WeaponsResource::GetAmmoPicFromWeapon(int iAmmoId, wrect_t &rect)
 	return NULL;
 }
 
-void CKF_SwitchWeapon(int slot);
-
 void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 {
 	if (gHUD.m_Menu.m_fMenuDisplayed && (fAdvance == FALSE) && (iDirection == 1))
@@ -452,7 +455,7 @@ void WeaponsResource::SelectSlot(int iSlot, int fAdvance, int iDirection)
 	if (gHUD.m_fPlayerDead || gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL))
 		return;
 
-	CKF_SwitchWeapon(iSlot);
+	g_pCKFClient->SwitchWeapon(iSlot);
 
 	/*if (!(gHUD.m_iWeaponBits & (1 << (WEAPON_SUIT))))
 		return;
@@ -955,6 +958,8 @@ int CHudAmmo::Draw(float flTime)
 	static wrect_t nullrc;
 	int a, x, y, r, g, b;
 	int AmmoWidth;
+
+	return 0;
 
 	if (gEngfuncs.IsSpectateOnly())
 	{

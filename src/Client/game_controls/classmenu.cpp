@@ -16,6 +16,10 @@
 
 #include "game_controls/mouseoverpanelbutton.h"
 
+#include <ICKFClient.h>
+
+extern ICKFClient *g_pCKFClient;
+
 using namespace vgui;
 
 CClassMenu::CClassMenu(void) : Frame(NULL, NULL)
@@ -93,11 +97,10 @@ void CClassMenu::Reset(void)
 
 void CClassMenu::OnCommand(const char *command)
 {
-	if (Q_stricmp(command, "vguicancel"))
-	{
-		engine->pfnClientCmd(const_cast<char *>(command));
-		engine->pfnClientCmd("\n");
-	}
+	//if (Q_stricmp(command, "vguicancel"))
+	//{
+		//engine->pfnClientCmd(const_cast<char *>(command));
+	//}
 
 	Close();
 
@@ -169,8 +172,9 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 {
 	if (m_iScoreBoardKey != KEY_NONE && m_iScoreBoardKey == code)
 	{
-		g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
-		g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
+		//g_pCKFClient->ShowScoreBoard(true);
+		//g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
+		//g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
 	}
 	else
 		BaseClass::OnKeyCodePressed(code);

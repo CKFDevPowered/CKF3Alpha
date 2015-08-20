@@ -338,6 +338,7 @@ void CHud::Init(void)
 	m_Flash.Init();
 	m_StatusBar.Init();
 	m_VGUI2Print.Init();
+
 	GetClientVoice()->Init(&g_VoiceStatusHelper);
 
 	m_pCvarDraw = gEngfuncs.pfnGetCvarPointer("hud_draw");

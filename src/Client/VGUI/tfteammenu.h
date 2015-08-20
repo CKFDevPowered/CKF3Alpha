@@ -64,6 +64,7 @@ public:
 	void ShowPanel(bool bShow);
 	void SetVisible(bool state);
 	bool IsTeamDisabled(int iTeam);
+	void OnKeyCodePressed( vgui::KeyCode code );
 
 private:
 	enum { NUM_TEAMS = 3 };
@@ -76,6 +77,7 @@ private:
 public:
 	virtual void PerformLayout(void);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
+	void SetVisibleButton(const char *textEntryName, bool state);
 
 	TFTeamButton	*m_pBlueTeamButton;
 	TFTeamButton	*m_pRedTeamButton;

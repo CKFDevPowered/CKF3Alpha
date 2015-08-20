@@ -6,14 +6,15 @@
 #include "event_api.h"
 #include <cl_entity.h>
 
-DECLARE_MESSAGE(m_ViewModel, ViewBody)
+DECLARE_MESSAGE(m_ViewModel, ViewBodySkin)
 DECLARE_MESSAGE(m_ViewModel, ViewRender)
 
 int CHudViewModel::Init(void)
 {
 	m_iFlags = 0;
 
-	HOOK_MESSAGE(ViewBody);
+	HOOK_MESSAGE(ViewBodySkin);
+	HOOK_MESSAGE(ViewRender);
 
 	return 1;
 }
@@ -21,6 +22,7 @@ int CHudViewModel::Init(void)
 int CHudViewModel::VidInit(void)
 {
 	m_body = 0;
+	m_skin = 0;
 	m_rendermode = kRenderNormal;
 	m_renderamt = 0.0;
 	m_rendercolor.r = 0;
@@ -38,6 +40,7 @@ void CHudViewModel::CalcRefdef(struct ref_params_s *pparams)
 	if (viewmodel)
 	{
 		viewmodel->curstate.body = m_body;
+		viewmodel->curstate.skin = m_skin;
 		viewmodel->curstate.rendermode = m_rendermode;
 		viewmodel->curstate.renderamt = m_renderamt;
 		viewmodel->curstate.rendercolor.r = m_rendercolor.r;
@@ -47,11 +50,12 @@ void CHudViewModel::CalcRefdef(struct ref_params_s *pparams)
 	}
 }
 
-int CHudViewModel::MsgFunc_ViewBody(const char *pszName, int iSize, void *pbuf)
+int CHudViewModel::MsgFunc_ViewBodySkin(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 
 	m_body = READ_BYTE();
+	m_skin = READ_BYTE();
 
 	return 1;
 }

@@ -58,5 +58,4 @@ void HUD_PostRunCmd(struct local_state_s *from, struct local_state_s *to, struct
 
 	if(gCkfClientFuncs.HUD_PostRunCmd)
 		gCkfClientFuncs.HUD_PostRunCmd(from, to, cmd, runfuncs, time, random_seed);
-	//gExportfuncs.HUD_PostRunCmd(from, to, cmd, runfuncs, time, random_seed);
 }

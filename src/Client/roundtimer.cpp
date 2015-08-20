@@ -45,6 +45,8 @@ int CHudRoundTimer::Draw(float flTime)
 {
 	int r, g, b;
 
+	return 0;
+
 	if (m_flNewPeriod)
 	{
 		m_flTimeEnd = m_flNewPeriod + flTime;

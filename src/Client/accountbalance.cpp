@@ -45,6 +45,8 @@ void CHudAccountBalance::Reset(void)
 
 int CHudAccountBalance::Draw(float flTime)
 {
+	return 0;
+
 	if (gEngfuncs.IsSpectateOnly())
 		return 1;
 
