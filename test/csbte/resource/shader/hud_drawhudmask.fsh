@@ -9,7 +9,7 @@ void main()
 {
 	vec4 vBaseColor = texture2D(base, gl_TexCoord[0].xy);
 
-	if(src_col.r == vBaseColor.r && src_col.g == vBaseColor.g && src_col.b == vBaseColor.b)
+	if(src_col.r + 0.05 >= vBaseColor.r && src_col.g + 0.05 >= vBaseColor.g && src_col.b + 0.05 >= vBaseColor.b)
 		vBaseColor.rgb = gl_Color.rgb;
 
 	gl_FragColor = vBaseColor;
