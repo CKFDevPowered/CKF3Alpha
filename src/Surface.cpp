@@ -1,6 +1,8 @@
 #define ENABLE_HTMLWINDOW
 #define PROTECTED_THINGS_DISABLE
 
+#define _WIN32_WINNT 0x0501
+
 #include <metahook.h>
 #include "plugins.h"
 #include <VGUI/ISurface.h>

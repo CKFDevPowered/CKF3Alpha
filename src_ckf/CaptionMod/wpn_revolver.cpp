@@ -13,6 +13,9 @@ void CClientRevolver::Precache(void)
 
 BOOL CClientRevolver::Deploy(void)
 {
+	//Close disguise kit menu here
+	//ShowHudMenu(0, 0);
+
 	return GroupDeploy("models/CKF_III/v_revolver.mdl", "models/CKF_III/wp_group_rf.mdl", REVOLVER_DRAW, 0, 0, "shotgun");
 }
 

@@ -382,7 +382,7 @@ void CDemoGrenade::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, floa
 	pev->dmgtime = gpGlobals->time + 2.28;
 	pev->team = -1;
 
-	pev->classname = MAKE_STRING("pj_defgrenade");
+	//pev->classname = MAKE_STRING("pj_defgrenade");
 }
 
 void CDemoGrenade::GrenadeThink()
@@ -432,11 +432,6 @@ void CDemoGrenade::GrenadeThink()
 
 void CDemoGrenade::Killed(entvars_t *pevAttacker, int iGib)
 {
-	/*MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
-	WRITE_BYTE(FX_KILLTRAIL);
-	WRITE_SHORT(ENTINDEX(edict()));
-	MESSAGE_END();*/
-
 	pev->takedamage = DAMAGE_NO;
 	pev->owner = NULL;
 	SetThink(&CBaseEntity::SUB_Remove);

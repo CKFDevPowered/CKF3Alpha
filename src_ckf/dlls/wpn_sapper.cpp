@@ -3,6 +3,7 @@
 #include "cbase.h"
 #include "player.h"
 #include "weapons.h"
+#include "gamerules.h"
 
 enum sapper_e
 {
@@ -220,6 +221,8 @@ int CBuildSapper::TakeDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, fl
 
 	if (pev->health <= 0)
 	{
+		g_pGameRules->SapperKilled(this, pevAttacker, pevInflictor);
+
 		Killed(pevAttacker, GIB_NORMAL);
 		return 0;
 	}

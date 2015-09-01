@@ -289,10 +289,10 @@ void DrawTimer(void)
 			switch(g_iRoundStatus)
 			{
 			case ROUND_END:
-				wcscpy(szText, g_wszRoundStatus[2]);
+				wcscpy(szText, g_wszRoundStatus[1]);
 				break;
 			case ROUND_OVERTIME:
-				wcscpy(szText, g_wszRoundStatus[1]);
+				wcscpy(szText, g_wszRoundStatus[2]);
 				break;
 			case ROUND_WAIT:
 				wcscpy(szText, g_wszRoundStatus[3]);
@@ -592,6 +592,7 @@ void DrawControlPoints(void)
 {
 	int size = g_ControlPoints.size();
 	int x, y, w, h;
+	int brightAlpha;
 	for(int i = 0; i < size; ++i)
 	{
 		controlpoint_t *cp = &g_ControlPoints[i];
@@ -607,9 +608,11 @@ void DrawControlPoints(void)
 		h = g_whControlPoint.h;
 		g_pSurface->DrawTexturedRect(x, y, x+w, y+h);
 
+		
 		if(cp->iState == CP_CAPTURING)
 		{
-			g_pSurface->DrawSetColor(255,255,255,100);
+			brightAlpha = 100 + 50 * sin(g_flClientTime - cp->flMessageTime);
+			g_pSurface->DrawSetColor(255,255,255, brightAlpha);
 			g_pSurface->DrawSetTexture(g_texControlPointBright);
 			g_pSurface->DrawTexturedRect(x, y, x+w, y+h);
 
@@ -673,7 +676,7 @@ int HudObject_Redraw(float flTime, int iIntermission)
 	if(iIntermission)
 		return 0;
 
-	if(!(g_iHideHUD & HIDEHUD_TIMER))
+	if((g_iHideHUD & HIDEHUD_TIMER))
 		return 0;
 
 	if(g_iTeam == 1 || g_iTeam == 2)

@@ -15,7 +15,7 @@ BOOL CClientDisguiseKit::Deploy(void)
 {
 	//if(g_runfuncs)
 	//{
-	//	ShowHudMenu(HUDMENU_DISGUISE, 0);
+	//ShowHudMenu(HUDMENU_DISGUISE, 0);
 	//}
 
 	return GroupDeploy("models/CKF_III/v_disguisekit.mdl", "models/CKF_III/wp_group_rf.mdl", DISGUISEKIT_DRAW, 0, 0, "c4");

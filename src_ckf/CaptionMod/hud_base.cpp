@@ -127,9 +127,9 @@ int HudBase_VidInit(void)
 		HudCrosshair_VidInit();
 		HudOverlay_VidInit();
 
-		HudIntroMenu_VidInit();
-		HudTeamMenu_VidInit();
-		HudClassMenu_VidInit();
+		//HudIntroMenu_VidInit();
+		//HudTeamMenu_VidInit();
+		//HudClassMenu_VidInit();
 		HudBuildMenu_VidInit();
 		HudDemolishMenu_VidInit();
 		HudDisguiseMenu_VidInit();
@@ -138,7 +138,7 @@ int HudBase_VidInit(void)
 
 		HudDeathMsg_VidInit();
 		HudFloatText_VidInit();
-		HudScoreBoard_VidInit();
+		//HudScoreBoard_VidInit();
 		HudObject_VidInit();
 	}
 
@@ -147,7 +147,7 @@ int HudBase_VidInit(void)
 	HudClassMenu_Init();
 	HudBuild_Init();
 	HudDeathMsg_Init();
-	HudScoreBoard_Init();
+	//HudScoreBoard_Init();
 	HudObject_Init();
 
 	return 1;
@@ -160,24 +160,24 @@ int HudBase_Redraw(float flTime, int iIntermission)
 		g_ScoreBoardEnabled = TRUE;
 	}
 
-	if(HudBase_IsFullScreenMenu())
-	{
-		HudIntroMenu_Redraw(flTime, iIntermission);
-		HudTeamMenu_Redraw(flTime, iIntermission);
-		HudClassMenu_Redraw(flTime, iIntermission);
-	}
-	else
-	{
-		if(!g_ScoreBoardEnabled)
-		{
+	//if(HudBase_IsFullScreenMenu())
+	//{
+		//HudIntroMenu_Redraw(flTime, iIntermission);
+		//HudTeamMenu_Redraw(flTime, iIntermission);
+		//HudClassMenu_Redraw(flTime, iIntermission);
+	//}
+	//else
+	//{
+		//if(!g_ScoreBoardEnabled)
+		//{
 			HudOverlay_Redraw(flTime, iIntermission);
 			HudDeathMsg_Redraw(flTime, iIntermission);
 			HudObject_Redraw(flTime, iIntermission);
 			if(!(g_iHideHUD & HIDEHUD_ALL))
 			{
 				HudBuild_Redraw(flTime, iIntermission);
-				HudClass_Redraw(flTime, iIntermission);
-				HudHealth_Redraw(flTime, iIntermission);
+				//HudClass_Redraw(flTime, iIntermission);
+				//HudHealth_Redraw(flTime, iIntermission);
 				HudAmmo_Redraw(flTime, iIntermission);
 			}
 
@@ -191,29 +191,29 @@ int HudBase_Redraw(float flTime, int iIntermission)
 				HudDisguiseMenu_Redraw(flTime, iIntermission);
 			}
 			HudCrosshair_Redraw(flTime, iIntermission);
-		}
-		else
-		{
-			HudScoreBoard_Redraw(flTime, iIntermission);
-		}
-	}
+		//}
+		//else
+		//{
+		//	HudScoreBoard_Redraw(flTime, iIntermission);
+		//}
+	//}
 	return 1;
 }
 
 void HudBase_MouseUp(int mx, int my)
 {
-	if(g_bGameUIActivate)
-		return;
+	//if(g_bGameUIActivate)
+	//	return;
 
-	HudIntroMenu_MouseUp(mx, my);
-	HudTeamMenu_MouseUp(mx, my);
-	HudClassMenu_MouseUp(mx, my);	
+	//HudIntroMenu_MouseUp(mx, my);
+	//HudTeamMenu_MouseUp(mx, my);
+	//HudClassMenu_MouseUp(mx, my);	
 }
 
 void HudBase_MouseDown(int mx, int my)
 {
-	if(g_bGameUIActivate)
-		return;
+	//if(g_bGameUIActivate)
+	//	return;
 }
 
 int HudBase_KeyEvent(int eventcode, int keynum, const char *pszCurrentBinding)
@@ -221,26 +221,26 @@ int HudBase_KeyEvent(int eventcode, int keynum, const char *pszCurrentBinding)
 	if(g_bGameUIActivate)
 		return 0;
 
-	if(HudBase_IsFullScreenMenu())
-	{
-		if(HudIntroMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
-			return 1;
+	//if(HudBase_IsFullScreenMenu())
+	//{
+	//	if(HudIntroMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
+	//		return 1;
 
-		if(HudTeamMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
-			return 1;
+	//	if(HudTeamMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
+	//		return 1;
 
-		if(HudClassMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
-			return 1;
-	}
-	else
-	{
+	//	if(HudClassMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
+	//		return 1;
+	//}
+	//else
+	//{
 		if(HudBuildMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
 			return 1;
 		if(HudDemolishMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
 			return 1;
 		if(HudDisguiseMenu_KeyEvent(eventcode, keynum, pszCurrentBinding))
 			return 1;
-	}
+	//}
 	return 0;
 }
 
@@ -317,8 +317,8 @@ void HudBase_GetPlayerInfo(void)
 
 bool HudBase_IsFullScreenMenu(void)
 {
-	if(g_iMenu == MENU_CHOOSETEAM || g_iMenu == MENU_CHOOSECLASS || g_iMenu == MENU_INTRO)
-		return true;
+	//if(g_iMenu == MENU_CHOOSETEAM || g_iMenu == MENU_CHOOSECLASS || g_iMenu == MENU_INTRO)
+	//	return true;
 
 	return false;
 }

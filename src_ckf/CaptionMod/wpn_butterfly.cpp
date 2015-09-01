@@ -22,6 +22,9 @@ BOOL CClientButterfly::Deploy(void)
 {
 	m_iShotsFired = 0;
 
+	//Close disguise kit menu here
+	//ShowHudMenu(0, 0);
+
 	return GroupDeploy("models/CKF_III/v_butterfly.mdl", "models/CKF_III/wp_group_rf.mdl", BUTTERFLY_DRAW, 0, 0, "knife");
 }
 

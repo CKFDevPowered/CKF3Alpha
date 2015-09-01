@@ -21,12 +21,12 @@ wchar_t *ReadLocalizedString(wchar_t *pOut, int outSize, bool bStripNewline, cha
 
 namespace vgui
 {
-CHudMenu::CHudMenu(void) : BaseClass(NULL, "HudMenu")
+CHudNewMenu::CHudNewMenu(void) : BaseClass(NULL, "HudMenu")
 {
 	m_nSelectedItem = -1;
 }
 
-void CHudMenu::Init(void)
+void CHudNewMenu::Init(void)
 {
 	m_bMenuTakesInput = false;
 	m_bMenuDisplayed = false;
@@ -54,28 +54,28 @@ void CHudMenu::Init(void)
 	SetVisible(true);
 }
 
-void CHudMenu::Reset(void)
+void CHudNewMenu::Reset(void)
 {
 	g_szPrelocalisedMenuString2[0] = 0;
 	m_fWaitingForMore = false;
 }
 
-bool CHudMenu::IsMenuOpen(void)
+bool CHudNewMenu::IsMenuOpen(void)
 {
 	return m_bMenuDisplayed && m_bMenuTakesInput;
 }
 
-void CHudMenu::VidInit(void)
+void CHudNewMenu::VidInit(void)
 {
 }
 
-void CHudMenu::Think(void)
+void CHudNewMenu::Think(void)
 {
 	if (m_flShutoffTime > 0 && m_flShutoffTime <= g_pViewPort->GetCurrentTime())
 		m_bMenuDisplayed = false;
 }
 
-void CHudMenu::PaintString(const wchar_t *text, int textlen, vgui::HFont &font, int x, int y)
+void CHudNewMenu::PaintString(const wchar_t *text, int textlen, vgui::HFont &font, int x, int y)
 {
 	vgui::surface()->DrawSetTextFont(font);
 	vgui::surface()->DrawSetTextPos(x, y);
@@ -182,7 +182,7 @@ void CHudMenu::PaintString(const wchar_t *text, int textlen, vgui::HFont &font, 
 	}
 }
 
-void CHudMenu::Paint(void)
+void CHudNewMenu::Paint(void)
 {
 	if (!gHUD.m_pCvarDraw->value)
 		return;
@@ -237,7 +237,7 @@ void CHudMenu::Paint(void)
 	}
 }
 
-bool CHudMenu::SelectMenuItem(int menu_item)
+bool CHudNewMenu::SelectMenuItem(int menu_item)
 {
 	char szbuf[32];
 
@@ -255,7 +255,7 @@ bool CHudMenu::SelectMenuItem(int menu_item)
 	return false;
 }
 
-void CHudMenu::ProcessText(void)
+void CHudNewMenu::ProcessText(void)
 {
 	if (m_hTextFont == vgui::INVALID_FONT)
 		return;
@@ -338,13 +338,13 @@ void CHudMenu::ProcessText(void)
 	}
 }
 
-void CHudMenu::HideMenu(void)
+void CHudNewMenu::HideMenu(void)
 {
 	m_bMenuTakesInput = false;
 	m_flShutoffTime = g_pViewPort->GetCurrentTime() + m_flOpenCloseTime;
 }
 
-void CHudMenu::ShowMenu(const wchar_t *menuName, int validSlots)
+void CHudNewMenu::ShowMenu(const wchar_t *menuName, int validSlots)
 {
 	m_flShutoffTime = -1;
 	m_bitsValidSlots = validSlots;
@@ -361,7 +361,7 @@ void CHudMenu::ShowMenu(const wchar_t *menuName, int validSlots)
 	m_bMenuTakesInput = true;
 }
 
-int CHudMenu::FireMessage(const char *pszName, int iSize, void *pbuf)
+int CHudNewMenu::FireMessage(const char *pszName, int iSize, void *pbuf)
 {
 	if (!strcmp(pszName, "ShowMenu"))
 	{
@@ -408,7 +408,7 @@ int CHudMenu::FireMessage(const char *pszName, int iSize, void *pbuf)
 	return 0;
 }
 
-void CHudMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
+void CHudNewMenu::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 

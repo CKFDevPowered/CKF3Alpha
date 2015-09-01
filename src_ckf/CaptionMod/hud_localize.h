@@ -14,9 +14,9 @@ extern wchar_t g_wszDemolish[16];
 extern wchar_t g_wszDisguise[16];
 extern wchar_t g_wszRandom[16];
 
+extern wchar_t g_wszBuildables[5][64];
+extern char g_szBuildables[5][64];
 
-extern wchar_t g_wszBuildables[4][64];
-extern char g_szBuildables[4][64];
 extern wchar_t g_wszNotBuilt[32];
 extern char g_szNotBuilt[32];
 extern wchar_t g_wszBuilding[32];
@@ -24,6 +24,7 @@ extern char g_szAlreadyBuilt[32];
 extern char g_szNeedMetal[32];
 extern char g_szHudMenuBack[64];
 extern char g_szDisgMenuSwitch[64];
+extern wchar_t g_wszCloakEnergy[64];
 
 extern char g_szScoreBoardSpectator[32];
 extern char g_szScoreBoardName[16];
@@ -41,6 +42,11 @@ extern wchar_t g_wszPlayerStatsName[STATS_MAX_NUM-1][16];
 
 extern wchar_t g_wszClassTips[10][4][64];
 extern wchar_t g_wszRoundStatus[4][16];
+
+extern char g_szMsgCaptured[16];
+extern char g_szMsgDefended[16];
+extern char g_szMsgDominating[16];
+extern char g_szMsgRevenge[16];
 
 void LocalizeStringUTF8(char *inputString, int inputStringLength, const char *tokenString);
 void LocalizeStringUnicode(wchar_t *inputStringW, int inputStringWLength, const char *tokenString);

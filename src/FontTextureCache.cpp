@@ -16,6 +16,7 @@ int CFontTextureCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] =
 	32,
 	64,
 	128,
+	256
 };
 
 CFontTextureCache::CFontTextureCache(void): m_CharCache(0, 256, CacheEntryLessFunc)

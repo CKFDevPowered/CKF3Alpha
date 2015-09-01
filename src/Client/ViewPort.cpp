@@ -11,6 +11,8 @@
 #include "CSBackGroundPanel.h"
 #include "CounterStrikeViewport.h"
 
+#include <vgui_controls/AnimationController.h>
+
 #include "vgui/hud_layer.h"
 
 #include "game_controls/commandmenu.h"
@@ -18,16 +20,16 @@
 
 //#include "vgui/cstriketeammenu.h"
 //#include "vgui/cstrikeclassmenu.h"
-#include "vgui/cstrikeclientscoreboard.h"
+//#include "vgui/cstrikeclientscoreboard.h"
 //#include "vgui/cstriketextwindow.h"
 #include "vgui/cstrikespectatorgui.h"
 #include "vgui/cstrikebuymenu.h"
-#include "vgui/cstrikechatdialog.h"
 #include "vgui/cstrikechatdialog.h"
 #include "vgui/tftextwindow.h"
 #include "vgui/tfmapinfomenu.h"
 #include "vgui/tfteammenu.h"
 #include "vgui/tfclassmenu.h"
+#include "vgui/tfscoreboard.h"
 
 #include <ICKFClient.h>
 
@@ -76,6 +78,16 @@ CViewport::CViewport(void) : Panel(NULL, "NewClientViewport")
 
 	m_iMousePos[0] = 0;
 	m_iMousePos[1] = 0;
+
+	// Attempt to load all hud animations
+	if ( LoadHudAnimations() == false )
+	{
+		// Fall back to just the main
+		if ( GetAnimationController()->SetScriptFile( GetVPanel(), "scripts/HudAnimations.txt", true ) == false )
+		{
+			Assert(0);
+		}
+	}
 }
 
 CViewport::~CViewport(void)
@@ -178,8 +190,7 @@ void CViewport::Think(void)
 {
 	m_flCurrentTime = gEngfuncs.GetAbsoluteTime();
 
-	//if (!m_pScoreBoard->IsVisible())
-	if (!g_pCKFClient->IsScoreBoardVisible())
+	if (!m_pScoreBoard->IsVisible())
 	{
 		if (m_PendingDialogs.Count() > 1 && !m_PendingDialogs.Head()->IsVisible())
 		{
@@ -196,8 +207,8 @@ void CViewport::Think(void)
 		}
 	}
 
-	//if (m_pScoreBoard->IsVisible() && m_pScoreBoard->NeedsUpdate())
-	//	m_pScoreBoard->Update();
+	if (m_pScoreBoard->IsVisible() && m_pScoreBoard->NeedsUpdate())
+		m_pScoreBoard->Update();
 
 	if (m_pSpectatorGUI->IsVisible() && m_pSpectatorGUI->NeedsUpdate())
 		m_pSpectatorGUI->Update();
@@ -422,8 +433,7 @@ int CViewport::GetSpectatorTopBarHeight(void)
 
 bool CViewport::IsScoreBoardVisible(void)
 {
-	//return m_pScoreBoard->IsVisible();
-	return g_pCKFClient->IsScoreBoardVisible();
+	return m_pScoreBoard->IsVisible();
 }
 
 void CViewport::ShowScoreBoard(void)
@@ -431,11 +441,10 @@ void CViewport::ShowScoreBoard(void)
 	if (!IsInLevel())
 		return;
 
-	//if (m_pScoreBoard->IsVisible())
-	//	return;
+	if (m_pScoreBoard->IsVisible())
+		return;
 
-	//ShowPanel(m_pScoreBoard, true);
-	g_pCKFClient->ShowScoreBoard(true);
+	ShowPanel(m_pScoreBoard, true);
 }
 
 void CViewport::HideScoreBoard(void)
@@ -443,11 +452,10 @@ void CViewport::HideScoreBoard(void)
 	if (!IsInLevel())
 		return;
 
-	//if (!m_pScoreBoard->IsVisible())
-	//	return;
+	if (!m_pScoreBoard->IsVisible())
+		return;
 
-	//ShowPanel(m_pScoreBoard, false);
-	g_pCKFClient->ShowScoreBoard(false);
+	ShowPanel(m_pScoreBoard, false);
 }
 
 CViewPortPanel *CViewport::AddNewPanel(CViewPortPanel *pPanel, char const *pchDebugName)
@@ -632,7 +640,7 @@ void CViewport::CreateDefaultPanels(void)
 	//m_pClassMenu_CT = (CCSClassMenu_CT *)AddNewPanel(new CCSClassMenu_CT);
 	m_pClassMenu = (CTFClassMenu *)AddNewPanel(new CTFClassMenu);
 	m_pTextWindow = (CTFTextWindow *)AddNewPanel(new CTFTextWindow);
-	m_pScoreBoard = (CCSClientScoreBoardDialog *)AddNewPanel(new CCSClientScoreBoardDialog);
+	m_pScoreBoard = (CTFScoreBoardDialog *)AddNewPanel(new CTFScoreBoardDialog);
 	m_pSpectatorGUI = (CCSSpectatorGUI *)AddNewPanel(new CCSSpectatorGUI);
 	m_pSpectatorMenu = (CCSSpectatorMenu *)AddNewPanel(new CCSSpectatorMenu);
 	m_pBuyMenu_TER = (CCSBuyMenu_TER *)AddNewPanel(new CCSBuyMenu_TER);
@@ -832,4 +840,37 @@ int CViewport::FireMessage(const char *pszName, int iSize, void *pbuf)
 		return 1;
 
 	return 0;
+}
+
+bool CViewport::LoadHudAnimations( void )
+{
+	const char *HUDANIMATION_MANIFEST_FILE = "resource/hudanimations_manifest.txt";
+	KeyValues *manifest = new KeyValues( HUDANIMATION_MANIFEST_FILE );
+	if ( manifest->LoadFromFile( g_pFullFileSystem, HUDANIMATION_MANIFEST_FILE, "GAME" ) == false )
+	{
+		manifest->deleteThis();
+		return false;
+	}
+
+	bool bClearScript = true;
+
+	// Load each file defined in the text
+	for ( KeyValues *sub = manifest->GetFirstSubKey(); sub != NULL; sub = sub->GetNextKey() )
+	{
+		if ( !Q_stricmp( sub->GetName(), "file" ) )
+		{
+			// Add it
+			const char *sb = sub->GetString();
+			if ( GetAnimationController()->SetScriptFile( GetVPanel(), sb , bClearScript ) == false )
+			{
+				Assert( 0 );
+			}
+
+			bClearScript = false;
+			continue;
+		}
+	}
+
+	manifest->deleteThis();
+	return true;
 }

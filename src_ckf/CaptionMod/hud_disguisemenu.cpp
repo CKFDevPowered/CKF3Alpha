@@ -16,7 +16,7 @@ static xywh_t g_xywhKey[9];
 static wchar_t *g_wszFontKey[] = {L"1", L"2", L"3", L"4", L"5", L"6", L"7", L"8", L"9"};
 
 static int g_sClassIndex[] = {1, 3, 4, 8, 2, 7, 6, 5, 9};
-static char *g_szClassNick[] = {"sco", "sol", "pyr", "dem", "hvy", "eng", "med", "sni", "spy", "ran"};
+static char *g_szClassName[] = {"scout", "soldier", "pyro", "demoman", "heavy", "engineer", "medic", "sniper", "spy", "random"};
 static int g_texMan[9][2];
 static xywh_t g_xywhMan[9];
 
@@ -29,11 +29,13 @@ static flcol24_t g_flColor[] = {{236/255.0f,227/255.0f,203/255.0f}};
 
 int HudDisguiseMenu_VidInit(void)
 {
+	char tempName[64];
 	for(int i = 0; i < 9; ++i)
 	{
 		for(int j = 0; j < 2; ++j)
 		{
-			g_texMan[i][j] = Surface_LoadTGA(va("resource\\tga\\btn_sel_%s_1440_%d", g_szClassNick[i], j+1));
+			sprintf(tempName, "gfx/vgui/class/class_sel_sm_%s_%s", g_szClassName[i], j ? "blu" : "red" );
+			g_texMan[i][j] = Surface_LoadTGA(tempName);
 		}
 	}
 	g_texIcoMenu = Surface_LoadTGA("resource\\tga\\ico_spy");
@@ -85,7 +87,7 @@ int HudDisguiseMenu_Redraw(float flTime, int iIntermission)
 		return 0;
 	if(g_iWeaponID != WEAPON_DISGUISEKIT)
 	{
-		g_iHudMenu = 0;
+	//	g_iHudMenu = 0;
 		return 0;
 	}
 	if(g_iDisgMenuTeam != 1 && g_iDisgMenuTeam != 2)

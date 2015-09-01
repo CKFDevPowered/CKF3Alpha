@@ -19,6 +19,8 @@ DWORD g_iVideoMode;
 int g_iVideoWidth, g_iVideoHeight, g_iBPP;
 bool g_bWindowed;
 
+extern ckf_vars_t gCKFVars;
+
 void API_InstallHook(void);
 void BaseUI_InstallHook(void);
 void Engine_InstallHook(void);
@@ -104,6 +106,11 @@ void ICKFClient::ShowScoreBoard(bool state)
 	g_ScoreBoardEnabled = state ? 1 : 0;
 }
 
+bool ICKFClient::IsScoreBoardVisible(void)
+{
+	return g_ScoreBoardEnabled ? true : false;
+}
+
 int HUD_SwitchWeapon(int slot);
 
 int ICKFClient::SwitchWeapon(int slot)
@@ -111,10 +118,23 @@ int ICKFClient::SwitchWeapon(int slot)
 	return HUD_SwitchWeapon(slot);
 }
 
-void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h);
+void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h, qboolean bLocalXY);
 
-void ICKFClient::Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h)
+void ICKFClient::Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h, qboolean bLocalXY)
 {
-	R_Draw3DHUDStudioModel(pEntity, x, y, w, h);
+	R_Draw3DHUDStudioModel(pEntity, x, y, w, h, bLocalXY);
 }
+
+void ICKFClient::GetCKFVars(ckf_vars_t *pCKFVars)
+{
+	memcpy(pCKFVars, &gCKFVars, sizeof(ckf_vars_t));
+}
+
+void DrawHudMask(int col, int x, int y, int w, int h);
+
+void ICKFClient::DrawHudMask(int col, int x, int y, int w, int h)
+{
+	::DrawHudMask(col, x, y, w, h);
+}
+
 EXPOSE_SINGLE_INTERFACE(ICKFClient, ICKFClient, CKFCLIENT_API_VERSION);

@@ -32,7 +32,7 @@
 
 
 // Half-Life User Info Configuration Layout Script (stores last settings chosen, too)
-// File generated:  Tue Feb 26 06:28:06 PM
+// File generated:  Tue Aug 25 14:22:51 AM
 //
 //
 // Cvar	-	Setting
@@ -59,14 +59,14 @@ DESCRIPTION INFO_OPTIONS
 	{
 		"#Cstrike_Max_Shells"
 		{ NUMBER 0 -1 }
-		{ "50" }
+		{ "120" }
 	}
 
 	"max_smokepuffs"
 	{
 		"#Cstrike_Max_Smoke_Puffs"
 		{ NUMBER 0 -1 }
-		{ "20" }
+		{ "120" }
 	}
 
 	"fastsprites"
@@ -78,7 +78,7 @@ DESCRIPTION INFO_OPTIONS
 			"#Cstrike_Smoke_Medium" "1"
 			"#Cstrike_Smoke_Worst" "2"
 		}
-		{ "1" }
+		{ "0" }
 	}
 
 	"cl_righthand"
@@ -116,7 +116,7 @@ DESCRIPTION INFO_OPTIONS
 	{
 		"#Valve_Center_Player_Names"
 		{ BOOL }
-		{ "1" }
+		{ "0" }
 	}
 
 	"_ah"
@@ -138,7 +138,7 @@ DESCRIPTION INFO_OPTIONS
 	{
 		"#Valve_Observer_Crosshair"
 		{ BOOL }
-		{ "0" }
+		{ "1" }
 	}
 
 	"cl_radartype"
@@ -149,6 +149,7 @@ DESCRIPTION INFO_OPTIONS
 			"#Cstrike_Transparent" "0"
 			"#Cstrike_Solid" "1"
 		}
-		{ "0" }
+		{ "1" }
 	}
+
 }

@@ -5,6 +5,7 @@
 #pragma once
 #endif
 
+#include <metahook.h>
 #include "ckfvars.h"
 
 typedef void (*xcommand_t)(void);
@@ -31,8 +32,9 @@ public:
 	virtual void ShowScoreBoard(bool state);
 	virtual bool IsScoreBoardVisible(void);
 	virtual int SwitchWeapon(int slot);
-	virtual void Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h);
+	virtual void Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h, qboolean bLocalXY);
 	virtual void GetCKFVars(ckf_vars_t *pCKFVars);
+	virtual void DrawHudMask(int col, int x, int y, int w, int h);
 };
 
 #define CKFCLIENT_API_VERSION "CKFCLIENT_API_VERSION001"

@@ -378,51 +378,51 @@ void DrawMainBoard(void)
 	qglEnable(GL_BLEND);
 }
 
-int GetPlayerStatsInfo(int index)
+int GetPlayerStats(int index)
 {
 	switch(index)
 	{
 	case STATS_DEMOLISH:
-		return g_PlayerStatsInfo.iDemolish;
+		return g_PlayerStats.iDemolish;
 		break;
 	case STATS_CAPTURE:
-		return g_PlayerStatsInfo.iCapture;
+		return g_PlayerStats.iCapture;
 		break;
 	case STATS_DEFENCE:
-		return g_PlayerStatsInfo.iDefence;
+		return g_PlayerStats.iDefence;
 		break;
 	case STATS_DOMINATE:
-		return g_PlayerStatsInfo.iDominate;
+		return g_PlayerStats.iDominate;
 		break;
 	case STATS_REVENGE:
-		return g_PlayerStatsInfo.iRevenge;
+		return g_PlayerStats.iRevenge;
 		break;
 	case STATS_UBERCHARGE:
-		return g_PlayerStatsInfo.iUbercharge;
+		return g_PlayerStats.iUbercharge;
 		break;
 	case STATS_HEADSHOT:
-		return g_PlayerStatsInfo.iHeadshot;
+		return g_PlayerStats.iHeadshot;
 		break;
 	case STATS_TELEPORT:
-		return g_PlayerStatsInfo.iTeleport;
+		return g_PlayerStats.iTeleport;
 		break;
 	case STATS_HEALING:
-		return g_PlayerStatsInfo.iHealing;
+		return g_PlayerStats.iHealing;
 		break;
 	case STATS_BACKSTAB:
-		return g_PlayerStatsInfo.iBackstab;
+		return g_PlayerStats.iBackstab;
 		break;
 	case STATS_BONUS:
-		return g_PlayerStatsInfo.iBonus;
+		return g_PlayerStats.iBonus;
 		break;
 	case STATS_KILL:
-		return g_PlayerStatsInfo.iKill;
+		return g_PlayerStats.iKill;
 		break;
 	case STATS_DEATH:
-		return g_PlayerStatsInfo.iDeath;
+		return g_PlayerStats.iDeath;
 		break;
 	case STATS_ASSIST:
-		return g_PlayerStatsInfo.iAssist;
+		return g_PlayerStats.iAssist;
 		break;
 	}
 	return 0;
@@ -475,7 +475,7 @@ void DrawBottomBoard(void)
 	int w, h;
 	for(int i = 1; i < STATS_MAX_NUM; ++i)
 	{
-		wsprintfW(wszTemp, L"%s%d", g_wszPlayerStatsName[i-1], GetPlayerStatsInfo(i) );
+		wsprintfW(wszTemp, L"%s%d", g_wszPlayerStatsName[i-1], GetPlayerStats(i) );
 		char *pszTemp = UnicodeToUTF8(wszTemp);
 		gEngfuncs.pfnDrawConsoleStringLen(pszTemp, &w, &h);
 		gEngfuncs.pfnDrawSetTextColor(1, 1, 1);

@@ -187,10 +187,11 @@ void CMedigun::MedigunHeal(void)
 				m_pTarget->m_iDisguiseHealth += flHeal;
 		}
 	}
-	if(m_pTarget->pev->health < m_pTarget->pev->max_health * 1.5)
+	float fLBoostMaxHealth = m_pTarget->GetBoostMaxHealth();
+	if(m_pTarget->pev->health < fLBoostMaxHealth )
 	{
-		if(m_pTarget->pev->health + flHeal > m_pTarget->pev->max_health * 1.5)
-			flHeal = m_pTarget->pev->max_health * 1.5 - m_pTarget->pev->health;
+		if(m_pTarget->pev->health + flHeal > fLBoostMaxHealth )
+			flHeal = fLBoostMaxHealth - m_pTarget->pev->health;
 
 		m_pTarget->pev->health += flHeal;
 		m_pPlayer->m_flHealAmount += flHeal;

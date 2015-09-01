@@ -89,7 +89,7 @@ bool CCSSpectatorGUI::NeedsUpdate(void)
 	if (m_nLastAccount != gHUD.m_accountBalance.m_iAccount)
 		return true;
 
-	if (m_nLastTime != (int)(gHUD.m_roundTimer.m_flTimeEnd - gHUD.m_flTime))
+	if (m_nLastTime != (int)((*gCKFVars.g_flRoundEndTime) - gHUD.m_flTime))
 		return true;
 
 	if (m_nLastSpecMode != g_iUser1)
@@ -106,7 +106,7 @@ bool CCSSpectatorGUI::NeedsUpdate(void)
 
 void CCSSpectatorGUI::UpdateTimer(void)
 {
-	m_nLastTime = (int)(gHUD.m_roundTimer.m_flTimeEnd - gHUD.m_flTime);
+	m_nLastTime = (int)((*gCKFVars.g_flRoundEndTime) - gHUD.m_flTime);
 
 	if (m_nLastTime < 0)
 		m_nLastTime = 0;

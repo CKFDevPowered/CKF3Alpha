@@ -9,7 +9,7 @@
 #include "pm_shared.h"
 #include "eventscripts.h"
 #include "game_shared/voice_status.h"
-
+#include "GameUI_Interface.h"
 #include "CounterStrikeViewport.h"
 #include "tri.h"
 
@@ -157,9 +157,9 @@ int __MsgFunc_ServerName(const char *pszName, int iSize, void *pbuf)
 	return gHUD.MsgFunc_ServerName(pszName, iSize, pbuf);
 }
 
-int __MsgFunc_TimeLeft(const char *pszName, int iSize, void *pbuf)
+int __MsgFunc_TimeLimit(const char *pszName, int iSize, void *pbuf)
 {
-	return gHUD.MsgFunc_TimeLeft(pszName, iSize, pbuf);
+	return gHUD.MsgFunc_TimeLimit(pszName, iSize, pbuf);
 }
 
 int __MsgFunc_SpecHealth(const char *pszName, int iSize, void *pbuf)
@@ -303,7 +303,7 @@ void CHud::Init(void)
 	g_pfnMSG_Fog = HOOK_MESSAGE(Fog);
 	g_pfnMSG_ScoreAttrib = HOOK_MESSAGE(ScoreAttrib);
 
-	HOOK_MESSAGE(TimeLeft);
+	HOOK_MESSAGE(TimeLimit);
 
 	m_pSpriteList = NULL;
 	m_iPlayerNum = 0;
@@ -770,11 +770,11 @@ int CHud::MsgFunc_ServerName(const char *pszName, int iSize, void *pbuf)
 	return g_pfnMSG_ServerName(pszName, iSize, pbuf);
 }
 
-int CHud::MsgFunc_TimeLeft(const char *pszName, int iSize, void *pbuf)
+int CHud::MsgFunc_TimeLimit(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 
-	m_flTimeLeft = gHUD.m_flTime + READ_WORD();
+	m_flTimeLeft = gHUD.m_flTime + READ_SHORT();
 	return 1;
 }
 
@@ -1285,6 +1285,22 @@ float CHud::GetSensitivity(void)
 void CHud::VGUI2HudPrint(char *charMsg, int x, int y, float r, float g, float b)
 {
 	m_VGUI2Print.VGUI2HudPrint(charMsg, x, y, r, g, b);
+}
+
+bool CHud::IsHidden( int iHudFlags )
+{
+	// Not in game?
+	if ( !GameUI().IsInLevel() )
+		return true;
+
+	// Get current hidden flags
+	int iHideHud = m_iHideHUDDisplay;
+
+	// Everything hidden?
+	if ( iHideHud & HIDEHUD_ALL )
+		return true;
+
+	return ( ( iHudFlags & iHideHud ) != 0);
 }
 
 int BTE_GetHUDFov(void)

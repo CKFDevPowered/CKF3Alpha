@@ -787,7 +787,7 @@ void CKFRadiusDamage(Vector vecSrc, entvars_t *pevDirectHit, entvars_t *pevInfli
 
 		if(pEntity->IsBSPModel()) flDistance /= 4;
 
-		if(bitsDamageType & DMG_SHAKE && (pEntity->pev->flags & FL_ONGROUND))
+		if(pEntity->IsPlayer() && (bitsDamageType & DMG_SHAKE) && (pEntity->pev->flags & FL_ONGROUND))
 		{//shake it off
 			UTIL_SingleScreenShake((5.0+5.0*flDamage/100) * (1 - min(flDistance / flForceRadius, 0.8) ), 1.6, 0.8, pEntity);
 		}

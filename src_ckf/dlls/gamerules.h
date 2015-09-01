@@ -7,6 +7,7 @@ class CBasePlayer;
 class CItem;
 class CBasePlayerAmmo;
 class CBaseBuildable;//hz extern here
+class CBuildSapper;//hz extern here
 
 #include <vector>
 
@@ -45,6 +46,24 @@ enum
 	END_RED_WIN,
 	END_BLU_WIN,	
 	END_SUDDEN_DEATH
+};
+
+enum
+{
+	WINSTATUS_NONE = 0,
+	WINSTATUS_TERRORIST,
+	WINSTATUS_CT,
+	WINSTATUS_DRAW
+};
+
+enum
+{
+	WINREASON_NONE = 0,
+	WINREASON_ALL_POINTS_CAPTURED,
+	WINREASON_OPPONENTS_DEAD,
+	WINREASON_FLAG_CAPTURE_LIMIT,
+	WINREASON_DEFEND_UNTIL_TIME_LIMIT,
+	WINREASON_STALEMATE,
 };
 
 enum
@@ -177,14 +196,6 @@ public:
 #define MAX_MAPS 100
 #define MAX_VIPQUEUES 5
 
-enum
-{
-	WINSTATUS_NONE = 0,
-	WINSTATUS_TERRORIST,
-	WINSTATUS_CT,
-	WINSTATUS_DRAW
-};
-
 #include "voice_gamemgr.h"
 
 class CHalfLifeMultiplay : public CGameRules
@@ -273,7 +284,7 @@ public:
 	BOOL CheckMaxRounds(void);
 	BOOL CheckGameOver(void);
 	BOOL CheckWinLimit(void);
-	void CheckAllowSpecator(void);
+	void CheckSharedConVars(void);
 	void CheckGameCvar(void);
 	void DisplayMaps(CBasePlayer *pPlayer, int mapId);
 	void ResetAllMapVotes(void);
@@ -294,20 +305,23 @@ public:
 	void CPSendInit(CBasePlayer *pPlayer);
 	void CPResetAll(void);
 	void ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, CBasePlayer *plKiller);
-	void ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, int iKillerTeam, CBasePlayer *pevAssister[], int iAssister);//Overloaded
+	void ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, int iKillerTeam, CBasePlayer *pevAssister[], int iAssister);//Multiple assister
 	void SyncRoundTimer(void);
 	void SetRoundStatus(int iStatus);
 	void SetRoundStatus(int iStatus, float flMaxTime);
+	void SapperKilled(CBuildSapper *pVictim, entvars_t *pevKiller, entvars_t *pevInflictor);
 	void BuildKilled(CBaseBuildable *pVictim, entvars_t *pKiller, entvars_t *pInflictor);//WTF
-	void BuildDeathNotice(CBaseBuildable *pVictim, entvars_t *pevKiller, entvars_t *pevInflictor);
+	void BuildDeathNotice(CBaseEntity *pVictim, entvars_t *pevKiller, entvars_t *pevInflictor);
 	void AnnounceRoundTime(void);
 	BOOL CPCheckOvertime(void);
 	void CalcPoints(CBasePlayer *pAttacker, entvars_t *pevInflictor, CBasePlayer *pKilled);
 	void UpdateTimeLimit(void);
 	void DominateNemesis(CBasePlayer *pKiller, CBasePlayer *pVictim);
 	CBasePlayer *GetAssister(CBasePlayer *pKiller, CBasePlayer *pVictim);
-	void AddCondition(CBasePlayer *pPlayer);
+	void Cmd_AddCondition(CBasePlayer *pPlayer);
 	BOOL IsRoundSetup(void);
+	BOOL SendWinStatus(void);
+
 public:
 	CVoiceGameMgr m_VoiceGameMgr;
 	int m_iNumTerrorist;

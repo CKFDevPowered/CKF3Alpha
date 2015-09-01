@@ -172,9 +172,8 @@ void CClassMenu::OnKeyCodePressed(KeyCode code)
 {
 	if (m_iScoreBoardKey != KEY_NONE && m_iScoreBoardKey == code)
 	{
-		//g_pCKFClient->ShowScoreBoard(true);
-		//g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
-		//g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
+		g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
+		g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
 	}
 	else
 		BaseClass::OnKeyCodePressed(code);

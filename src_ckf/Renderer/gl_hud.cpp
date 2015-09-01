@@ -26,6 +26,8 @@ cvar_t *r_hdr_exposure = NULL;
 cvar_t *r_hdr_darkness = NULL;
 cvar_t *r_hdr_contrast = NULL;
 cvar_t *r_hdr_adaptation = NULL;
+cvar_t *r_hudinworld_debug = NULL;
+int r_hudinworld_texture = 0;
 
 void R_InitRefHUD(void)
 {
@@ -203,6 +205,7 @@ void R_InitRefHUD(void)
 	r_hdr_darkness = gEngfuncs.pfnRegisterVariable("r_hdr_darkness", "1.8", FCVAR_ARCHIVE);
 	r_hdr_contrast = gEngfuncs.pfnRegisterVariable("r_hdr_contrast", "1.2", FCVAR_ARCHIVE);
 	r_hdr_adaptation = gEngfuncs.pfnRegisterVariable("r_hdr_adaptation", "150.0", FCVAR_ARCHIVE);
+	r_hudinworld_debug = gEngfuncs.pfnRegisterVariable("r_hudinworld_debug", "0", FCVAR_ARCHIVE);
 
 	last_luminance = 0;
 
@@ -652,7 +655,7 @@ void R_BeginDrawTrianglesInHUD_Direct(int x, int y)
 	GLEndHud();
 	
 	qglViewport(x-(glheight*4/3)/2, glheight/2-y, glheight*4/3, glheight);
-	
+
 	qglClear(GL_DEPTH_BUFFER_BIT);
 
 	draw3dhud = true;
@@ -706,6 +709,8 @@ void R_BeginDrawHUDInWorld(int texid, int w, int h)
 {
 	R_GLBindFrameBuffer(GL_FRAMEBUFFER, s_HUDInWorldFBO.s_hBackBufferFBO);
 
+	r_hudinworld_texture = texid;
+
 	qglFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texid, 0);
 	
 	qglClearColor(0.0, 0.0, 0.0, 0.0);
@@ -721,12 +726,12 @@ void R_BeginDrawHUDInWorld(int texid, int w, int h)
 	GLBeginHud();
 	qglViewport(0, 0, w, h);
 
-	draw3dhud = true;
+	drawhudinworld = true;
 }
 
 void R_FinishDrawHUDInWorld(void)
 {
-	draw3dhud = false;
+	drawhudinworld = false;
 
 	GLEndHud();
 	qglViewport(0, 0, glwidth, glheight);

@@ -130,7 +130,7 @@
 				ExceptionHandling="2"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
-				EnableEnhancedInstructionSet="2"
+				EnableEnhancedInstructionSet="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -1171,6 +1171,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Client\VGUI\hud_playerstatus.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_playerstatus.h"
+						>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\hud_radar.cpp"
 						>
 					</File>
@@ -1292,6 +1300,14 @@
 					</File>
 					<File
 						RelativePath=".\Client\VGUI\tfmapinfomenu.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\tfscoreboard.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\tfscoreboard.h"
 						>
 					</File>
 					<File
@@ -1544,6 +1560,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\Client\game_controls\TFHudPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\Client\game_controls\TFHudPanel.h"
+					>
+				</File>
+				<File
 					RelativePath=".\Client\game_controls\TFImageButton.cpp"
 					>
 				</File>
@@ -1724,6 +1748,10 @@
 			</File>
 			<File
 				RelativePath=".\buildnum.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ckfvars.h"
 				>
 			</File>
 			<File

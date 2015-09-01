@@ -22,12 +22,14 @@ void CCSChatDialog::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 void CCSChatDialog::CreateChatInputLine(void)
 {
+	//BaseClass::CreateChatInputLine();
 	m_pChatInput = new CChatDialogInputLine(this, "ChatInputLine");
 	m_pChatInput->SetVisible(false);
 }
 
 void CCSChatDialog::CreateChatLines(void)
 {
+	//BaseClass::CreateChatLines();
 	m_ChatLine = new CChatDialogLine(this, "ChatLine");
 	m_ChatLine->SetVisible(false);
 }
@@ -44,6 +46,7 @@ void CCSChatDialog::VidInit(void)
 
 void CCSChatDialog::Reset(void)
 {
+	BaseClass::Reset();
 }
 
 void CCSChatDialog::OnThink(void)

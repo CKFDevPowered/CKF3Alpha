@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "hud_util.h"
 #include "tfteammenu.h"
 
 #include <vgui/IScheme.h>
@@ -119,6 +120,9 @@ bool TFTeamButton::IsDisabled()
 //-----------------------------------------------------------------------------
 void TFTeamButton::OnCursorEntered()
 {
+	if(m_bTeamDisabled)
+		return;
+
 	BaseClass::OnCursorEntered();
 
 	SetMouseEnteredState( true );
@@ -129,6 +133,9 @@ void TFTeamButton::OnCursorEntered()
 //-----------------------------------------------------------------------------
 void TFTeamButton::OnCursorExited()
 {
+	if(m_bTeamDisabled)
+		return;
+
 	BaseClass::OnCursorExited();
 
 	SetMouseEnteredState( false );
@@ -202,7 +209,7 @@ void TFTeamButton::OnTick()
 				if(strstr(m_szModelPanel, "door"))
 					SendAnimation("disabled");
 				else
-					SendAnimation("TV_disabled");
+					SendAnimation("TV_OFF");
 			}
 			else
 			{
@@ -223,7 +230,7 @@ void TFTeamButton::OnTick()
 			if(strstr(m_szModelPanel, "door"))
 				SendAnimation("disabled");
 			else
-				SendAnimation("TV_disabled");
+				SendAnimation("TV_OFF");
 		}
 		else
 		{
@@ -243,6 +250,8 @@ void TFTeamButton::OnTick()
 			}
 		}
 	}
+
+	SetEnabled(!m_bTeamDisabled);
 }
 
 CTFTeamMenu::CTFTeamMenu(void) : CTeamMenu()
@@ -265,16 +274,19 @@ CTFTeamMenu::CTFTeamMenu(void) : CTeamMenu()
 	SetPaintBackgroundEnabled(false);
 
 	LoadControlSettings("Resource/UI/TFTeamMenu.res");
+
 	InvalidateLayout();
+
+	vgui::ivgui()->AddTickSignal( GetVPanel() );
 }
 
 bool CTFTeamMenu::IsTeamDisabled(int iTeam)
 {
-	if(iTeam == TEAM_RED && (*gCKFVars.g_iTeam) == TEAM_RED)
+	if(iTeam == (*gCKFVars.g_iTeam))
 	{
-		return true;
+		return false;
 	}
-	if(iTeam == TEAM_BLUE && (*gCKFVars.g_iTeam) == TEAM_BLUE)
+	if(iTeam != TEAM_RANDOM && IsTeamStacked(iTeam))
 	{
 		return true;
 	}
@@ -288,13 +300,18 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 		if (gHUD.m_iIntermission || gEngfuncs.IsSpectateOnly())
 			return;
 
+		if((*gCKFVars.g_iTeam) != TEAM_UNASSIGNED && (*gCKFVars.g_iTeam) != TEAM_SPECTATOR)
+		{
+			if(*gCKFVars.g_iRoundStatus == ROUND_END)
+				return;
+		}
+
 		m_pModelPanel[0]->LoadModel();
 		m_pModelPanel[1]->LoadModel();
 		m_pModelPanel[2]->LoadModel();
 		m_pModelPanel[3]->LoadModel();
 
-		if (m_iTeamMenuKey == KEY_NONE)
-			m_iTeamMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeteam");
+		m_iTeamMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeteam");
 	}
 
 	BaseClass::ShowPanel(bShow);
@@ -302,15 +319,15 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 
 void CTFTeamMenu::Update(void)
 {
-	if (gViewPortInterface->GetAllowSpectators())
-	{
-		if ((*gCKFVars.g_iTeam) == TEAM_UNASSIGNED || g_iFreezeTimeOver || (!gCKFVars.g_PlayerInfo[gHUD.m_iPlayerNum].bIsAlive))
-			SetVisibleButton("specbutton", true);
-		else
-			SetVisibleButton("specbutton", false);
-	}
-	else
-		SetVisibleButton("specbutton", false);
+	//if (gViewPortInterface->GetAllowSpectators())
+	//{
+	//	if ((*gCKFVars.g_iTeam) == TEAM_UNASSIGNED || g_iFreezeTimeOver || (!gCKFVars.g_PlayerInfo[gHUD.m_iPlayerNum].bIsDead))
+	//		SetVisibleButton("specbutton", true);
+	//	else
+	//		SetVisibleButton("specbutton", false);
+	//}
+	//else
+	//	SetVisibleButton("specbutton", false);
 
 	if ( (*gCKFVars.g_iTeam) != TEAM_UNASSIGNED )
 	{
@@ -360,10 +377,14 @@ void CTFTeamMenu::OnCommand(const char *command)
 				iTeam = TEAM_RANDOM;
 			}
 			// are we selecting the team we're already on?
-			if ( g_iTeamNumber != iTeam )
+			if ( (*gCKFVars.g_iTeam) != iTeam )
 			{
 				engine->pfnClientCmd( (char *)command );
 				engine->pfnClientCmd( "\n" );
+			}
+			else
+			{
+				engine->pfnClientCmd( "closemenu\n" );
 			}
 		}
 		else if ( Q_strstr( command, "jointeam_nomenus " ) )
@@ -371,8 +392,11 @@ void CTFTeamMenu::OnCommand(const char *command)
 			engine->pfnClientCmd( (char *)command );
 			engine->pfnClientCmd( "\n" );
 		}
+		else if ( !Q_strcmp( command, "cancelmenu" ) )
+		{
+			engine->pfnClientCmd( "closemenu\n" );
+		}
 	}
-	engine->pfnClientCmd( "closemenu\n" );
 	ShowPanel( false );
 }
 
@@ -407,22 +431,61 @@ void CTFTeamMenu::OnKeyCodePressed( KeyCode code )
 	}
 	else if( code == KEY_1 )
 	{
-		m_pAutoTeamButton->PostActionSignal(m_pAutoTeamButton->GetCommand());
+		m_pAutoTeamButton->DoClick();
 	}
 	else if( code == KEY_2 )
 	{
-		m_pSpecTeamButton->PostActionSignal(m_pSpecTeamButton->GetCommand());
+		m_pSpecTeamButton->DoClick();
 	}
 	else if( code == KEY_3 )
 	{
-		m_pBlueTeamButton->PostActionSignal(m_pBlueTeamButton->GetCommand());
+		m_pBlueTeamButton->DoClick();
 	}
 	else if( code == KEY_3 )
 	{
-		m_pRedTeamButton->PostActionSignal(m_pRedTeamButton->GetCommand());
+		m_pRedTeamButton->DoClick();
 	}
 	else
 	{
 		BaseClass::OnKeyCodePressed( code );
 	}
+}
+
+bool CTFTeamMenu::IsTeamStacked(int newTeam_id)
+{
+	int curTeam_id = (*gCKFVars.g_iTeam);
+	int m_iNumRed = GetTeamCounts(TEAM_RED);
+	int m_iNumBlue = GetTeamCounts(TEAM_BLUE);
+	int m_iLimitTeam = (*gCKFVars.g_iLimitTeams);
+	switch (newTeam_id)
+	{
+		case TEAM_RED:
+		{
+			if (curTeam_id != TEAM_UNASSIGNED && curTeam_id != TEAM_SPECTATOR)
+				return (m_iNumRed + 1) > (m_iNumBlue + m_iLimitTeam - 1);
+
+			return (m_iNumRed + 1) > (m_iNumBlue + m_iLimitTeam);
+		}
+
+		case TEAM_BLUE:
+		{
+			if (curTeam_id != TEAM_UNASSIGNED && curTeam_id != TEAM_SPECTATOR)
+				return (m_iNumBlue + 1) > (m_iNumRed + m_iLimitTeam - 1);
+
+			return (m_iNumBlue + 1) > (m_iNumRed + m_iLimitTeam);
+		}
+
+		case TEAM_SPECTATOR:
+		{
+			return !gViewPortInterface->GetAllowSpectators();
+		}
+	}
+	return false;
+}
+
+void CTFTeamMenu::OnTick()
+{
+	// set our team counts
+	SetDialogVariable( "bluecount", GetTeamCounts(TEAM_BLUE) );
+	SetDialogVariable( "redcount", GetTeamCounts(TEAM_RED) );
 }

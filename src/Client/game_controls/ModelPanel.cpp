@@ -45,7 +45,8 @@ ModelPanel::ModelPanel( Panel *parent, const char *name ) : Panel( parent, name 
 	m_szModel[0] = '\0';
 	InitEntity();
 
-	ivgui()->AddTickSignal( GetVPanel() );
+	SetPaintBackgroundEnabled(false);
+	SetPaintBorderEnabled(false);
 }
 
 //-----------------------------------------------------------------------------
@@ -59,6 +60,9 @@ void ModelPanel::ApplySettings( KeyValues *inResourceData )
 	_entity.curstate.skin = atoi(inResourceData->GetString("skin", "0"));
 	sscanf(inResourceData->GetString("origin", "0 0 0"), "%f %f %f", &_origin[0], &_origin[1], &_origin[2]);
 	sscanf(inResourceData->GetString("angles", "0 0 0"), "%f %f %f", &_angles[0], &_angles[1], &_angles[2]);
+
+	VectorCopy(_origin, _entity.origin);
+	VectorCopy(_angles, _entity.angles);
 
 	InvalidateLayout( false, true ); // force ApplySchemeSettings to run
 }
@@ -154,31 +158,12 @@ void ModelPanel::InitEntity(void)
 	_entity.player = 0;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void ModelPanel::PerformLayout()
+void ModelPanel::Paint(void)
 {
-	BaseClass::PerformLayout();
-}
-
-void ModelPanel::Think()
-{
-	VectorCopy(_origin, _entity.origin);
-	VectorCopy(_angles, _entity.angles);
-}
-
-void ModelPanel::PaintTraverse(bool Repaint, bool allowForce)
-{
-	int w, h;
-
-	BaseClass::PaintTraverse(Repaint, allowForce);
-
-	if(!_entity.model)
-		return;
-
-	int clipRect[4];
-	ipanel()->GetClipRect( GetVPanel(), clipRect[0], clipRect[1], clipRect[2], clipRect[3] );
-
-	g_pCKFClient->Draw3DHUDStudioModel(&_entity, clipRect[0], clipRect[1], clipRect[2]-clipRect[0], clipRect[3]-clipRect[1]);
+	if(_entity.model)
+	{
+		int clipRect[4];
+		ipanel()->GetClipRect( GetVPanel(), clipRect[0], clipRect[1], clipRect[2], clipRect[3] );
+		g_pCKFClient->Draw3DHUDStudioModel(&_entity, clipRect[0], clipRect[1], clipRect[2]-clipRect[0], clipRect[3]-clipRect[1], true);
+	}
 }

@@ -80,6 +80,8 @@ void SayTextLine::Clear(void)
 
 void SayTextLine::Draw(int x, int y, float r, float g, float b)
 {
+	return ;
+
 	int rangeIndex;
 	TextRange *range;
 	wchar_t ch;
@@ -366,7 +368,6 @@ int CHudSayText::Draw(float flTime)
 		return 1;
 
 	flScrollTime = min(flScrollTime, flTime + m_HUD_saytext_time->value);
-	flScrollTime = min(flScrollTime, flTime + m_HUD_saytext_time->value);
 
 	if (flScrollTime <= flTime)
 	{
@@ -393,7 +394,7 @@ int CHudSayText::Draw(float flTime)
 	for (int i = 0; i < MAX_LINES; i++)
 	{
 		if (g_sayTextLine[i].m_line[0])
-			g_sayTextLine[i].Draw(10, y, fR, fG, fB);
+			g_sayTextLine[i].Draw(ScreenWidth * 0.05, y, fR, fG, fB);
 
 		y += line_height;
 	}
@@ -494,7 +495,7 @@ int CHudSayText::GetTextPrintY(void)
 	}
 	else
 	{
-		iRetVal = (ScreenHeight - gHUD.m_iFontHeight * 2.75) - (line_height * MAX_LINES) - (line_height * 0.5);
+		iRetVal = (ScreenHeight - gHUD.m_iFontHeight * 8) - (line_height * MAX_LINES) - (line_height * 0.5);
 	}
 
 	return iRetVal;
@@ -688,6 +689,8 @@ void CHudSayText::SayTextPrint(const char *pszBuf, int iBufSize, int clientIndex
 	m_iFlags |= HUD_ACTIVE;
 
 	Y_START = GetTextPrintY();
+
+	g_pViewPort->ChatPrintf(clientIndex, finalBuffer);
 }
 
 void CHudSayText::EnsureTextFitsInOneLineAndWrapIfHaveTo(int line)

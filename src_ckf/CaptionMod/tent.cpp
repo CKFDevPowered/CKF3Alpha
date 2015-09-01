@@ -398,6 +398,31 @@ void SpyWatch_Draw(void)
 	qglDepthRange(0, 1);
 }
 
+void CL_ControlPointUpdate(void)
+{
+	g_iCapPointIndex = 0;
+	vec3_t vecSrc, vecMins, vecMaxs;
+
+	VectorCopy(gEngfuncs.GetLocalPlayer()->origin, vecSrc);
+	vecMins[0] = vecSrc[0] - 16;
+	vecMins[1] = vecSrc[1] - 16;
+	vecMins[2] = vecSrc[2] - 16;
+	vecMaxs[0] = vecSrc[0] + 16;
+	vecMaxs[1] = vecSrc[1] + 16;
+	vecMaxs[2] = vecSrc[2] + 48;
+	int size = g_ControlPoints.size();
+	for(int i = 0; i < size ; ++i)
+	{
+		physent_t *pe = &g_ControlPoints[i].physent;
+
+		if(UTIL_IsHullInZone(pe, vecMins, vecMaxs))
+		{
+			g_iCapPointIndex = i + 1;
+			break;
+		}
+	}
+}
+
 //common
 
 void T_VidInit(void)
@@ -413,8 +438,10 @@ void T_DrawTEnts(void)
 	T_BluePrint_Draw();
 }
 
-void T_UpdateTEnts()
+void T_UpdateTEnts(void)
 {
 	T_BluePrint_Update();
 	T_SpyWatch_Update();
+	CL_ControlPointUpdate();
 }
+

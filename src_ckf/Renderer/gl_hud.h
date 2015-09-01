@@ -110,6 +110,8 @@ extern qboolean drawhudinworld;
 extern qboolean draw3dhud;
 extern int pp_fxaa_program;
 extern cvar_t *r_hdr;
+extern cvar_t *r_hudinworld_debug;
+extern int r_hudinworld_texture;
 
 void R_InitBlur(const char *vs_code, int samples);
 void R_BeginHUDQuad(void);

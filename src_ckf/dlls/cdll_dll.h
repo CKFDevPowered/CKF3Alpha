@@ -77,11 +77,10 @@
 
 #define MENU_CLOSE 0
 #define MENU_TEAM 10
-#define MENU_CLASS 11
+#define MENU_CLASS_RED 11
 #define MENU_INTRO 12
 #define MENU_MAPINFO 13
-#define MENU_CLASS_RED 14
-#define MENU_CLASS_BLUE 15
+#define MENU_CLASS_BLU 14
 
 #define MENUBUF_MOTD 1
 #define MENUBUF_MAPINFO 2

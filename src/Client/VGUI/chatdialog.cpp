@@ -5,6 +5,10 @@
 #include "vgui_int.h"
 #include "shared_util.h"
 
+float *GetClientColor(int clientIndex);
+float *GetTextColor(int colorNum, int clientIndex);
+extern float g_ColorDefault[3];
+
 CChatDialogLine::CChatDialogLine(vgui::Panel *parent, const char *panelName) : vgui::RichText(parent, panelName)
 {
 	m_hFont = m_hFontMarlett = 0;
@@ -12,6 +16,8 @@ CChatDialogLine::CChatDialogLine(vgui::Panel *parent, const char *panelName) : v
 	m_flStartTime = 0.0f;
 	m_iNameLength = 0;
 	m_text = NULL;
+
+	//SetScheme("ChatScheme");
 
 	SetPaintBackgroundEnabled(true);
 	SetVerticalScrollbar(false);
@@ -30,6 +36,12 @@ void CChatDialogLine::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_hFont = pScheme->GetFont("ChatFont");
 	m_hFontMarlett = pScheme->GetFont("Marlett");
 	m_clrText = pScheme->GetColor("FgColor", GetFgColor());
+
+	Color defaultColor = pScheme->GetColor("TanLight", Color(235, 226, 202, 255));
+
+	g_ColorDefault[0] = defaultColor.r() / 255.0f;
+	g_ColorDefault[1] = defaultColor.g() / 255.0f;
+	g_ColorDefault[2] = defaultColor.b() / 255.0f;
 
 	SetFont(m_hFont);
 	SetBgColor(Color(0, 0, 0, 100));
@@ -97,10 +109,12 @@ void CChatDialogLine::PerformFadeout(void)
 	OnThink();
 }
 
+extern cvar_t *hud_saytext_time;
+
 void CChatDialogLine::SetExpireTime(void)
 {
 	m_flStartTime = g_pViewPort->GetCurrentTime();
-	m_flExpireTime = m_flStartTime + /*hud_saytext_time->value*/1.0;
+	m_flExpireTime = m_flStartTime + hud_saytext_time->value;
 	m_nCount = CChatDialog::m_nLineCounter++;
 }
 
@@ -148,10 +162,13 @@ void CChatDialogInputLine::ApplySchemeSettings(vgui::IScheme *pScheme)
 	m_pPrompt->SetFont(hFont);
 	m_pInput->SetFont(hFont);
 	m_pInput->SetFgColor(pScheme->GetColor("Chat.TypingText", pScheme->GetColor("Panel.FgColor", Color(255, 255, 255, 255))));
+
+	SetPaintBackgroundEnabled( true );
+	m_pPrompt->SetPaintBackgroundEnabled( true );
+
 	m_pInput->SetMouseInputEnabled(true);
 
 	SetBgColor(Color(0, 0, 0, 0));
-	SetPaintBackgroundEnabled(true);
 }
 
 void CChatDialogInputLine::SetPrompt(const char *prompt)
@@ -187,23 +204,14 @@ void CChatDialogInputLine::PerformLayout(void)
 {
 	BaseClass::PerformLayout();
 
-	/*int wide, tall;
-	GetSize(wide, tall);
+	int wide, tall;
+	GetSize( wide, tall );
 
-	int w, h;
-	m_pPrompt->GetSize(w, h);
+	int w,h;
+	m_pPrompt->GetSize( w, h); 
+	m_pPrompt->SetBounds( 0, 0, w, tall );
 
-	wchar_t text[128];
-	m_pPrompt->GetText(text, sizeof(text));
-
-	int width = 0;
-	vgui::HFont font = m_pPrompt->GetFont();
-
-	for (size_t i = 0; i < wcslen(text); i++)
-		width += vgui::surface()->GetCharacterWidth(font, text[i]) * 1.35;
-
-	m_pPrompt->SetBounds(0, 0, width, tall);
-	m_pInput->SetBounds(width + 2, 0, wide - width - 2, tall);*/
+	m_pInput->SetBounds( w + 2, 0, wide - w - 2 , tall );
 }
 
 vgui::Panel *CChatDialogInputLine::GetInputPanel(void)
@@ -213,6 +221,9 @@ vgui::Panel *CChatDialogInputLine::GetInputPanel(void)
 
 CChatDialogHistory::CChatDialogHistory(vgui::Panel *pParent, const char *panelName) : BaseClass(pParent, "ChatHistory")
 {
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( NULL, "resource/ChatScheme.res", "ChatScheme");
+	SetScheme(scheme);
+
 	InsertFade(-1, -1);
 }
 
@@ -239,7 +250,15 @@ int CChatDialog::m_nLineCounter = 1;
 
 CChatDialog::CChatDialog(void) : BaseClass(NULL, PANEL_CHAT)
 {
+	//MakePopup();
 	SetZPos(-30);
+
+	vgui::HScheme scheme = vgui::scheme()->LoadSchemeFromFileEx( NULL, "resource/ChatScheme.res", "ChatScheme" );
+	SetScheme(scheme);
+
+	SetTitleBarVisible(false);
+
+	vgui::ivgui()->AddTickSignal( GetVPanel() );
 
 	m_nMessageMode = MM_NONE;
 	m_pChatHistory = new CChatDialogHistory(this, "ChatHistory");
@@ -268,6 +287,8 @@ void CChatDialog::CreateChatLines(void)
 
 void CChatDialog::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
+	LoadControlSettings("Resource/UI/ChatDialog.res", "GAME");
+
 	BaseClass::ApplySchemeSettings(pScheme);
 
 	SetPaintBackgroundType(2);
@@ -276,8 +297,6 @@ void CChatDialog::ApplySchemeSettings(vgui::IScheme *pScheme)
 
 	SetKeyBoardInputEnabled(false);
 	SetMouseInputEnabled(false);
-
-	GetChatHistory()->SetVerticalScrollbar(false);
 
 	m_iHistoryAlpha = GetChatHistory()->GetBgColor().a();
 	m_iAlpha = CHAT_HISTORY_ALPHA;
@@ -288,7 +307,8 @@ void CChatDialog::ApplySchemeSettings(vgui::IScheme *pScheme)
 		m_iAlpha = cColor.a();
 
 	SetBgColor(Color(cColor.r(), cColor.g(), cColor.b(), m_iAlpha));
-	LoadControlSettings("Resource/UI/ChatDialog.res", "GAME");
+
+	GetChatHistory()->SetVerticalScrollbar(false);
 }
 
 void CChatDialog::Reset(void)
@@ -358,23 +378,26 @@ void CChatDialog::OnThink(void)
 	if (m_ChatLine)
 	{
 		vgui::HFont font = m_ChatLine->GetFont();
-		m_iFontHeight = vgui::surface()->GetFontTall(font) * 1.35;
+		m_iFontHeight = vgui::surface()->GetFontTall( font ) + 2;
+
+		// Put input area at bottom
 
 		int iChatX, iChatY, iChatW, iChatH;
 		int iInputX, iInputY, iInputW, iInputH;
+		
+		m_pChatInput->GetBounds( iInputX, iInputY, iInputW, iInputH );
+		GetBounds( iChatX, iChatY, iChatW, iChatH );
 
-		GetBounds(iChatX, iChatY, iChatW, iChatH);
+		m_pChatInput->SetBounds( iInputX, iChatH - (m_iFontHeight * 1.75), iInputW, m_iFontHeight );
 
-		m_pChatInput->GetBounds(iInputX, iInputY, iInputW, iInputH);
-		m_pChatInput->SetBounds(iInputX, iChatH - (m_iFontHeight * 1.75), iInputW, m_iFontHeight);
-
+		//Resize the History Panel so it fits more lines depending on the screen resolution.
 		int iChatHistoryX, iChatHistoryY, iChatHistoryW, iChatHistoryH;
 
-		GetChatHistory()->GetBounds(iChatHistoryX, iChatHistoryY, iChatHistoryW, iChatHistoryH);
+		GetChatHistory()->GetBounds( iChatHistoryX, iChatHistoryY, iChatHistoryW, iChatHistoryH );
 
 		iChatHistoryH = (iChatH - (m_iFontHeight * 2.25)) - iChatHistoryY;
 
-		GetChatHistory()->SetBounds(iChatHistoryX, iChatHistoryY, iChatHistoryW, iChatHistoryH);
+		GetChatHistory()->SetBounds( iChatHistoryX, iChatHistoryY, iChatHistoryW, iChatHistoryH );
 	}
 
 	SetAlpha(255);
@@ -488,15 +511,20 @@ void CChatDialog::StartMessageMode(int iMessageModeType)
 	m_pChatInput->SetPaintBorderEnabled(true);
 	m_pChatInput->SetMouseInputEnabled(true);
 
-	if (CHAT_HISTORY_FADE_TIME <= 0)
+	/*if (CHAT_HISTORY_FADE_TIME <= 0)
 	{
 		SetPaintBackgroundEnabled(true);
 
 		if (GetChatHistory())
 			GetChatHistory()->SetBgColor(Color(GetChatHistory()->GetBgColor().r(), GetChatHistory()->GetBgColor().g(), GetChatHistory()->GetBgColor().b(), m_iHistoryAlpha));
 	}
-	else
+	else*/
 	{
+		//Place the mouse cursor near the text so people notice it.
+		int x, y, w, h;
+		GetChatHistory()->GetBounds( x, y, w, h );
+		vgui::input()->SetCursorPos( x + ( w/2), y + (h/2) );
+		
 		m_flHistoryFadeTime = gEngfuncs.GetAbsoluteTime() + CHAT_HISTORY_FADE_TIME;
 	}
 }
@@ -522,14 +550,14 @@ void CChatDialog::StopMessageMode(void)
 	m_pChatInput->ClearEntry();
 	m_pChatInput->SetVisible(false);
 
-	if (CHAT_HISTORY_FADE_TIME <= 0)
+	/*if (CHAT_HISTORY_FADE_TIME <= 0)
 	{
 		SetPaintBackgroundEnabled(false);
 
 		if (GetChatHistory())
 			GetChatHistory()->SetBgColor(Color(GetChatHistory()->GetBgColor().r(), GetChatHistory()->GetBgColor().g(), GetChatHistory()->GetBgColor().b(), 0));
 	}
-	else
+	else*/
 	{
 		m_flHistoryFadeTime = gEngfuncs.GetAbsoluteTime() + CHAT_HISTORY_FADE_TIME;
 	}
@@ -573,15 +601,12 @@ void CChatDialog::FadeChatHistory(void)
 	}
 }
 
-float *GetClientColor(int clientIndex);
-float *GetTextColor(int colorNum, int clientIndex);
-
 Color CChatDialog::GetTextColorForClient(int colorNum, int clientIndex)
 {
 	float *col = ::GetTextColor(colorNum, clientIndex);
 
 	if (!col)
-		return Color(0, 0, 0, 0);
+		col = g_ColorDefault;
 
 	return Color(col[0] * 255, col[1] * 255, col[2] * 255, 255);
 }
@@ -591,7 +616,7 @@ Color CChatDialog::GetClientColor(int clientIndex)
 	float *col = ::GetClientColor(clientIndex);
 
 	if (!col)
-		return Color(0, 0, 0, 0);
+		col = g_ColorDefault;
 
 	return Color(col[0] * 255, col[1] * 255, col[2] * 255, 255);
 }
@@ -717,7 +742,7 @@ void CChatDialogLine::Colorize(int alpha)
 			{
 				pChat->GetChatHistory()->InsertColorChange(color);
 				pChat->GetChatHistory()->InsertString(wText);
-				pChat->GetChatHistory()->InsertFade(/*hud_saytext_time->value*/1.0, CHAT_HISTORY_IDLE_FADE_TIME);
+				pChat->GetChatHistory()->InsertFade(hud_saytext_time->value, CHAT_HISTORY_IDLE_FADE_TIME);
 
 				if (i == m_textRanges.Count() - 1)
 					pChat->GetChatHistory()->InsertFade(-1, -1);
@@ -797,7 +822,7 @@ void CChatDialog::ChatPrintf(int iPlayerIndex, const char *fmt, ...)
 	char *pmsg = msg;
 	Color color = GetTextColorForClient((int)(*pmsg), iPlayerIndex);
 
-	while (*pmsg && (*pmsg == '\n' || (color == Color(0, 0, 0, 0))))
+	while (*pmsg && (*pmsg == '\n' || ( *pmsg > 0 && *pmsg < TEXTCOLOR_MAX ) ))
 		pmsg++;
 
 	if (!*pmsg)
@@ -886,9 +911,11 @@ void CChatDialog::ChatPrintf(int iPlayerIndex, const wchar_t *fmt, ...)
 	wchar_t *pmsg = msg;
 	Color color = GetTextColorForClient((int)(*pmsg), iPlayerIndex);
 
-	while (*pmsg && (*pmsg == '\n' || (color == Color(0, 0, 0, 0))))
+	while ( *pmsg && ( *pmsg == '\n' || ( *pmsg > 0 && *pmsg < TEXTCOLOR_MAX ) ) )
+	{
 		pmsg++;
-
+	}
+	
 	if (!*pmsg)
 		return;
 

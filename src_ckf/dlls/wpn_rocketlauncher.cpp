@@ -281,14 +281,21 @@ void CRocket::RocketTouch(CBaseEntity *pOther)
 void CRocket::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flForce)
 {
 	CBasePlayer *pPlayer = NULL;
-	if(pAttacker->IsPlayer()) pPlayer = (CBasePlayer *)pAttacker;
+	if(pAttacker->IsPlayer())
+		pPlayer = (CBasePlayer *)pAttacker;
+
 	pev->velocity = vecDirShooting.Normalize() * (pev->velocity.Length());
 	pev->owner = pAttacker->edict();
-	if(pPlayer) m_iTeam = pPlayer->m_iTeam;
+
+	if(pPlayer)
+		m_iTeam = pPlayer->m_iTeam;
 	pev->skin = m_iTeam - 1;
 	m_iPjFlags |= PJ_AIRBLAST_DEFLECTED;
-	if(!m_iCrit) m_iCrit ++;
-	pev->classname = MAKE_STRING("pj_defrocket");
+
+	if(!m_iCrit)
+		m_iCrit ++;
+
+	//pev->classname = MAKE_STRING("pj_defrocket");
 }
 
 void CRocket::RocketLaunch(void)

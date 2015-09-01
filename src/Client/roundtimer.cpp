@@ -10,7 +10,7 @@ DECLARE_MESSAGE(m_roundTimer, RoundTime)
 
 int CHudRoundTimer::Init(void)
 {
-	g_pfnMSG_RoundTime = HOOK_MESSAGE(RoundTime);
+	//g_pfnMSG_RoundTime = HOOK_MESSAGE(RoundTime);
 
 	gHUD.AddHudElem(this);
 

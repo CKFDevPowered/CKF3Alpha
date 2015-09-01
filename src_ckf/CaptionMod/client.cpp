@@ -20,13 +20,14 @@ hud_player_info_t g_HudPlayerInfo[33];
 PlayerInfo g_PlayerInfo[33];
 WeaponInfo g_WeaponInfo[MAX_WEAPONS];
 BuildInfo g_Build;
-PlayerStatsInfo g_PlayerStatsInfo;
+PlayerStats g_PlayerStats;
 zonevector g_NoBuildZones;
 cpvector g_ControlPoints;
 
 int g_iHealth;
 int g_iMaxHealth;
 int g_iClass;
+int g_iDesiredClass;
 int g_iTeam;
 int g_iWeaponID;
 int g_iHideHUD;
@@ -48,6 +49,8 @@ int g_iBluePlayerNum;
 int g_iSpectatorNum;
 
 int g_iLocalPlayerNum;
+
+int g_iLimitTeams;
 
 char g_szServerName[64];
 
@@ -81,6 +84,7 @@ void CL_InitVars(void)
 	g_iHealth = 0;
 	g_iMaxHealth = 0;
 	g_iClass = 0;
+	g_iDesiredClass = 0;
 	g_iTeam = 0;
 	g_iWeaponID = 0;
 	g_iForceFOV = 0;
@@ -98,6 +102,7 @@ void CL_InitVars(void)
 	g_iRedPlayerNum = 0;
 	g_iBluePlayerNum = 0;
 	g_iSpectatorNum = 0;
+	g_iLimitTeams = 0;
 	g_szServerName[0] = 0;
 	g_iRoundStatus = 0;
 	g_iMaxRoundTime = 0;
@@ -107,7 +112,7 @@ void CL_InitVars(void)
 
 	memset(g_WeaponInfo, 0, sizeof(g_WeaponInfo));
 	memset(g_PlayerInfo, 0, sizeof(g_PlayerInfo));
-	memset(&g_PlayerStatsInfo, 0, sizeof(g_PlayerStatsInfo));
+	memset(&g_PlayerStats, 0, sizeof(g_PlayerStats));
 	memset(&g_Build, 0, sizeof(g_Build));
 	g_NoBuildZones.clear();
 	g_ControlPoints.clear();

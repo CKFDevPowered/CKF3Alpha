@@ -89,11 +89,14 @@ protected:
 
 protected:
 	CPanelAnimationVarAliasType(int, m_iAvatarWidth, "avatar_width", "34", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iNameWidth, "name_width", "136", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iClassWidth, "class_width", "35", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iStatusWidth, "status_width", "12", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iNameWidth, "name_width", "100", "proportional_int");	
+	CPanelAnimationVarAliasType(int, m_iDominateWidth, "dominate_width", "20", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iClassWidth, "class_width", "20", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iNemesisWidth, "nemesis_width", "20", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iScoreWidth, "score_width", "35", "proportional_int");
 	CPanelAnimationVarAliasType(int, m_iDeathWidth, "death_width", "35", "proportional_int");
-	CPanelAnimationVarAliasType(int, m_iPingWidth, "ping_width", "23", "proportional_int");
+	CPanelAnimationVarAliasType(int, m_iPingWidth, "ping_width", "35", "proportional_int");
 
 private:
 	int m_iPlayerIndexSymbol;

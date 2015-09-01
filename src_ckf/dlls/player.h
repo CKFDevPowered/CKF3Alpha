@@ -51,7 +51,14 @@ enum fx_e
 	FX_BURNINGPLAYER,
 	FX_CLOAKBEGIN,
 	FX_CLOAKSTOP,
-	FX_DISGUISEHINT
+	FX_DISGUISEHINT,
+	FX_KILLALLTRAIL
+};
+
+enum
+{
+	PV_iDesiredClass = 0,
+	PV_iLimitTeams
 };
 
 #define MAX_DMGRECORD 100
@@ -455,6 +462,7 @@ public:
 	void UpdateStatusBar(void);
 	void CheckPowerups(void);
 
+	int GetBoostMaxHealth(void);
 	int GetCriticalFire(int iType, unsigned int iRandSeed);
 	void CritChance_Think(void);
 	void CritBuff_Think(void);

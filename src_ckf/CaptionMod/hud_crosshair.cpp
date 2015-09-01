@@ -25,7 +25,7 @@ int HudCrosshair_Redraw(float flTime, int iIntermission)
 	if(g_ScoreBoardEnabled)
 		return 0;
 
-	if(!(g_iHideHUD & HIDEHUD_WEAPONS))
+	if((g_iHideHUD & HIDEHUD_WEAPONS))
 		return 0;
 
 	if(gBTEFuncs.GetHUDFov() < 60)

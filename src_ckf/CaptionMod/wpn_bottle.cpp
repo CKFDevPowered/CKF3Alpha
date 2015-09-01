@@ -15,7 +15,7 @@ BOOL CClientBottle::Deploy(void)
 {
 	m_iShotsFired = 0;
 
-	return GroupDeploy("models/CKF_III/v_bottle.mdl", "models/CKF_III/wp_group_rf.mdl", BOTTLE_DRAW, 0, 0, "knife");
+	return GroupDeploy("models/CKF_III/v_bottle.mdl", "models/CKF_III/wp_group_rf.mdl", (m_bBroken) ? BOTTLE_DRAW_BROKEN : BOTTLE_DRAW, 0, 0, "knife");
 }
 
 void CClientBottle::Holster(void)

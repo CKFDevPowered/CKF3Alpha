@@ -128,7 +128,7 @@ int HudDemolishMenu_Redraw(float flTime, int iIntermission)
 		return 0;
 	if(g_iWeaponID != WEAPON_DESTROYPDA)
 	{
-		g_iHudMenu = 0;
+		//g_iHudMenu = 0;
 		return 0;
 	}
 

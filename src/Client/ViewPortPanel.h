@@ -1,3 +1,6 @@
+#ifndef VIEWPORTPANEL_H
+#define VIEWPORTPANEL_H
+
 class CViewPortPanel
 {
 public:
@@ -35,3 +38,5 @@ public:
 	virtual bool IsMouseInputEnabled(void) { return BaseClass::IsMouseInputEnabled(); } \
 	virtual void SetMouseInputEnabled(bool state) { BaseClass::SetMouseInputEnabled(state); } \
 	virtual void InvalidateLayout(bool layoutNow = false, bool reloadScheme = false) { BaseClass::InvalidateLayout(layoutNow, reloadScheme); }
+
+#endif

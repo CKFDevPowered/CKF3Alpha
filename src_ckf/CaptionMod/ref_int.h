@@ -381,13 +381,3 @@ enum
 	kRenderFxShadow,
 	kRenderFxFireLayer
 };
-
-typedef void (*xcommand_t)(void);
-
-typedef struct
-{
-	int (*GetHUDFov)(void);
-	float *(*GetPunchAngles)(void);
-	pfnUserMsgHook (*HookUserMsg)(char *pMsgName, pfnUserMsgHook pfnHook);
-	xcommand_t (*HookCmd)(char *cmd_name, xcommand_t newfuncs);
-}bte_funcs_t;

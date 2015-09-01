@@ -1,3 +1,5 @@
+#pragma once
+
 #ifdef GetCurrentTime
 #undef GetCurrentTime
 #endif
@@ -37,7 +39,7 @@ class CCSBackGroundPanel;
 //class CCSClassMenu_CT;
 class CTFClassMenu;
 //class CCSTextWindow;
-class CCSClientScoreBoardDialog;
+//class CCSClientScoreBoardDialog;
 class CCSTeamMenu;
 class CommandMenu;
 class CCSSpectatorGUI;
@@ -49,6 +51,7 @@ class CCSChatDialog;
 class CTFTextWindow;
 class CTFMapInfoMenu;
 class CTFTeamMenu;
+class CTFScoreBoardDialog;
 
 #ifdef GetCurrentTime
 #undef GetCurrentTime
@@ -142,6 +145,7 @@ public:
 	void SetServerName(char *name);
 	void SetTeamScore(int team, int score);
 	void ShowMOTD(char *title, char *string);
+	bool LoadHudAnimations( void );
 
 private:
 	float m_flCurrentTime;
@@ -167,7 +171,7 @@ private:
 	//CCSClassMenu_CT *m_pClassMenu_CT;
 	CTFClassMenu *m_pClassMenu;
 	CTFTextWindow *m_pTextWindow;
-	CCSClientScoreBoardDialog *m_pScoreBoard;
+	CTFScoreBoardDialog *m_pScoreBoard;
 	CCSSpectatorGUI *m_pSpectatorGUI;
 	CCSSpectatorMenu *m_pSpectatorMenu;
 	CCSBuyMenu_CT *m_pBuyMenu_CT;

@@ -31,7 +31,7 @@ extern vec3_t v_origin, v_angles;
 
 namespace vgui
 {
-CHudRadar::CHudRadar(void) : Panel(NULL, "HudRadar")
+CHudNewRadar::CHudNewRadar(void) : Panel(NULL, "HudRadar")
 {
 	m_hHudFont = INVALID_FONT;
 	m_bCanRenderMapSprite = false;
@@ -42,7 +42,7 @@ CHudRadar::CHudRadar(void) : Panel(NULL, "HudRadar")
 	SetKeyBoardInputEnabled(false);
 }
 
-void CHudRadar::Init(void)
+void CHudNewRadar::Init(void)
 {
 	m_bCanRenderMapSprite = false;
 	m_iLastWide = 0;
@@ -55,7 +55,7 @@ void CHudRadar::Init(void)
 	SetVisible(true);
 }
 
-void CHudRadar::VidInit(void)
+void CHudNewRadar::VidInit(void)
 {
 	g_MapSprite = NULL;
 
@@ -91,13 +91,13 @@ void CHudRadar::VidInit(void)
 	m_hRadaropaque = gHUD.GetSprite(m_HUD_radaropaque);
 }
 
-void CHudRadar::Reset(void)
+void CHudNewRadar::Reset(void)
 {
 	for (int i = 1; i <= MAX_HOSTAGES; i++)
 		m_pHostages[i] = NULL;
 }
 
-void CHudRadar::Think(void)
+void CHudNewRadar::Think(void)
 {
 	if (m_hHudFont == INVALID_FONT)
 	{
@@ -122,13 +122,13 @@ void CHudRadar::Think(void)
 	}
 }
 
-void CHudRadar::UpdateMapSprite(void)
+void CHudNewRadar::UpdateMapSprite(void)
 {
 	if (!g_MapSprite)
 		return;
 }
 
-void CHudRadar::RenderMapSprite(void)
+void CHudNewRadar::RenderMapSprite(void)
 {
 	if (!g_MapSprite)
 		return; //
@@ -227,7 +227,7 @@ void CHudRadar::RenderMapSprite(void)
 	}
 }
 
-void CHudRadar::CalcRefdef(struct ref_params_s *pparams)
+void CHudNewRadar::CalcRefdef(struct ref_params_s *pparams)
 {
 	m_bCanRenderMapSprite = false;
 
@@ -285,7 +285,7 @@ void CHudRadar::CalcRefdef(struct ref_params_s *pparams)
 		m_bCanRenderMapSprite = true;
 }
 
-void CHudRadar::Paint(void)
+void CHudNewRadar::Paint(void)
 {
 	return;
 
@@ -728,7 +728,7 @@ void CHudRadar::Paint(void)
 	gEngfuncs.pTriAPI->RenderMode(kRenderNormal);
 }
 
-void CHudRadar::BuildHostageList(void)
+void CHudNewRadar::BuildHostageList(void)
 {
 	int index = 1;
 
@@ -758,7 +758,7 @@ void CHudRadar::BuildHostageList(void)
 		m_pHostages[i] = NULL;
 }
 
-bool CHudRadar::IsValidEntity(cl_entity_s *pEntity)
+bool CHudNewRadar::IsValidEntity(cl_entity_s *pEntity)
 {
 	if (pEntity && pEntity->model && pEntity->model->name && !(pEntity->curstate.messagenum < gEngfuncs.GetLocalPlayer()->curstate.messagenum))
 		return true;
@@ -768,7 +768,7 @@ bool CHudRadar::IsValidEntity(cl_entity_s *pEntity)
 
 #pragma optimize("", off)
 
-bool CHudRadar::CalcPoint(float *origin, int &screenX, int &screenY, int &scale)
+bool CHudNewRadar::CalcPoint(float *origin, int &screenX, int &screenY, int &scale)
 {
 	int wide, tall;
 	GetSize(wide, tall);
@@ -838,7 +838,7 @@ bool CHudRadar::CalcPoint(float *origin, int &screenX, int &screenY, int &scale)
 
 #pragma optimize("", on)
 
-void CHudRadar::DrawSprite(int x, int y, HSPRITE hspr, float yaw, int scale, int r, int g, int b, int a)
+void CHudNewRadar::DrawSprite(int x, int y, HSPRITE hspr, float yaw, int scale, int r, int g, int b, int a)
 {
 	if (hspr == 0)
 	{
@@ -870,12 +870,12 @@ void CHudRadar::DrawSprite(int x, int y, HSPRITE hspr, float yaw, int scale, int
 	gEngfuncs.pTriAPI->End();
 }
 
-void CHudRadar::ApplySchemeSettings(vgui::IScheme *pScheme)
+void CHudNewRadar::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
 }
 
-int CHudRadar::FireMessage(const char *pszName, int iSize, void *pbuf)
+int CHudNewRadar::FireMessage(const char *pszName, int iSize, void *pbuf)
 {
 	return 0;
 }

@@ -423,7 +423,7 @@ void R_DrawTGATracer(cl_entity_t *e, tgasprite_t *tgaspr)
 #endif
 }
 
-void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h)
+void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h, qboolean bLocalXY)
 {
 	gpRefExports->R_PushRefDef();
 	VectorClear(refdef->viewangles);
@@ -434,7 +434,7 @@ void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h)
 
 	int centerX = x + w/2;
 	int centerY = y + h/2;
-	if(g_3dmenu->value >= 2 && (g_RefSupportExt & r_ext_fbo))
+	if(g_RefSupportExt & r_ext_fbo)
 	{
 		int left = w/2;
 		int top = h/2;
@@ -449,7 +449,10 @@ void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h)
 		if(g_RefSupportExt & r_ext_shader)
 			gpRefExports->R_BeginFXAA(ScreenWidth, ScreenHeight);
 
-		gpRefExports->R_Draw3DHUDQuad(centerX, centerY, left, top);
+		if(bLocalXY)
+			gpRefExports->R_Draw3DHUDQuad(left, top, left, top);
+		else
+			gpRefExports->R_Draw3DHUDQuad(centerX, centerY, left, top);
 
 		if(g_RefSupportExt & r_ext_shader)
 			gpRefExports->ShaderAPI.GL_EndProgram();

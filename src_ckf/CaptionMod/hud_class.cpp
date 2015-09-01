@@ -116,7 +116,7 @@ int HudClass_VidInit(void)
 	g_texPlayerMan[0][4] = Surface_LoadTGA("resource\\tga\\class_sniper_red");
 	g_texPlayerMan[0][5] = Surface_LoadTGA("resource\\tga\\class_medic_red");
 	g_texPlayerMan[0][6] = Surface_LoadTGA("resource\\tga\\class_engineer_red");
-	g_texPlayerMan[0][7] = Surface_LoadTGA("resource\\tga\\class_demo_red");
+	g_texPlayerMan[0][7] = Surface_LoadTGA("resource\\tga\\class_demoman_red");
 	g_texPlayerMan[0][8] = Surface_LoadTGA("resource\\tga\\class_spy_red");
 
 	g_texPlayerMan[1][0] = Surface_LoadTGA("resource\\tga\\class_scout_blu");
@@ -126,7 +126,7 @@ int HudClass_VidInit(void)
 	g_texPlayerMan[1][4] = Surface_LoadTGA("resource\\tga\\class_sniper_blu");
 	g_texPlayerMan[1][5] = Surface_LoadTGA("resource\\tga\\class_medic_blu");
 	g_texPlayerMan[1][6] = Surface_LoadTGA("resource\\tga\\class_engineer_blu");
-	g_texPlayerMan[1][7] = Surface_LoadTGA("resource\\tga\\class_demo_blu");
+	g_texPlayerMan[1][7] = Surface_LoadTGA("resource\\tga\\class_demoman_blu");
 	g_texPlayerMan[1][8] = Surface_LoadTGA("resource\\tga\\class_spy_blu");
 
 	CL_CreateTempEntity(&g_PlayerEntity, NULL);
@@ -146,7 +146,7 @@ int HudClass_Redraw(float flTime, int iIntermission)
 	if(iIntermission)
 		return 0;
 
-	if(!(g_iHideHUD & HIDEHUD_HEALTH))
+	if((g_iHideHUD & HIDEHUD_HEALTH))
 		return 0;
 
 	if(gEngfuncs.IsSpectateOnly())

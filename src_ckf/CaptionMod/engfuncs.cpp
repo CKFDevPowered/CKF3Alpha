@@ -114,7 +114,7 @@ void API_InstallHook(void)
 	HMODULE hUser32 = GetModuleHandle("user32.dll");
 	
 	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "SetWindowTextA"), Hook_SetWindowTextA, (void *&)gHookFuncs.SetWindowTextA);
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "SetCursorPos"), Hook_SetCursorPos, (void *&)gHookFuncs.SetCursorPos);
+	//g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "SetCursorPos"), Hook_SetCursorPos, (void *&)gHookFuncs.SetCursorPos);
 	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExA"), Hook_CreateWindowExA, (void *&)gHookFuncs.CreateWindowExA);
 	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExW"), Hook_CreateWindowExW, (void *&)gHookFuncs.CreateWindowExW);
 }

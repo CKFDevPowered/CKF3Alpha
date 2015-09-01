@@ -112,6 +112,7 @@ void CGameUI::Initialize(CreateInterfaceFn *factories, int count)
 void CGameUI::Start(struct cl_enginefuncs_s *engineFuncs, int interfaceVersion, void *system)
 {
 	engine = engineFuncs;
+	engine->pfnClientCmd("cd on\n");
 	engine->pfnClientCmd("mp3 loop media/gamestartup.mp3\n");
 
 	ModInfo().LoadCurrentGameInfo();

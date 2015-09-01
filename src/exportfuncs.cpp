@@ -55,7 +55,7 @@ int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion)
 	engine = pEnginefuncs;
 	memcpy(&gEngfuncs, pEnginefuncs, sizeof(gEngfuncs));
 
-	pEnginefuncs->pfnHookEvent = HookEvent;
+	//pEnginefuncs->pfnHookEvent = HookEvent;
 	pEnginefuncs->CheckParm = CheckParm;
 	pEnginefuncs->pfnGetPlayerInfo = GetPlayerInfo;
 	pEnginefuncs->pfnGetScreenInfo = GetScreenInfo;
@@ -189,7 +189,8 @@ void HUD_PlayerMoveInit(struct playermove_s *ppmove)
 {
 	gExportfuncs.HUD_PlayerMoveInit(ppmove);
 
-	//PM_Init(ppmove);
+	//init pmove so that PM_GetPhysEntInfo don't crash
+	PM_Init(ppmove);
 
 	if(gCkfClientFuncs.HUD_PlayerMoveInit)
 		gCkfClientFuncs.HUD_PlayerMoveInit(ppmove);

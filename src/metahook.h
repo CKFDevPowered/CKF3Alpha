@@ -1,7 +1,9 @@
 #ifndef _METAHOOK_H
 #define _METAHOOK_H
 
+#ifndef EXPORT
 #define EXPORT __declspec(dllexport)
+#endif
 
 #include <winsani_in.h>
 #include <windows.h>

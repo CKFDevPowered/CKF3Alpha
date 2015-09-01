@@ -1,9 +1,9 @@
 "Resource/UI/TFClassMenu.res"
 {
-	"classmenu"
+	"class"
 	{
 		"ControlName"			"CTFClasMenu"
-		"fieldName"				"classmenu"
+		"fieldName"				"class"
 		"xpos"					"0"
 		"ypos"					"0"
 		"wide"					"f0"
@@ -504,7 +504,7 @@
 		"visible"		"1"
 		"enabled"		"1"
 		"tabPosition"	"0"
-		"labelText"		"#CKF3_Menu_Cancel"
+		"labelText"		"#CKF3_Cancel"
 		"textAlignment"	"center"
 		"Command"		"vguicancel"
 		"font"			"HudFontSmallBold"
@@ -528,6 +528,44 @@
 		"textAlignment"	"west"
 		"font"			"MenuMainTitle"
 		"fgcolor"		"HudOffWhite"
+	}
+	
+	"LocalPlayerImage"
+	{
+		"ControlName"	"ImagePanel"
+		"fieldName"		"LocalPlayerImage"
+		"xpos"			"c-30"
+		"ypos"			"330"
+		"zpos"			"9"
+		"wide"			"45"
+		"tall"			"90"
+		"visible"		"0"
+		"enabled"		"1"
+		"image"			""	
+		"scaleImage"	"1"	
+	}
+	
+	"LocalPlayerBG"
+	{
+		"ControlName"	"ScalableImagePanel"
+		"fieldName"		"LocalPlayerBG"
+		"xpos"			"c-35"
+		"ypos"			"345"
+		"zpos"			"2"
+		"wide"			"55"
+		"tall"			"80"
+		"autoResize"	"0"
+		"pinCorner"		"0"
+		"visible"		"0"
+		"enabled"		"1"
+		"image"			"class/color_panel_clear"
+		"scaleImage"	"1"	
+
+		"src_corner_height"		"23"			// pixels inside the image
+		"src_corner_width"		"23"
+				
+		"draw_corner_width"		"5"				// screen size of the corners ( and sides ), proportional
+		"draw_corner_height" 	"5"	
 	}
 	
 	"countImage0"
@@ -661,7 +699,7 @@
 		"tall"			"60"
 		"visible"		"0"
 		"enabled"		"1"
-		"image"			""	
+		"image"			""
 		"scaleImage"	"1"	
 	}
 	

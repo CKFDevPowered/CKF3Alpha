@@ -617,6 +617,10 @@ void CScheme::ReloadFontGlyphs(void)
 			}
 			else
 			{
+				if(fontdata->GetInt("weight") == 700 && tall == 12)
+				{
+					Msg("sb");
+				}
 				g_pSurface->AddGlyphSetToFont(m_FontAliases[i]._font, fontdata->GetString("name"), tall, fontdata->GetInt("weight"), blur, scanlines, flags, 0x0, 0xFFFF);
 			}
 

@@ -23,7 +23,7 @@ int HudHealth_Redraw(float flTime, int iIntermission)
 	if(iIntermission)
 		return 0;
 
-	if(!(g_iHideHUD & HIDEHUD_HEALTH))
+	if((g_iHideHUD & HIDEHUD_HEALTH))
 		return 0;
 
 	if(gEngfuncs.IsSpectateOnly())

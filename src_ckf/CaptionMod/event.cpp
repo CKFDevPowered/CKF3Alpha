@@ -27,7 +27,7 @@ float UTIL_SharedRandomFloat( unsigned int seed, float low, float high );
 
 void V_PunchAxis( int axis, float punch )
 {
-	ev_punchangle[axis] = punch;
+	ev_punchangle[axis] += punch;
 }
 
 void EV_EjectBrass( float *origin, float *velocity, float rotation, int model, int soundtype )
@@ -773,8 +773,16 @@ void EV_FireLauncher(event_args_t *args)
 	case WEAPON_ROCKETLAUNCHER:
 		sample = "CKF_III/rocketlauncher_shoot.wav";break;
 	case WEAPON_GRENADELAUNCHER:
+		if(EV_IsLocal(idx) && !CL_IsThirdPerson())
+		{
+			V_PunchAxis(0, 2.0);
+		}
 		sample = "CKF_III/grenadelauncher_shoot.wav";break;
 	case WEAPON_STICKYLAUNCHER:
+		if(EV_IsLocal(idx) && !CL_IsThirdPerson())
+		{
+			V_PunchAxis(0, 2.0);
+		}
 		sample = "CKF_III/stickylauncher_shoot.wav";break;
 	default:
 		break;

@@ -6,15 +6,18 @@
 #include "client.h"
 #include "util.h"
 #include "weapon.h"
+#include "hud_localize.h"
 
 pfnUserMsgHook pfnMsgFunc_Health;
 pfnUserMsgHook pfnMsgFunc_ResetHUD;
 pfnUserMsgHook pfnMsgFunc_TeamInfo;
+pfnUserMsgHook pfnMsgFunc_TeamScore;
 pfnUserMsgHook pfnMsgFunc_InitHUD;
 pfnUserMsgHook pfnMsgFunc_Ammo;
 pfnUserMsgHook pfnMsgFunc_VGUIMenu;
 pfnUserMsgHook pfnMsgFunc_HideWeapon;
 pfnUserMsgHook pfnMsgFunc_ServerName;
+pfnUserMsgHook pfnMsgFunc_DrawFX;
 
 void HudBase_ShowMenu(void);
 void HudBase_DeactivateMouse(void);
@@ -59,14 +62,111 @@ void HudFloatText_AddHealth(int iHealth);
 void HudFloatText_AddMetal(int iMetal);
 void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flTime);
 void CL_DisguiseHint(void);
+void R_KillAllEntityPartSystem(int instant);
 
 int MsgFunc_HideWeapon(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 
-	g_iHideHUD = READ_BYTE();
+	g_iHideHUD = READ_SHORT();
 	
 	return pfnMsgFunc_HideWeapon(pszName, iSize, pbuf);
+}
+
+int MsgFunc_Dominate(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	int killerindex = READ_BYTE();
+	int victimindex = READ_BYTE();
+	int relative = 0;
+
+	hud_player_info_t killer_pi;
+	hud_player_info_t victim_pi;
+
+	if(killerindex == victimindex)
+		return 1;
+
+	gEngfuncs.pfnGetPlayerInfo(killerindex, &killer_pi);
+	if(!killerindex || !killer_pi.name || !killer_pi.name[0])
+	{
+		gEngfuncs.Con_DPrintf("Bad killer id (%d) in MsgFunc_Dominate\n", killerindex);
+		return 1;
+	}
+
+	int killerteam = g_PlayerInfo[killerindex].iTeam;
+
+	if(killerindex == gEngfuncs.GetLocalPlayer()->index)
+		relative = 1;
+
+	gEngfuncs.pfnGetPlayerInfo(victimindex, &victim_pi);
+	if(!victimindex || !victim_pi.name || !victim_pi.name[0])
+	{
+		gEngfuncs.Con_DPrintf("Bad victim id (%d) in MsgFunc_Dominate\n", victimindex);
+		return 1;
+	}
+
+	int victimteam = g_PlayerInfo[victimindex].iTeam;
+
+	if(victimindex == gEngfuncs.GetLocalPlayer()->index)
+		relative = 1;
+
+	char victim_name[128];
+
+	sprintf(victim_name, "%s %s", g_szMsgDominating, victim_pi.name);
+
+	HudDeathMsg_AddPanel(killer_pi.name, NULL, killerteam, victim_name, victimteam, "dom", relative, false);
+
+	g_PlayerInfo[killerindex].iDominateList[victimteam] = 1;
+
+	return 1;
+}
+
+int MsgFunc_Revenge(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	int killerindex = READ_BYTE();
+	int victimindex = READ_BYTE();
+	int relative = 0;
+
+	hud_player_info_t killer_pi;
+	hud_player_info_t victim_pi;
+
+	if(killerindex == victimindex)
+		return 1;
+
+	gEngfuncs.pfnGetPlayerInfo(killerindex, &killer_pi);
+	if(!killerindex || !killer_pi.name || !killer_pi.name[0])
+	{
+		gEngfuncs.Con_DPrintf("Bad killer id (%d) in MsgFunc_Revenge\n", killerindex);
+		return 1;
+	}
+
+	int killerteam = g_PlayerInfo[killerindex].iTeam;
+
+	if(killerindex == gEngfuncs.GetLocalPlayer()->index)
+		relative = 1;
+
+	gEngfuncs.pfnGetPlayerInfo(victimindex, &victim_pi);
+	if(!victimindex || !victim_pi.name || !victim_pi.name[0])
+	{
+		gEngfuncs.Con_DPrintf("Bad victim id (%d) in MsgFunc_Revenge\n", victimindex);
+		return 1;
+	}
+
+	int victimteam = g_PlayerInfo[victimindex].iTeam;
+
+	if(victimindex == gEngfuncs.GetLocalPlayer()->index)
+		relative = 1;
+
+	char final_victim_name[128];
+
+	sprintf(final_victim_name, "%s %s", g_szMsgRevenge, victim_pi.name);
+
+	HudDeathMsg_AddPanel(killer_pi.name, NULL, killerteam, final_victim_name, victimteam, "dom", relative, false);
+
+	g_PlayerInfo[victimteam].iDominateList[killerindex] = 0;
+
+	return 1;
 }
 
 int MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
@@ -87,7 +187,7 @@ int MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 	gEngfuncs.pfnGetPlayerInfo(victimindex, &victim_pi);
 	if(!victimindex || !victim_pi.name || !victim_pi.name[0])
 	{
-		gEngfuncs.Con_DPrintf("Warning: Bad victim index (%d) in MsgFunc_DeathMsg", victimindex);
+		gEngfuncs.Con_DPrintf("Bad victim id (%d) in MsgFunc_DeathMsg\n", victimindex);
 		return 1;
 	}
 	killerteam = 0;
@@ -155,8 +255,6 @@ int MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
-extern char g_szBuildables[4][64];
-
 int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
@@ -174,9 +272,9 @@ int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 
 	char victim_name[128];
 
-	if(buildclass < BUILDABLE_SENTRY || buildclass > BUILDABLE_EXIT)
+	if(buildclass < 1 || buildclass > 5)
 	{
-		gEngfuncs.Con_DPrintf("Warning: Bad buildclass (%d) in MsgFunc_BuildDeath", buildclass);
+		gEngfuncs.Con_DPrintf("Warning: Bad classindex (%d) in MsgFunc_BuildDeath", buildclass);
 		return 1;
 	}
 
@@ -253,6 +351,67 @@ int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
+int MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int killerteam = READ_BYTE();
+	int killerindex = READ_BYTE();
+
+	std::vector<int> killer_vector;
+	if(killerindex == 0)
+	{
+		int killercount = READ_BYTE();
+		for(int i = 0; i < killercount; ++i)
+		{
+			killer_vector.push_back(READ_BYTE());
+		}		
+	}
+	else
+	{
+		killer_vector.push_back(killerindex);
+	}
+
+	int victimteam = READ_BYTE();
+	std::string iconname = READ_STRING();
+	std::string victimname = READ_STRING();
+
+	int relative = 0;
+
+	hud_player_info_t killer_pi;
+
+	char killer_name[128];
+
+	killer_name[0] = '\0';
+
+	for(int i = 0; i < killer_vector.size(); ++i)
+	{
+		if(i != 0) strcat(killer_name, ", ");
+
+		gEngfuncs.pfnGetPlayerInfo(killer_vector[i], &killer_pi);
+
+		if(killer_pi.name && killer_pi.name[0])
+			strcat(killer_name, killer_pi.name);
+
+		if(killer_pi.thisplayer)
+			relative = 1;
+	}
+
+	char victim_name[128];
+
+	if(iconname.find("def") != std::string::npos)
+		sprintf(victim_name, "%s %s", g_szMsgDefended, victimname.c_str());
+	else
+		sprintf(victim_name, "%s %s", g_szMsgCaptured, victimname.c_str());
+
+	if(g_iTeam == victimteam)
+		relative = 1;
+
+	HudDeathMsg_AddPanel(killer_name, NULL, killerteam, victim_name, victimteam, iconname.c_str(), relative, 0);
+
+	return 1;
+}
+
 int MsgFunc_MapObject(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
@@ -275,7 +434,6 @@ int MsgFunc_MapObject(const char *pszName, int iSize, void *pbuf)
 
 		model_t *mod = IEngineStudio.Mod_ForName(modelname, true);
 
-		//int i = g_NoBuildZones.numphysent;
 		physent_t physent;
 		memset(&physent, 0, sizeof(physent_t));
 
@@ -553,6 +711,13 @@ int MF_DrawFX_DisguiseHint(void)
 	return 1;
 }
 
+int MF_DrawFX_KillAllTrail(void)
+{
+	R_KillAllEntityPartSystem(true);
+
+	return 1;
+}
+
 pfnMF_DrawFX gDrawFXList[] = {
 	MF_DrawFX_StickyTrail,
 	MF_DrawFX_RocketTrail,
@@ -581,12 +746,19 @@ pfnMF_DrawFX gDrawFXList[] = {
 	MF_DrawFX_BurningPlayer,
 	MF_DrawFX_CloakBegin,
 	MF_DrawFX_CloakStop,
-	MF_DrawFX_DisguiseHint
+	MF_DrawFX_DisguiseHint,
+	MF_DrawFX_KillAllTrail
 };
 
 int MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
+
+	if(pfnMsgFunc_DrawFX && pfnMsgFunc_DrawFX(pszName, iSize, pbuf))
+	{
+		return 1;
+	}
+
 	int fxtype = READ_BYTE();
 	if(fxtype >= 0 && fxtype < ARRAYSIZE(gDrawFXList) )
 		return (gDrawFXList[fxtype])();
@@ -769,11 +941,6 @@ int MsgFunc_TeamInfo(const char *pszName, int iSize, void *pbuf)
 	if(entindex == gEngfuncs.GetLocalPlayer()->index)
 	{
 		g_iTeam = g_PlayerInfo[entindex].iTeam;
-		if(g_iTeam == 0 || g_iTeam == 3)
-		{
-			g_iClass = 0;
-			g_iMaxHealth = 0;
-		}
 	}
 
 	return pfnMsgFunc_TeamInfo(pszName, iSize, pbuf);
@@ -879,49 +1046,49 @@ int MsgFunc_StatsInfo(const char *pszName, int iSize, void *pbuf)
 	switch(iType)
 	{
 	case STATS_DEMOLISH:
-		g_PlayerStatsInfo.iDemolish = READ_SHORT();
+		g_PlayerStats.iDemolish = READ_SHORT();
 		break;
 	case STATS_CAPTURE:
-		g_PlayerStatsInfo.iCapture = READ_SHORT();
+		g_PlayerStats.iCapture = READ_SHORT();
 		break;
 	case STATS_DEFENCE:
-		g_PlayerStatsInfo.iDefence = READ_SHORT();
+		g_PlayerStats.iDefence = READ_SHORT();
 		break;
 	case STATS_DOMINATE:
-		g_PlayerStatsInfo.iDominate = READ_SHORT();
+		g_PlayerStats.iDominate = READ_SHORT();
 		break;
 	case STATS_REVENGE:
-		g_PlayerStatsInfo.iRevenge = READ_SHORT();
+		g_PlayerStats.iRevenge = READ_SHORT();
 		break;
 	case STATS_UBERCHARGE:
-		g_PlayerStatsInfo.iUbercharge = READ_SHORT();
+		g_PlayerStats.iUbercharge = READ_SHORT();
 		break;
 	case STATS_HEADSHOT:
-		g_PlayerStatsInfo.iHeadshot = READ_SHORT();
+		g_PlayerStats.iHeadshot = READ_SHORT();
 		break;
 	case STATS_TELEPORT:
-		g_PlayerStatsInfo.iTeleport = READ_SHORT();
+		g_PlayerStats.iTeleport = READ_SHORT();
 		break;
 	case STATS_HEALING:
-		g_PlayerStatsInfo.iHealing = READ_SHORT();
+		g_PlayerStats.iHealing = READ_SHORT();
 		break;
 	case STATS_BACKSTAB:
-		g_PlayerStatsInfo.iBackstab = READ_SHORT();
+		g_PlayerStats.iBackstab = READ_SHORT();
 		break;
 	case STATS_BONUS:
-		g_PlayerStatsInfo.iBonus = READ_SHORT();
+		g_PlayerStats.iBonus = READ_SHORT();
 		break;
 	case STATS_KILL:
-		g_PlayerStatsInfo.iKill = READ_SHORT();
+		g_PlayerStats.iKill = READ_SHORT();
 		break;
 	case STATS_DEATH:
-		g_PlayerStatsInfo.iDeath = READ_SHORT();
+		g_PlayerStats.iDeath = READ_SHORT();
 		break;
 	case STATS_ASSIST:
-		g_PlayerStatsInfo.iAssist = READ_SHORT();
+		g_PlayerStats.iAssist = READ_SHORT();
 		break;
 	case STATS_CLEAR:
-		memset(&g_PlayerStatsInfo, 0, sizeof(g_PlayerStatsInfo));
+		memset(&g_PlayerStats, 0, sizeof(g_PlayerStats));
 		break;
 	}
 	return 1;
@@ -938,7 +1105,7 @@ int MsgFunc_TeamScore(const char *pszName, int iSize, void *pbuf)
 	else if(!strcmp(teamname, "CT"))
 		g_iBlueTeamScore = READ_SHORT();
 
-	return 1;
+	return pfnMsgFunc_TeamScore(pszName, iSize, pbuf);
 }
 
 int MsgFunc_ScoreAttrib(const char *pszName, int iSize, void *pbuf)
@@ -949,7 +1116,7 @@ int MsgFunc_ScoreAttrib(const char *pszName, int iSize, void *pbuf)
 
 	int flags = READ_BYTE();
 
-	g_PlayerInfo[entindex].bIsAlive = (flags & SCOREATTRIB_DEAD) ? true : false;
+	g_PlayerInfo[entindex].bIsDead = (flags & SCOREATTRIB_DEAD) ? true : false;
 	g_PlayerInfo[entindex].iClass = READ_BYTE();
 
 	return 1;
@@ -1028,6 +1195,23 @@ int MsgFunc_CPInit(const char *pszName, int iSize, void *pbuf)
 		g_ControlPoints[i].iHudPosition = READ_CHAR();
 		strncpy(g_ControlPoints[i].szName, READ_STRING(), 31);
 		g_ControlPoints[i].szName[0] = 0;
+
+		char modelname[16];
+		strcpy(modelname, READ_STRING());
+
+		model_t *mod = IEngineStudio.Mod_ForName(modelname, true);
+
+		physent_t *physent = &g_ControlPoints[i].physent;
+		memset(physent, 0, sizeof(physent_t));
+
+		VectorCopy(mod->maxs, physent->maxs);
+		VectorCopy(mod->mins, physent->mins);
+		VectorAdd(physent->maxs, physent->mins, physent->origin);
+		VectorMultiply(physent->origin, 0.5, physent->origin);
+		physent->model = mod;
+		physent->solid = SOLID_TRIGGER;
+		physent->movetype = MOVETYPE_NONE;
+		physent->skin = CONTENT_SOLID;
 	}
 
 	return 1;
@@ -1039,6 +1223,23 @@ int MsgFunc_CPZone(const char *pszName, int iSize, void *pbuf)
 
 	g_iCapPointIndex = READ_BYTE();
 
+	return 1;
+}
+
+int MsgFunc_PlayerVars(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int iVarType = READ_BYTE();
+	switch(iVarType)
+	{
+	case PV_iDesiredClass:
+		g_iDesiredClass = READ_BYTE();
+		break;
+	case PV_iLimitTeams:
+		g_iLimitTeams = READ_BYTE();
+	default:break;
+	}
 	return 1;
 }
 
@@ -1060,7 +1261,7 @@ void UserMsg_InstallHook(void)
 	pfnMsgFunc_ResetHUD = HOOK_USERMSG(ResetHUD);
 	pfnMsgFunc_InitHUD = HOOK_USERMSG(InitHUD);
 	pfnMsgFunc_TeamInfo = HOOK_USERMSG(TeamInfo);
-	HOOK_USERMSG(TeamScore);
+	pfnMsgFunc_TeamScore = HOOK_USERMSG(TeamScore);
 	HOOK_USERMSG(DeathMsg);
 	//pfnMsgFunc_VGUIMenu = HOOK_USERMSG(VGUIMenu);
 	pfnMsgFunc_HideWeapon = HOOK_USERMSG(HideWeapon);
@@ -1071,16 +1272,20 @@ void UserMsg_InstallHook(void)
 
 	HOOK_USERMSG(WeaponInfo);
 	HOOK_USERMSG(HudMenu);
-	HOOK_USERMSG(MGUIPrint);
-	HOOK_USERMSG(MGUIMenu);
-	HOOK_USERMSG(DrawFX);	
+	//HOOK_USERMSG(MGUIPrint);
+	//HOOK_USERMSG(MGUIMenu);
+	pfnMsgFunc_DrawFX = HOOK_USERMSG(DrawFX);
 	HOOK_USERMSG(WeaponAnimEx);
 	HOOK_USERMSG(MapObject);
 	HOOK_USERMSG(BuildDeath);
 	HOOK_USERMSG(HUDBuild);
+	HOOK_USERMSG(ObjectMsg);
 	HOOK_USERMSG(StatsInfo);
 	HOOK_USERMSG(CPState);
 	HOOK_USERMSG(CPInit);
-	HOOK_USERMSG(CPZone);
+	//HOOK_USERMSG(CPZone);
 	HOOK_USERMSG(SpawnInit);
+	HOOK_USERMSG(PlayerVars);
+	HOOK_USERMSG(Dominate);
+	HOOK_USERMSG(Revenge);
 }

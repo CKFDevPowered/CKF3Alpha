@@ -7,6 +7,7 @@
 #include <pm_defs.h>
 #include <tier0/basetypes.h>
 #include <cvardef.h>
+#include <ICKFClient.h>
 #include "gl_model.h"
 #include "ref_int.h"
 

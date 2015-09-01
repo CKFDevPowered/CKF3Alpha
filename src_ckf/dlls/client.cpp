@@ -132,6 +132,8 @@ void ShowVGUIMenu(CBasePlayer *pPlayer, int type, int bitsKey, char *string)
 	}
 	else
 		ShowMenu(pPlayer, bitsKey, -1, 0, string);
+
+	pPlayer->m_iMenu = type;
 }
 
 void ShowHudMenu(CBasePlayer *pPlayer, int type, int keys, int skiplocal)
@@ -451,25 +453,169 @@ void ClientPutInServer(edict_t *pEntity)
 	UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "#Game_connected", sName[0] ? sName : "<unconnected>");
 }
 
-void Host_Say(CBasePlayer *pPlayer, BOOL teamonly)
+__declspec(naked) int Q_UTF8ToUChar32(const char *pUTF8, wchar_t &uValueOut, bool &bErrorOut)
 {
+	_asm
+	{
+		push ebp
+		mov ebp, [esp + 4 + 0x4]
+		xor ecx, ecx
+		push esi
+		mov cl, [ebp + 0]
+		push edi
+		cmp ecx, 0x80
+		mov edi, 1
+		jb loc_1006530C
+		lea eax, [ecx - 0xC0]
+		cmp eax, 0x37
+		ja loc_1006531F
+		mov dl, [ebp + 1]
+		mov al, dl
+		and al, 0xC0
+		cmp al, 0x80
+		jnz loc_1006531F
+		add ecx, 0xFFFFFF3E
+		and edx, 0xFF
+		shl ecx, 6
+		add ecx, edx
+		mov edi, 2
+		test ch, 8
+		mov esi, 0x80
+		jz loc_100652D9
+		mov dl, [ebp + 2]
+		mov al, dl
+		and al, 0xC0
+		cmp al, 0x80
+		jnz loc_1006531F
+		add ecx, 0xFFFFF7FE
+		and edx, 0xFF
+		shl ecx, 6
+		add ecx, edx
+		mov edi, 3
+		test ecx, 0x10000
+		mov esi, 0x800
+		jnz short loc_100652B3
+		lea edx, [ecx - 0xD800]
+		cmp edx, 0x400
+		jnb short loc_100652D9
+		cmp byte ptr [ebp + 3], 0xED
+		jnz short loc_100652D9
+		mov al, [ebp + 4]
+		add al, 0x50
+		cmp al, 0x10
+		jnb short loc_100652D9
+		mov dl, [ebp + 5]
+		push ebx
+		mov bl, dl
+		and bl, 0xC0
+		cmp bl, 0x80
+		pop ebx
+		jnz short loc_100652D9
+		shl ecx, 4
+		and eax, 0xFF
+		mov edi, 6
+		lea ecx, [ecx + eax - 0xD7C02]
+		jmp short loc_100652C9
+
+loc_100652B3:
+		mov dl, [ebp + 3]
+		mov al, dl
+		and al, 0xC0
+		cmp al, 0x80
+		jnz short loc_1006531F
+		add ecx, 0xFFFEFFFE
+		mov edi, 4
+
+loc_100652C9:
+		shl ecx, 6
+		and edx, 0xFF
+		mov esi, 0x10000
+		add ecx, edx
+
+loc_100652D9:
+		cmp ecx, esi
+		jb short loc_1006531F
+		cmp ecx, 0x110000
+		jnb short loc_1006531F
+		lea edx, [ecx - 0xD800]
+		cmp edx, 0x7FF
+		jbe short loc_1006531F
+		mov eax, ecx
+		and eax, 0xFFFF
+		cmp eax, 0xFFFE
+		jnb short loc_1006531F
+		lea edx, [ecx - 0xFDD0]
+		cmp edx, 0x1F
+		jbe short loc_1006531F
+
+loc_1006530C:
+		mov eax, [esp + 0xC + 0x8]
+		mov [eax], ecx
+		mov ecx, [esp + 0xC + 0xC]
+		mov eax, edi
+		pop edi
+		pop esi
+		mov byte ptr [ecx], 0
+		pop ebp
+		retn
+
+loc_1006531F:
+		mov edx, [esp + 0xC + 0x8]
+		mov eax, [esp + 0xC + 0xC]
+		mov dword ptr [edx], 0x3F
+		mov byte ptr [eax], 1
+		mov eax, edi
+		pop edi
+		pop esi
+		pop ebp
+		retn
+	}
+}
+
+bool Q_UnicodeValidate(const char *pUTF8)
+{
+	bool bError = false;
+	wchar_t uVal = 0;
+	int nCharSize;
+
+	while (*pUTF8)
+	{
+		nCharSize = Q_UTF8ToUChar32(pUTF8, uVal, bError);
+
+		if (bError)
+			return false;
+
+		if (nCharSize == 6)
+			return false;
+
+		pUTF8 += nCharSize;
+	}
+
+	return true;
+}
+
+void Host_Say(CBasePlayer *player, int teamonly)
+{
+	CBasePlayer *client;
+	int j;
 	char *p;
 	char text[128];
 	char szTemp[256];
 	const char *cpSay = "say";
 	const char *cpSayTeam = "say_team";
 	const char *pcmd = CMD_ARGV(0);
-	BOOL dead = FALSE;
+	bool bSenderDead = false;
+	char *pszFormat, *pszConsoleFormat;
 
-	entvars_t *pev = pPlayer->pev;
+	entvars_t *pev = player->pev;
 
-	if (pPlayer->m_flLastTalk && gpGlobals->time - pPlayer->m_flLastTalk < 1.0f)//0.66
+	if (player->m_flLastTalk != 0 && gpGlobals->time - player->m_flLastTalk < 0.66)
 		return;
 
-	pPlayer->m_flLastTalk = gpGlobals->time;
+	player->m_flLastTalk = gpGlobals->time;
 
-	if (pPlayer->pev->deadflag != DEAD_NO)
-		dead = TRUE;
+	if (player->pev->deadflag != DEAD_NO)
+		bSenderDead = true;
 
 	if (CMD_ARGC() == 0)
 		return;
@@ -497,62 +643,82 @@ void Host_Say(CBasePlayer *pPlayer, BOOL teamonly)
 		p[strlen(p) - 1] = '\0';
 	}
 
+	if (!p || !*p)
+		return;
+
 	char *pc = p;
 
-	if(strlen(pc) < 1)
-		return ;
+	if (!Q_UnicodeValidate(pc))
+		return;
 
-/*	for (; pc && *pc != '\0'; pc++)
+	if (teamonly == TRUE)
 	{
-		if (isprint(*pc) && !isspace(*pc))
+		if (player->m_iTeam == TEAM_CT && !bSenderDead)
 		{
-			pc = NULL;
-			break;
+			pszFormat = "#CKF3_Chat_B";
+			pszConsoleFormat = "(BLU) %s : %s";
+		}
+		else if (player->m_iTeam == TEAM_TERRORIST && !bSenderDead)
+		{
+			pszFormat = "#CKF3_Chat_R";
+			pszConsoleFormat = "(RED) %s : %s";
+		}
+		else if (player->m_iTeam == TEAM_CT && bSenderDead)
+		{
+			pszFormat = "#CKF3_Chat_B_Dead";
+			pszConsoleFormat = "*DEAD*(BLU) %s : %s";
+		}
+		else if (player->m_iTeam == TEAM_TERRORIST || bSenderDead)
+		{
+			pszFormat = "#CKF3_Chat_R_Dead";
+			pszConsoleFormat = "*DEAD*(RED) %s : %s";
+		}
+		else
+		{
+			pszFormat = "#CKF3_Chat_Spec";
+			pszConsoleFormat = "(Spectator) %s : %s";
+		}
+	}
+	else
+	{
+		if (bSenderDead)
+		{
+			if (player->m_iTeam == TEAM_SPECTATOR)
+			{
+				pszFormat = "#CKF3_Chat_AllSpec";
+				pszConsoleFormat = "*SPEC* %s : %s";
+			}
+			else
+			{
+				pszFormat = "#CKF3_Chat_AllDead";
+				pszConsoleFormat = "*DEAD* %s : %s";
+			}
+		}
+		else
+		{
+			pszFormat = "#CKF3_Chat_All";
+			pszConsoleFormat = "%s : %s";
 		}
 	}
 
-	if (pc)
-		return;*/
-
-	if (pPlayer->m_iTeam == TEAM_SPECTATOR)
-	{
-		sprintf(text, "(Spectator) %s : ", STRING(pev->netname));
-	}
-	else if (teamonly == TRUE)
-	{
-		if (pPlayer->m_iTeam == TEAM_CT && !dead)
-			sprintf(text, "(Counter-Terrorist) %s : ", STRING(pev->netname));
-		else if (pPlayer->m_iTeam == TEAM_TERRORIST && !dead)
-			sprintf(text, "(Terrorist) %s : ", STRING(pev->netname));
-		else if (pPlayer->m_iTeam == TEAM_CT && dead == TRUE)
-			sprintf(text, "*DEAD*(CT) %s : ", STRING(pev->netname));
-		else if (pPlayer->m_iTeam == TEAM_TERRORIST || dead == TRUE)
-			sprintf(text, "*DEAD*(Terrorist) %s : ", STRING(pev->netname));
-	}
-	else if (teamonly == FALSE)
-	{
-		if (!dead)
-			sprintf(text, "%s : ", STRING(pev->netname));
-		else if (dead == TRUE)
-			sprintf(text, "*DEAD*%s : ", STRING(pev->netname));
-	}
-
-	int j = sizeof(text) - 2 - strlen(text);
+	text[0] = 0;
+	j = sizeof(text) - 3 - strlen(pszFormat);
 
 	if ((int)strlen(p) > j)
 		p[j] = '\0';
 
-	//No need now
-
-/*	for (char *pApersand = p; pApersand && *pApersand; pApersand++)
+	for (char *pApersand = p; pApersand && *pApersand; pApersand++)
 	{
-		if (*pApersand == '%')
-			*pApersand = ' ';
-	}*/
+		if (pApersand[0] == '%' && pApersand[1] == 'l')
+		{
+			if (pApersand[1] != ' ' && pApersand[1] != '\0')
+				pApersand[0] = ' ';
+		}
+	}
 
 	strcat(text, p);
 	strcat(text, "\n");
-	CBasePlayer *client = NULL;
+	client = NULL;
 
 	while ((client = (CBasePlayer *)UTIL_FindEntityByClassname(client, "player")) != NULL)
 	{
@@ -562,52 +728,32 @@ void Host_Say(CBasePlayer *pPlayer, BOOL teamonly)
 		if (!client->pev)
 			continue;
 
-		if (client->pev == pev)
+		if (client->edict() == player->edict())
 			continue;
 
 		if (!client->IsNetClient())
 			continue;
 
-		if (gpGlobals->deathmatch && g_pGameRules->m_VoiceGameMgr.PlayerHasBlockedPlayer(client, pPlayer))
+		if (gpGlobals->deathmatch && g_pGameRules->m_VoiceGameMgr.PlayerHasBlockedPlayer(client, player))
 			continue;
 
-		if (teamonly)
-		{
-			if (pPlayer->m_iTeam == TEAM_SPECTATOR)
-			{
-				if (client->m_iTeam != TEAM_SPECTATOR)
-				{
-					if (!FBitSet(pev->flags, FL_PROXY))
-						continue;
-				}
-			}
-			else
-			{
-				if (g_pGameRules->PlayerRelationship(client, pPlayer) != GR_TEAMMATE)
-					continue;
-			}
-		}
-		else
-		{
-			if (pPlayer->m_iTeam == TEAM_SPECTATOR)
-			{
-				if (!FBitSet(pev->flags, FL_PROXY))
-					continue;
-			}
-		}
+		if (teamonly && client->m_iTeam != player->m_iTeam)
+			continue;
 
-		if ((client->pev->deadflag != DEAD_NO && dead != TRUE) || (client->pev->deadflag == DEAD_NO && dead == TRUE))
+		if ((client->pev->deadflag != DEAD_NO && !bSenderDead) || (client->pev->deadflag == DEAD_NO && bSenderDead))
 		{
-			if (!FBitSet(pev->flags, FL_PROXY))
+			if (!FBitSet(player->pev->flags, FL_PROXY))
 				continue;
 		}
 
 		if (client->m_iIgnoreMessage == IGNOREMSG_ENEMY)
 		{
-			if (client->m_iTeam == pPlayer->m_iTeam)
+			if (client->m_iTeam == player->m_iTeam)
 			{
 				MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, client->pev);
-				WRITE_BYTE(pPlayer->entindex());
+				WRITE_BYTE(player->entindex());
+				WRITE_STRING(pszFormat);
+				WRITE_STRING("");
 				WRITE_STRING(text);
 				MESSAGE_END();
 			}
@@ -615,47 +761,47 @@ void Host_Say(CBasePlayer *pPlayer, BOOL teamonly)
 		else if (client->m_iIgnoreMessage == IGNOREMSG_NONE)
 		{
 			MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, client->pev);
-			WRITE_BYTE(pPlayer->entindex());
+			WRITE_BYTE(player->entindex());
+			WRITE_STRING(pszFormat);
+			WRITE_STRING("");
 			WRITE_STRING(text);
 			MESSAGE_END();
 		}
 	}
 
-	MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pev);
-	WRITE_BYTE(pPlayer->entindex());
+	MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, player->pev);
+	WRITE_BYTE(player->entindex());
+	WRITE_STRING(pszFormat);
+	WRITE_STRING("");
 	WRITE_STRING(text);
 	MESSAGE_END();
 
-	g_engfuncs.pfnServerPrint(text);
+	if (pszConsoleFormat)
+		g_engfuncs.pfnServerPrint(UTIL_VarArgs(pszConsoleFormat, STRING(player->pev->netname), text));
 
 	if (CVAR_GET_FLOAT("mp_logmessages") != 0)
-	{
-		char *deadstr = "";
-		char *temp = teamonly != TRUE ? "say" : "say_team";
-
-		if (pPlayer->m_iTeam != TEAM_SPECTATOR && dead == TRUE)
-			deadstr = " (dead)";
-
-		UTIL_LogPrintf("\"%s<%i><%s><%s>\" %s \"%s\"%s\n", STRING(pev->netname), GETPLAYERUSERID(pPlayer->edict()), GETPLAYERAUTHID(pPlayer->edict()), GetTeam(pPlayer->m_iTeam), temp, pc, deadstr);
-	}
+		UTIL_LogPrintf("\"%s<%i><%s><%s>\" %s \"%s\"%s\n", STRING(player->pev->netname), GETPLAYERUSERID(player->edict()), GETPLAYERAUTHID(player->edict()), GetTeam(player->m_iTeam), (teamonly != TRUE) ? "say" : "say_team", pc, (player->m_iTeam != TEAM_SPECTATOR && bSenderDead) ? " (dead)" : "");
 }
 
 void BlinkAccount(CBasePlayer *pPlayer, int time);
 
 extern int gmsgStatusIcon;
+extern int gmsgPlayerVars;
 
 int HandleMenu_ChooseClass(CBasePlayer *pPlayer, int keys)
 {
 	char *model;
+	char *classname;
 	if(keys <= 0 || keys >= 10)
 		keys = RANDOM_LONG(1,9);
 
 	if(pPlayer->m_iNewClass == keys)
 	{
-		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Already_In_This_Class");//以后改为更华丽的
+		//ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Already_In_This_Class");
 		return FALSE;
 	}
 
+	int iNewClass = pPlayer->m_iNewClass;
 	switch (keys)
 	{
 		default:
@@ -663,58 +809,68 @@ int HandleMenu_ChooseClass(CBasePlayer *pPlayer, int keys)
 		{
 			pPlayer->m_iNewClass = CLASS_SCOUT;
 			model = "ckf_scout";
+			classname = "#CKF3_Scout";
 			break;
 		}
 		case CLASS_HEAVY:
 		{
 			pPlayer->m_iNewClass = CLASS_HEAVY;
 			model = "ckf_heavy";
+			classname = "#CKF3_Heavy";
 			break;
 		}
 		case CLASS_SOLDIER:
 		{
 			pPlayer->m_iNewClass = CLASS_SOLDIER;
 			model = "ckf_soldier";
+			classname = "#CKF3_Soldier";
 			break;
 		}
 		case CLASS_PYRO:
 		{
 			pPlayer->m_iNewClass = CLASS_PYRO;
 			model = "ckf_pyro";
+			classname = "#CKF3_Pyro";
 			break;
 		}
 		case CLASS_SNIPER:
 		{
 			pPlayer->m_iNewClass = CLASS_SNIPER;
 			model = "ckf_sniper";
+			classname = "#CKF3_Sniper";
 			break;
 		}
 		case CLASS_MEDIC:
 		{
 			pPlayer->m_iNewClass = CLASS_MEDIC;
 			model = "ckf_medic";
+			classname = "#CKF3_Medic";
 			break;
 		}
 		case CLASS_ENGINEER:
 		{
 			pPlayer->m_iNewClass = CLASS_ENGINEER;
 			model = "ckf_engineer";
+			classname = "#CKF3_Engineer";
 			break;
 		}
 		case CLASS_DEMOMAN:
 		{
 			pPlayer->m_iNewClass = CLASS_DEMOMAN;
 			model = "ckf_demoman";
+			classname = "#CKF3_Demoman";
 			break;
 		}
 		case CLASS_SPY:
 		{
 			pPlayer->m_iNewClass = CLASS_SPY;
 			model = "ckf_spy";
+			classname = "#CKF3_Spy";
 			break;
 		}
 	}
 
+	BOOL bInstantSpawn = FALSE;
 	if (pPlayer->m_iJoiningState != JOINED)
 	{
 		if (pPlayer->m_iJoiningState == PICKINGTEAM)
@@ -727,14 +883,30 @@ int HandleMenu_ChooseClass(CBasePlayer *pPlayer, int keys)
 			if(!(pPlayer->m_iMapZone & MAPZONE_RESUPPLYROOM))
 			{
 				ClientKill(pPlayer->edict());
+
 				pPlayer->Respawn_Start();
 			}
 			else
+			{
 				pPlayer->RoundRespawn();
+				bInstantSpawn = TRUE;
+			}
 		}
 		else
 			pPlayer->Respawn_Start();
 	}
+	if(!bInstantSpawn)
+	{
+		if(pPlayer->m_iClass == 0)
+			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#game_spawn_as", classname);
+		else
+			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#game_respawn_as", classname);
+	}
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgPlayerVars, NULL, pPlayer->pev);
+	WRITE_BYTE(PV_iDesiredClass);
+	WRITE_BYTE(pPlayer->m_iNewClass);
+	MESSAGE_END();
 
 	pPlayer->pev->body = 0;
 	g_engfuncs.pfnSetClientKeyValue(pPlayer->entindex(), g_engfuncs.pfnGetInfoKeyBuffer(ENT(pPlayer->pev)), "model", model);
@@ -793,14 +965,14 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 				}
 			}
 
-			if (g_pGameRules->m_iRoundStatus == ROUND_NORMAL)
-			{
-				if (pPlayer->pev->deadflag == DEAD_NO)
-				{
-					ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Cannot_Be_Spectator");
-					return FALSE;
-				}
-			}
+			//if (g_pGameRules->m_iRoundStatus == ROUND_NORMAL)
+			//{
+			//	if (pPlayer->pev->deadflag == DEAD_NO)
+			//	{
+			//		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Cannot_Be_Spectator");
+			//		return FALSE;
+			//	}
+			//}
 
 			if (pPlayer->m_iTeam != TEAM_UNASSIGNED)
 			{
@@ -870,20 +1042,20 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 
 	if (g_pGameRules->TeamFull(team))
 	{
-		if (team == TEAM_TERRORIST)
-			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Terrorists_Full");
+		if (team == TEAM_RED)
+			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#CKF3_Red_Team_Full");
 		else
-			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#CTs_Full");
+			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#CKF3_Blue_Team_Full");
 
 		return FALSE;
 	}
 
 	if (g_pGameRules->TeamStacked(team, pPlayer->m_iTeam))
 	{
-		if (team == TEAM_TERRORIST)
-			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Too_Many_Terrorists");
+		if (team == TEAM_RED)
+			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#CKF3_Too_Many_Red");
 		else
-			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#Too_Many_CTs");
+			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "#CKF3_Too_Many_Blue");
 
 		return FALSE;
 	}
@@ -939,7 +1111,7 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 
 	if(pPlayer->m_iNewClass == 0)
 	{
-		ShowVGUIMenu(pPlayer, (team == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLUE, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
+		ShowVGUIMenu(pPlayer, (pPlayer->m_iTeam == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLU, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 	}
 
 	if (team != TEAM_UNASSIGNED)
@@ -950,10 +1122,10 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 	if (!name[0])
 		name = "<unconnected>";
 
-	if (team == TEAM_TERRORIST)
-		UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "#Game_join_terrorist", name);
+	if (team == TEAM_RED)
+		UTIL_ClientPrintAll(HUD_PRINTTALK, "#Game_join_red", name);
 	else
-		UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "#Game_join_ct", name);
+		UTIL_ClientPrintAll(HUD_PRINTTALK, "#Game_join_blue", name);
 
 	UTIL_LogPrintf("\"%s<%i><%s><%s>\" joined team \"%s\"\n", STRING(pPlayer->pev->netname), GETPLAYERUSERID(pPlayer->edict()), GETPLAYERAUTHID(pPlayer->edict()), GetTeam(oldteam), GetTeam(team));
 	return TRUE;
@@ -1175,8 +1347,10 @@ if (FStrEq(pcmd, "fullupdate"))
 
 	if (FStrEq(pcmd, "addcond"))
 	{
-		if(CVAR_GET_FLOAT("sv_cheats"))
-			g_pGameRules->AddCondition(pPlayer);
+		if(CVAR_GET_FLOAT("sv_cheats") != 0)
+		{
+			g_pGameRules->Cmd_AddCondition(pPlayer);
+		}
 		return;
 	}
 
@@ -1372,14 +1546,14 @@ if (FStrEq(pcmd, "fullupdate"))
 	{
 		if(pPlayer->m_iMenu == MENU_TEAM || pPlayer->m_iMenu == MENU_INTRO)
 			return;
-		ShowVGUIMenu(pPlayer, (pPlayer->m_iTeam == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLUE, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
+		ShowVGUIMenu(pPlayer, (pPlayer->m_iTeam == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLU, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 		//ShowVGUIMenu(pPlayer, MENU_TEAM, 0, "");
 		return;
 	}
 
 	if (FStrEq(pcmd, "joinclass"))
 	{
-		if(pPlayer->m_iJoiningState == JOINED && pPlayer->m_iMenu != MENU_CLASS)
+		if(pPlayer->m_iJoiningState == JOINED && pPlayer->m_iMenu != MENU_CLASS_RED && pPlayer->m_iMenu != MENU_CLASS_BLU)
 			return;
 
 		const char *pkey = CMD_ARGV(1);
@@ -1390,12 +1564,12 @@ if (FStrEq(pcmd, "fullupdate"))
 		if (HandleMenu_ChooseClass(pPlayer, keys))
 			return;
 
-		ShowVGUIMenu(pPlayer, MENU_CLASS, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
+		ShowVGUIMenu(pPlayer, (pPlayer->m_iTeam == TEAM_RED) ? MENU_CLASS_RED : MENU_CLASS_BLU, (pPlayer->m_iJoiningState != JOINED) ? KEY_1 : KEY_1 | KEY_0, "");
 	}
 
 	if (FStrEq(pcmd, "chooseteam") || FStrEq(pcmd, "changeteam"))
 	{
-		if(pPlayer->m_iMenu == MENU_CLASS)
+		if(pPlayer->m_iMenu == MENU_CLASS_RED || pPlayer->m_iMenu == MENU_CLASS_BLU)
 			return;
 
 		int menukeys = KEY_1 | KEY_2 | KEY_3 | KEY_4 | KEY_0;
@@ -1438,16 +1612,18 @@ if (FStrEq(pcmd, "fullupdate"))
 
 	if (FStrEq(pcmd, "showmapinfo"))
 	{
-		if (g_MapInfoText.empty())
-			return;
+		//if (g_MapInfoText.empty())
+		//	return;
 
 		if (pPlayer->m_iTeam != TEAM_UNASSIGNED)
 			return;
 
-		//if (pPlayer->m_afPhysicsFlags & PFLAG_OBSERVER)
-		//	return;
+		if (pPlayer->m_afPhysicsFlags & PFLAG_OBSERVER)
+			return;
 
-		SendMGUIPrint(pPlayer, MENUBUF_MAPINFO, g_MapInfoText.c_str());
+		ShowVGUIMenu(pPlayer, MENU_MAPINFO, 0, "");
+
+		//SendMGUIPrint(pPlayer, MENUBUF_MAPINFO, g_MapInfoText.c_str());
 		pPlayer->m_bMissionBriefing = TRUE;
 		return;
 	}
@@ -1585,18 +1761,22 @@ void ClientUserInfoChanged(edict_t *pEntity, char *infobuffer)
 	if (!pEntity->pvPrivateData)
 		return;
 
-	char *pName = g_engfuncs.pfnInfoKeyValue(infobuffer, "name");
+	char *szBufferName = g_engfuncs.pfnInfoKeyValue(infobuffer, "name");
+	int iClientIndex = ENTINDEX(pEntity);
 
-	if (pEntity->v.netname && STRING(pEntity->v.netname)[0] != '\0' && !FStrEq(STRING(pEntity->v.netname), pName))
+	if (pEntity->v.netname && STRING(pEntity->v.netname)[0] != '\0' && !FStrEq(STRING(pEntity->v.netname), szBufferName))
 	{
 		char sName[32];
-		_snprintf(sName, sizeof(sName), "%s", pName);
+		_snprintf(sName, sizeof(sName), "%s", szBufferName);
 
 		for (char *pApersand = sName; pApersand != NULL && *pApersand != '\0'; pApersand++)
 		{
-			if (*pApersand == '%')
+			if (*pApersand == '%' || *pApersand == '&')
 				*pApersand = ' ';
 		}
+
+		if (sName[0] == '#')
+			sName[0] = '*';
 
 		CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance(pEntity);
 
@@ -1605,17 +1785,17 @@ void ClientUserInfoChanged(edict_t *pEntity, char *infobuffer)
 			pPlayer->m_bNameChanged = TRUE;
 			_snprintf(pPlayer->m_szNewName, sizeof(pPlayer->m_szNewName), "%s", sName);
 			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#Name_change_at_respawn");
-			g_engfuncs.pfnSetClientKeyValue(ENTINDEX(pEntity), infobuffer, "name", (char *)STRING(pEntity->v.netname));
+			g_engfuncs.pfnSetClientKeyValue(iClientIndex, infobuffer, "name", (char *)STRING(pEntity->v.netname));
 		}
 		else
 		{
-			g_engfuncs.pfnSetClientKeyValue(ENTINDEX(pEntity), infobuffer, "name", sName);
+			g_engfuncs.pfnSetClientKeyValue(iClientIndex, infobuffer, "name", sName);
 
-			char text[256];
-			sprintf(text, "* %s changed name to %s\n", STRING(pEntity->v.netname), sName);
 			MESSAGE_BEGIN(MSG_BROADCAST, gmsgSayText);
-			WRITE_BYTE(ENTINDEX(pEntity));
-			WRITE_STRING(text);
+			WRITE_BYTE(iClientIndex);
+			WRITE_STRING("#CKF3_Name_Change");
+			WRITE_STRING(STRING(pEntity->v.netname));
+			WRITE_STRING(sName);
 			MESSAGE_END();
 
 			UTIL_LogPrintf("\"%s<%i><%s><%s>\" changed name to \"%s\"\n", STRING(pEntity->v.netname), GETPLAYERUSERID(pEntity), GETPLAYERAUTHID(pEntity), GetTeam(pPlayer->m_iTeam), sName);

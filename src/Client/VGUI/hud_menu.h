@@ -7,12 +7,12 @@
 
 namespace vgui
 {
-class CHudMenu : public Panel, public CHudElement
+class CHudNewMenu : public Panel, public CHudElement
 {
-	DECLARE_CLASS_SIMPLE(CHudMenu, Panel);
+	DECLARE_CLASS_SIMPLE(CHudNewMenu, Panel);
 
 public:
-	CHudMenu(void);
+	CHudNewMenu(void);
 
 public:
 	void Init(void);
@@ -20,6 +20,7 @@ public:
 	void Think(void);
 	void Reset(void);
 	int FireMessage(const char *pszName, int iSize, void *pbuf);
+	bool ShouldDraw( void ){ return  ( !gHUD.IsHidden( m_iHiddenBits ) );}
 	void HideMenu(void);
 	void ShowMenu(const wchar_t *menuName, int keySlot);
 	bool IsMenuOpen(void);

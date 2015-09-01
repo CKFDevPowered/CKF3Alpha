@@ -422,7 +422,7 @@ protected:
 void R_FlameThrow(cl_entity_t *pEntity, int iTeam)
 {
 	CPSFlameThrow *pOldFlame;
-	gEngfuncs.Con_Printf("R_FlameThrow, team=%d\n", iTeam);
+	//gEngfuncs.Con_Printf("R_FlameThrow, team=%d\n", iTeam);
 	if(iTeam == 0)
 	{
 		pOldFlame = (CPSFlameThrow *)R_FindPartSystem(PS_FlameThrow, pEntity);

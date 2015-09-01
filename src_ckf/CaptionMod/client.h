@@ -4,7 +4,7 @@
 
 typedef struct
 {
-	qboolean bIsAlive;
+	qboolean bIsDead;
 	int iTeam;
 	int iClass;
 	int iHealth;
@@ -12,6 +12,7 @@ typedef struct
 	int iDeaths;
 	int iDominates;
 	int iPing;
+	int iDominateList[33];
 }PlayerInfo;
 
 typedef struct
@@ -30,7 +31,7 @@ typedef struct
 	int iHealing;
 	int iBackstab;
 	int iBonus;
-}PlayerStatsInfo;
+}PlayerStats;
 
 typedef struct
 {
@@ -142,6 +143,7 @@ typedef struct
 	float flProgress;
 	float flCapRate;
 	float flMessageTime;
+	physent_t physent;
 }controlpoint_t;
 
 typedef std::vector<physent_t> zonevector;
@@ -246,10 +248,6 @@ void ShowHudMenu(int type, int keys);
 #define MENUKEY_0 (1<<9)
 #define MENUKEY_10 (1<<10)
 
-#define HUDMENU_DISGUISE 1
-#define HUDMENU_BUILD 2
-#define HUDMENU_DEMOLISH 3
-
 #define BUILDABLE_SENTRY 1
 #define BUILDABLE_DISPENSER 2
 #define BUILDABLE_ENTRANCE 3
@@ -318,7 +316,8 @@ enum fx_e
 	FX_BURNINGPLAYER,
 	FX_CLOAKBEGIN,
 	FX_CLOAKSTOP,
-	FX_DISGUISEHINT
+	FX_DISGUISEHINT,
+	FX_KILLALLTRAIL
 };
 
 enum
@@ -328,6 +327,12 @@ enum
 	ROUND_END,
 	ROUND_OVERTIME,
 	ROUND_WAIT
+};
+
+enum
+{
+	PV_iDesiredClass = 0,
+	PV_iLimitTeams
 };
 
 #define EF_INVULNERABLE				(1<<8)//256
@@ -392,11 +397,12 @@ extern hud_player_info_t g_HudPlayerInfo[33];
 extern PlayerInfo g_PlayerInfo[33];
 extern WeaponInfo g_WeaponInfo[MAX_WEAPONS];
 extern BuildInfo g_Build;
-extern PlayerStatsInfo g_PlayerStatsInfo;
+extern PlayerStats g_PlayerStats;
 extern zonevector g_NoBuildZones;
 extern cpvector g_ControlPoints;
 
 extern int g_iClass;
+extern int g_iDesiredClass;
 extern int g_iTeam;
 extern int g_iHealth;
 extern int g_iMaxHealth;
@@ -422,6 +428,8 @@ extern int g_iRedPlayerNum;
 extern int g_iBluePlayerNum;
 extern int g_iSpectatorNum;
 extern int g_iLocalPlayerNum;
+
+extern int g_iLimitTeams;
 
 extern char g_szServerName[64];
 

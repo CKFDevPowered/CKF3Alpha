@@ -78,11 +78,40 @@ void DrawPointsQuad(xy_t *p)
 
 void DrawTexturedEdge(int x, int y, int w, int h, int r)
 {
+	xy_t p[4];
 	//draw 4 edges
+
 	g_pSurface->DrawTexturedRect(x, y, x+r, y+r);
-	g_pSurface->DrawTexturedRect(x+w, y, x+w-r, y+r);
-	g_pSurface->DrawTexturedRect(x+w, y+h, x+w-r, y+h-r);
-	g_pSurface->DrawTexturedRect(x, y+h, x+r, y+h-r);
+
+	/*p[0].x = x;p[0].y = y;
+	p[1].x = x+r;p[1].y = y;
+	p[2].x = x+r;p[2].y = y+r;
+	p[3].x = x;p[3].y = y+r;
+	DrawPointsQuad(p);*/
+	
+	//g_pSurface->DrawTexturedRect(x+w, y, x+w-r, y+r);
+
+	p[0].x = x+w;p[0].y = y;
+	p[1].x = x+w;p[1].y = y+r;
+	p[2].x = x+w-r;p[2].y = y+r;
+	p[3].x = x+w-r;p[3].y = y;
+	DrawPointsQuad(p);
+
+	//g_pSurface->DrawTexturedRect(x+w, y+h, x+w-r, y+h-r);
+
+	p[0].x = x+w;p[0].y = y+h;
+	p[1].x = x+w-r;p[1].y = y+h;
+	p[2].x = x+w-r;p[2].y = y+h-r;
+	p[3].x = x+w;p[3].y = y+h-r;
+	DrawPointsQuad(p);
+
+	//g_pSurface->DrawTexturedRect(x, y+h, x+r, y+h-r);
+
+	p[0].x = x;p[0].y = y+h;
+	p[1].x = x;p[1].y = y+h-r;
+	p[2].x = x+r;p[2].y = y+h-r;
+	p[3].x = x+r;p[3].y = y+h;
+	DrawPointsQuad(p);
 }
 
 void DrawFilledEdge(int x, int y, int w, int h, int r)
@@ -99,12 +128,27 @@ void DrawTexturedSide(int x, int y, int w, int h, int r)
 	//fill 4 sides, bug fixed
 	xy_t p[4];
 	g_pSurface->DrawTexturedRect(x+r, y, x+w-r, y+r);
+
+	/*p[0].x = x+r;p[0].y = y;
+	p[1].x = x+w-r;p[1].y = y;
+	p[2].x = x+w-r;p[2].y = y+r;
+	p[3].x = x+r;p[3].y = y+r;
+	DrawPointsQuad(p);*/
+
 	p[0].x = x+w;p[0].y = y+r;
 	p[1].x = x+w;p[1].y = y+h-r;
 	p[2].x = x+w-r;p[2].y = y+h-r;
 	p[3].x = x+w-r;p[3].y = y+r;
 	DrawPointsQuad(p);
-	g_pSurface->DrawTexturedRect(x+w-r, y+h, x+r, y+h-r);
+
+	//g_pSurface->DrawTexturedRect(x+w-r, y+h, x+r, y+h-r);
+
+	p[0].x = x+w-r;p[0].y = y+h;
+	p[1].x = x+r;p[1].y = y+h;
+	p[2].x = x+r;p[2].y = y+h-r;
+	p[3].x = x+w-r;p[3].y = y+h-r;
+	DrawPointsQuad(p);
+
 	p[0].x = x;p[0].y = y+h-r;
 	p[1].x = x;p[1].y = y+r;
 	p[2].x = x+r;p[2].y = y+r;
@@ -210,6 +254,7 @@ void DrawHudMask(int col, int x, int y, int w, int h)
 		DrawTexturedSide(x, y, w, h, g_sizeHudMaskEdge);
 
 		int r = g_sizeHudMaskEdge;
+
 		qglBegin(GL_QUADS);
 		qglTexCoord2f(0,0.33);
 		qglVertex3f(x+r,y+r,0);
@@ -249,6 +294,7 @@ void R_DrawHitDamageText(const wchar_t *text, int width, int height)
 {
 	int w, h;
 	g_pSurface->GetTextSize(g_hHitDamageFont, text, w, h);
+	g_pSurface->DrawSetTextColor(255, 255, 255, 255);
 	g_pSurface->DrawSetTextFont(g_hHitDamageFont);
 	g_pSurface->DrawSetTextPos(width/2-w/2, height/2-h/2);
 	g_pSurface->DrawPrintText(text, wcslen(text));

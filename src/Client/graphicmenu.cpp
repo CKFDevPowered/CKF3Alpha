@@ -10,6 +10,7 @@ DECLARE_MESSAGE(m_GraphicMenu, TeamMenu)
 DECLARE_MESSAGE(m_GraphicMenu, ClassMenu)
 DECLARE_MESSAGE(m_GraphicMenu, BuyMenu)
 DECLARE_MESSAGE(m_GraphicMenu, GraphicMenu)
+DECLARE_MESSAGE(m_GraphicMenu, DrawFX)
 
 int CHudGraphicMenu::Init(void)
 {
@@ -19,6 +20,7 @@ int CHudGraphicMenu::Init(void)
 	HOOK_MESSAGE(ClassMenu);
 	HOOK_MESSAGE(BuyMenu);
 	HOOK_MESSAGE(GraphicMenu);
+	HOOK_MESSAGE(DrawFX);
 
 	return 1;
 }
@@ -78,4 +80,16 @@ int CHudGraphicMenu::MsgFunc_GraphicMenu(const char *pszName, int iSize, void *p
 	}
 
 	return 1;
+}
+
+int CHudGraphicMenu::MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
+{
+	const char *vgui_menus = gEngfuncs.LocalPlayerInfo_ValueForKey("_vgui_menus");
+
+	if (gConfigs.bEnableClientUI && vgui_menus && strlen(vgui_menus) && atoi(vgui_menus) != 0)
+	{
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+	}
+
+	return 0;
 }

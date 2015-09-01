@@ -679,6 +679,7 @@ public:
 	}
 
 	void VGUI2HudPrint(char *charMsg, int x, int y, float r, float g, float b);
+	bool IsHidden( int iHudFlags );
 
 public:
 	int MsgFunc_SetFOV(const char *pszName, int iSize, void *pbuf);
@@ -688,7 +689,7 @@ public:
 	int MsgFunc_MOTD(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_Fog(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_ServerName(const char *pszName, int iSize, void *pbuf);
-	int MsgFunc_TimeLeft(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_TimeLimit(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_SpecHealth(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_SpecHealth2(const char *pszName, int iSize, void *pbuf);
 	int MsgFunc_ShadowIdx(const char *pszName, int iSize, void *pbuf);

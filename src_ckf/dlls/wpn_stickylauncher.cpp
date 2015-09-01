@@ -452,11 +452,6 @@ void CSticky::Killed(entvars_t *pevAttacker, int iGib)
 	WRITE_BYTE(pev->skin);
 	MESSAGE_END();
 
-	/*MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
-	WRITE_BYTE(FX_KILLTRAIL);
-	WRITE_SHORT(ENTINDEX(edict()));
-	MESSAGE_END();*/
-
 	pev->takedamage = DAMAGE_NO;
 
 	if(pev->owner)

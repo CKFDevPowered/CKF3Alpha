@@ -22,6 +22,8 @@ float *EV_GetPunchAngles(void);
 pfnUserMsgHook MSG_HookUserMsg(char *szMsgName, pfnUserMsgHook pfn);
 xcommand_t Cmd_HookCmd(char *cmd_name, xcommand_t newfuncs);
 
+ckf_vars_t gCKFVars;
+
 bte_funcs_t gBTEFuncs =
 {
 	BTE_GetHUDFov,
@@ -81,6 +83,7 @@ void CKF_Init(void)
 
 	g_pCKFClient->GetClientFuncs(&gCkfClientFuncs);
 	g_pCKFClient->GetBTEFuncs(&gBTEFuncs);
+	g_pCKFClient->GetCKFVars(&gCKFVars);
 }
 
 void Renderer_Shutdown(void)
@@ -93,19 +96,4 @@ void CKF_Shutdown(void)
 {
 	if (g_pCKFClient)
 		Sys_FreeModule(g_hCKFClient);
-}
-
-void CKF_ShowScoreBoard(bool state)
-{
-	g_pCKFClient->ShowScoreBoard(state);
-}
-
-void CKF_SwitchWeapon(int slot)
-{
-	g_pCKFClient->SwitchWeapon(slot);
-}
-
-void CKF_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h)
-{
-	g_pCKFClient->Draw3DHUDStudioModel(pEntity, x, y, w, h);
 }

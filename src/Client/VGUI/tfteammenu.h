@@ -64,7 +64,10 @@ public:
 	void ShowPanel(bool bShow);
 	void SetVisible(bool state);
 	bool IsTeamDisabled(int iTeam);
+	bool IsTeamStacked(int newTeam_id);
 	void OnKeyCodePressed( vgui::KeyCode code );
+
+	MESSAGE_FUNC(OnTick, "Tick");
 
 private:
 	enum { NUM_TEAMS = 3 };
@@ -78,15 +81,11 @@ public:
 	virtual void PerformLayout(void);
 	virtual void ApplySchemeSettings(vgui::IScheme *pScheme);
 	void SetVisibleButton(const char *textEntryName, bool state);
-
+	
 	TFTeamButton	*m_pBlueTeamButton;
 	TFTeamButton	*m_pRedTeamButton;
 	TFTeamButton	*m_pAutoTeamButton;
 	TFTeamButton	*m_pSpecTeamButton;
-
-	vgui::ImagePanel		*m_pBlueDisableImage;
-	vgui::ImagePanel		*m_pRedDisableImage;
-	vgui::ImagePanel		*m_pSpecDisableImage;
 
 	vgui::ModelPanel		*m_pModelPanel[4];
 	vgui::Label			*m_pSpecLabel;

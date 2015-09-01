@@ -10,14 +10,14 @@ enum
 	MM_SAY_TEAM,
 };
 
-#define CHATLINE_NUM_FLASHES 0.01f
-#define CHATLINE_FLASH_TIME 0.01f
-#define CHATLINE_FADE_TIME 0.01f
+#define CHATLINE_NUM_FLASHES 8.0f
+#define CHATLINE_FLASH_TIME 5.0f
+#define CHATLINE_FADE_TIME 1.0f
 
-#define CHAT_HISTORY_FADE_TIME 0.01f
-#define CHAT_HISTORY_IDLE_TIME 0.01f
-#define CHAT_HISTORY_IDLE_FADE_TIME 0.01f
-#define CHAT_HISTORY_ALPHA 0
+#define CHAT_HISTORY_FADE_TIME 0.25f
+#define CHAT_HISTORY_IDLE_TIME 15.0f
+#define CHAT_HISTORY_IDLE_FADE_TIME 2.5f
+#define CHAT_HISTORY_ALPHA 127
 
 #include "vgui_controls/RichText.h"
 #include "vgui_controls/EditablePanel.h"

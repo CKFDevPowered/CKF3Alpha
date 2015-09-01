@@ -1,9 +1,9 @@
 "Resource/UI/TFTeamMenu.res"
 {
-	"teammenu"
+	"team"
 	{
 		"ControlName"			"CTFTeamMenu"
-		"fieldName"				"teammenu"
+		"fieldName"				"team"
 		"xpos"					"0"
 		"ypos"					"0"
 		"wide"					"f0"
@@ -102,6 +102,7 @@
 		"brighttext"	"0"
 		"paintborder"	"0"
 		"command"		"jointeam 0"
+		"team"				"4"		// team random
 		"associated_model"	"autodoor"
 		"hover"				"0.334"
 		"fgcolor_override"		"Black"
@@ -127,6 +128,7 @@
 		"brighttext"	"0"
 		"paintborder"	"0"
 		"command"		"jointeam 3"
+		"team"				"3"		// team spectator
 		"associated_model"	"spectate"
 		"fgcolor_override"		"Black"
 	}
@@ -231,7 +233,7 @@
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		"labelText"		"0"
+		"labelText"		"%bluecount%"
 		"textAlignment"	"center"
 		"dulltext"		"0"
 		"brighttext"	"1"
@@ -252,7 +254,7 @@
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		"labelText"		"0"
+		"labelText"		"%redcount%"
 		"textAlignment"	"center"
 		"dulltext"		"0"
 		"brighttext"	"1"

@@ -589,7 +589,7 @@ void CSpectatorGUI::Update(void)
 
 void CSpectatorGUI::UpdateTimer(void)
 {
-	int timer = (int)(gHUD.m_roundTimer.m_flTimeEnd - gHUD.m_flTime);
+	int timer = (int)((*gCKFVars.g_flRoundEndTime) - gHUD.m_flTime);
 
 	if (timer < 0)
 		timer = 0;

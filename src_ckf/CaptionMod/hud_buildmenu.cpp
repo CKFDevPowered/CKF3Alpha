@@ -94,7 +94,7 @@ int HudBuildMenu_VidInit(void)
 		g_xyFontMetal[i].x = g_xywhMenu.x + (.105 + .215*i) * ScreenHeight;
 		g_xyFontMetal[i].y = g_xywhMenu.y + .105 * ScreenHeight;
 
-		g_xyFontBlock[i].x = g_xywhMenu.x + (.117 + .215*i) * ScreenHeight;
+		g_xyFontBlock[i].x = g_xywhMenu.x + (.15 + .215*i) * ScreenHeight;
 		g_xyFontBlock[i].y = g_xywhMenu.y + .19 * ScreenHeight;
 
 		g_xywhKey[i].x = g_xywhMenu.x + (.13 + .215*i) * ScreenHeight;
@@ -149,7 +149,7 @@ int HudBuildMenu_Redraw(float flTime, int iIntermission)
 		return 0;
 	if(g_iWeaponID != WEAPON_BUILDPDA)
 	{
-		g_iHudMenu = 0;
+		//g_iHudMenu = 0;
 		return 0;
 	}
 
@@ -190,13 +190,17 @@ int HudBuildMenu_Redraw(float flTime, int iIntermission)
 		{
 			col = 2;
 			gEngfuncs.pfnDrawSetTextColor(g_flColor[0].r,g_flColor[0].g,g_flColor[0].b);
-			gEngfuncs.pfnDrawConsoleString(g_xyFontBlock[i].x, g_xyFontBlock[i].y, g_szAlreadyBuilt);
+			int tw, th;
+			gEngfuncs.pfnDrawConsoleStringLen(g_szAlreadyBuilt, &tw, &th);
+			gEngfuncs.pfnDrawConsoleString(g_xyFontBlock[i].x - tw/2, g_xyFontBlock[i].y, g_szAlreadyBuilt);
 		}
 		else if(canBuild == CANBUILD_NOMETAL)//no metal
 		{
 			col = 1;
 			gEngfuncs.pfnDrawSetTextColor(g_flColor[1].r,g_flColor[1].g,g_flColor[1].b);
-			gEngfuncs.pfnDrawConsoleString(g_xyFontBlock[i].x, g_xyFontBlock[i].y, g_szNeedMetal);
+			int tw, th;
+			gEngfuncs.pfnDrawConsoleStringLen(g_szNeedMetal, &tw, &th);
+			gEngfuncs.pfnDrawConsoleString(g_xyFontBlock[i].x - tw/2, g_xyFontBlock[i].y, g_szNeedMetal);
 		}
 		else//can build
 		{

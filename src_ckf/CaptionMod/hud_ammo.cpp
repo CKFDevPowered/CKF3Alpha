@@ -62,7 +62,7 @@ int HudAmmo_VidInit(void)
 	g_hUberEnergyFont = g_pSurface->CreateFont();
 	g_hSniperChargeFont = g_hUberEnergyFont;
 
-	g_pSurface->AddGlyphSetToFont(g_hUberEnergyFont, "TF2", 10 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
+	g_pSurface->AddGlyphSetToFont(g_hUberEnergyFont, "TF2", 11 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
 	g_pSurface->AddGlyphSetToFont(g_hClipFont, "TF2 Build", 46 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
 	g_pSurface->AddGlyphSetToFont(g_hAmmoFont, "TF2", 24 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
 	g_pSurface->AddGlyphSetToFont(g_hStickFont, "TF2", 30 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
@@ -87,7 +87,7 @@ int HudAmmo_Redraw(float flTime, int iIntermission)
 	if(iIntermission)
 		return 0;
 
-	if(!(g_iHideHUD & HIDEHUD_WEAPONS))
+	if((g_iHideHUD & HIDEHUD_WEAPONS))
 		return 0;
 
 	if(gEngfuncs.IsSpectateOnly())
@@ -294,11 +294,13 @@ void DrawSniperCharge(void)
 		w = .05f * ScreenHeight * flScale;
 		h = w;
 
+		qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		g_pSurface->DrawTexturedRect(ScreenWidth/2-w, ScreenHeight/2-h, ScreenWidth/2+w, ScreenHeight/2+h);
 
 		w *= charge;
 		h = w;
 
+		qglEnable(GL_BLEND);
 		qglBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		qglBegin(GL_QUADS);
 		qglTexCoord2f(0,0);
@@ -310,6 +312,8 @@ void DrawSniperCharge(void)
 		qglTexCoord2f(0,1);
 		qglVertex3f(ScreenWidth/2-w,ScreenHeight/2+h,0);
 		qglEnd();
+
+		qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	wsprintfW(szText, L"%d%%", (int)g_Sniperifle.m_fCharge);
@@ -432,7 +436,7 @@ void DrawSpy(void)
 	ax=(640 - 138)*(ScreenHeight*4/3)/640+ScreenWidth-ScreenHeight*4/3;
 	ay=(480 - 34)*ScreenHeight/480;
 
-	wsprintfW(wszArmor, L"ÄÜÁ¿:%d%%", (int)g_Player.m_flCloakEnergy);
+	wsprintfW(wszArmor, L"%s: %d%%", g_wszCloakEnergy, (int)g_Player.m_flCloakEnergy);
 	g_pSurface->DrawSetTextColor(255, 255, 255, 255);
 	g_pSurface->DrawSetTextPos(ax, ay);
 	g_pSurface->DrawSetTextFont(g_hUberEnergyFont);

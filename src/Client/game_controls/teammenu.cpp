@@ -41,7 +41,6 @@ const char *GetStringTeamColor(int i)
 
 CTeamMenu::CTeamMenu(void) : Frame(NULL, PANEL_TEAM)
 {
-	m_iJumpKey = KEY_NONE;
 	m_iScoreBoardKey = KEY_NONE;
 
 	SetTitle("", true);
@@ -97,7 +96,7 @@ void CTeamMenu::ApplySchemeSettings(IScheme *pScheme)
 
 void CTeamMenu::AutoAssign(void)
 {
-	engine->pfnClientCmd("jointeam 5");
+	engine->pfnClientCmd("jointeam 0");
 
 	OnClose();
 }
@@ -122,11 +121,7 @@ void CTeamMenu::ShowPanel(bool bShow)
 				m_mouseoverButtons[i]->HidePage();
 		}
 
-		if (m_iJumpKey == KEY_NONE)
-			m_iJumpKey = gameuifuncs->GetVGUI2KeyCodeForBind("jump");
-
-		if (m_iScoreBoardKey == KEY_NONE)
-			m_iScoreBoardKey = gameuifuncs->GetVGUI2KeyCodeForBind("showscores");
+		m_iScoreBoardKey = gameuifuncs->GetVGUI2KeyCodeForBind("showscores");
 	}
 	else
 	{
@@ -214,15 +209,10 @@ void CTeamMenu::SetLabelText(const char *textEntryName, const char *text)
 
 void CTeamMenu::OnKeyCodePressed(KeyCode code)
 {
-	if (m_iJumpKey != KEY_NONE && m_iJumpKey == code)
+	if (m_iScoreBoardKey != KEY_NONE && m_iScoreBoardKey == code)
 	{
-		AutoAssign();
-	}
-	else if (m_iScoreBoardKey != KEY_NONE && m_iScoreBoardKey == code)
-	{
-		//g_pCKFClient->ShowScoreBoard(true);
-		//g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
-		//g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
+		g_pViewPort->ShowPanel(PANEL_SCOREBOARD, true);
+		g_pViewPort->PostMessageToPanel(PANEL_SCOREBOARD, new KeyValues("PollHideCode", "code", code));
 	}
 	else
 		BaseClass::OnKeyCodePressed(code);

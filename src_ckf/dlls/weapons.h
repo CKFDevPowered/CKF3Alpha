@@ -8,6 +8,13 @@ class CBasePlayer;
 extern int gmsgWeapPickup;
 extern int gmsgReloadSound;
 
+#define PJ_AIRBLAST_DEFLECTABLE (1<<0)
+#define PJ_AIRBLAST_OWNER (1<<1)
+#define PJ_AIRBLAST_UPWARD (1<<2)
+#define PJ_AIRBLAST_ROTATE (1<<3)
+#define PJ_AIRBLAST_DEFLECTED (1<<4)
+#define PJ_AIRBLAST_TEMPOWNER (1<<5)
+
 extern void FindHullIntersection(const Vector &vecSrc, TraceResult &tr, float *pflMins, float *pfkMaxs, edict_t *pEntity);
 
 class CGrenade : public CBaseMonster
@@ -30,6 +37,7 @@ public:
 	void CKFExplode(TraceResult *pTrace, int bitsDamageType);
 	virtual void Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flForce){};
 	virtual void CKFDetonate(void){};
+	virtual bool IsDeflected(void){ return (m_iPjFlags & PJ_AIRBLAST_DEFLECTED) ? true : false;}
 
 public:
 	//static TYPEDESCRIPTION m_SaveData[];
@@ -47,13 +55,6 @@ public:
 public:
 	TraceResult m_iTrace;
 };
-
-#define PJ_AIRBLAST_DEFLECTABLE (1<<0)
-#define PJ_AIRBLAST_OWNER (1<<1)
-#define PJ_AIRBLAST_UPWARD (1<<2)
-#define PJ_AIRBLAST_ROTATE (1<<3)
-#define PJ_AIRBLAST_DEFLECTED (1<<4)
-#define PJ_AIRBLAST_TEMPOWNER (1<<5)
 
 #define ITEM_HEALTHKIT 1
 #define ITEM_ANTIDOTE 2

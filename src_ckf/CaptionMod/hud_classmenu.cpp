@@ -179,11 +179,13 @@ int HudClassMenu_VidInit(void)
 	g_texMenu = Surface_LoadTGA("resource\\tga\\ui_selclass");
 	g_texFontIcon = Surface_LoadTGA("resource\\tga\\chalf_circle");
 
+	char tempName[64];
 	for(int i = 0; i < 10; ++i)
 	{
 		for(int j = 0; j < 3; ++j)
 		{
-			g_texButton[i][j] = Surface_LoadTGA(va("resource\\tga\\btn_sel_%s_1440_%d", g_szClassNick[i], j));
+			sprintf(tempName, "gfx/vgui/class/class_sel_sm_%s_%d", g_szClassName[i], j ? "blu" : "red" );
+			g_texButton[i][j] = Surface_LoadTGA(tempName);
 		}
 	}
 

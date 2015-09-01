@@ -161,6 +161,22 @@ void R_KillPartSystem(cl_entity_t *pEntity, int instant)
 	}
 }
 
+void R_KillAllEntityPartSystem(int instant)
+{
+	int i, size;
+	CParticleSystem *t;
+
+	size = g_partsystems.size();
+	for(i = 0; i < size; ++i)
+	{
+		t = g_partsystems[i];
+		if(t->IsFollowEntity())
+		{
+			t->SetDead(instant ? 2 : 1);
+		}
+	}
+}
+
 void R_AddVisParticles(CParticleSystem *t, part_t *p)
 {
 	vispart_t vp;

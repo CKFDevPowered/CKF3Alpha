@@ -26,7 +26,9 @@ Scheme
 		"TFOrange"			"145 73 59 255"
 		
 		"White"				"235 235 235 255"
+		
 		"Red"				"192 28 0 140"
+		"Blue"				"0 28 162 140"
 		"RedSolid"			"192 28 0 255"
 		"Black"				"46 43 42 255"
 		"TransparentBlack"	"0 0 0 196"
@@ -39,6 +41,16 @@ Scheme
 		"TanDarker"				"46 43 42 255"
 		
 		"Gray"				"178 178 178 255"
+		
+		"HUDBlueTeam"		"104 124 155 127"
+		"HUDRedTeam"		"180 92 77 127"
+		"HUDSpectator"		"124 124 124 127"
+		"HUDBlueTeamSolid"	"104 124 155 255"
+		"HUDRedTeamSolid"	"180 92 77 255"
+		"HUDDeathWarning"	"255 0 0 255"
+		
+		"ScoreBoardBlue"	"154 205 255 255"
+		"ScoreBoardRed"		"160 50 50 255"
 		
 		"HudWhite"			"255 255 255 255"
 		"HudOffWhite"		"200 187 161 255"
@@ -791,6 +803,127 @@ Scheme
 			}
 		}
 		
+		"ScoreboardVerySmall"
+		{
+			"1"
+			{
+				"name"		"Verdana"
+				"tall"		"10"
+				"weight"	"400"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
+		"ScoreboardSmall"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"12"
+				"weight"	"400"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
+		"ScoreboardMediumSmall"
+		{
+			"1"
+			{
+				"name"		"TF2"
+				"tall"		"14"
+				"weight"	"500"
+				"range"		"0x0000 0x007F"	//	Basic Latin
+				"antialias" "1"
+				"additive"	"0"
+			}
+		}
+		"ScoreboardMedium"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"20"
+				"weight"	"500"
+				"range"		"0x0000 0x007F"	//	Basic Latin
+				"antialias" "1"
+				"additive"	"0"
+			}
+		}
+		"ScoreboardTeamName"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"20"
+				"tall_hidef"	"24"
+				"tall_lodef"	"24"
+				"weight"	"500"
+				"range"		"0x0000 0x007F"	//	Basic Latin
+				"antialias" "1"
+				"additive"	"0"
+			}
+		}
+		"ScoreboardTeamNameLarge"
+		{
+			"1"
+			{
+				"name"		"TF2 Secondary"
+				"tall"		"34"
+				"weight"	"500"
+				"range"		"0x0000 0x007F"	//	Basic Latin
+				"antialias" "1"
+				"additive"	"0"
+			}
+		}
+		"ScoreboardTeamScore"
+		{
+			"1"
+			{
+				"name"		"TF2"
+				"tall"		"52"
+				"range" 	"0x0000 0x00FF"
+				"weight"	"400"
+				"yres"		"1 599"
+				"antialias" "1"
+			}
+			"2"
+			{
+				"name"		"TF2"
+				"tall"		"72"
+				"range" 	"0x0000 0x00FF"
+				"weight"	"400"
+				"yres"		"600 767"
+				"antialias" "1"
+			}
+			"3"
+			{
+				"name"		"TF2"
+				"tall"		"100"
+				"range" 	"0x0000 0x00FF"
+				"weight"	"400"
+				"yres"		"768 1023"
+				"antialias" "1"
+			}
+			"4"
+			{
+				"name"		"TF2"
+				"tall"		"140"
+				"range" 	"0x0000 0x00FF"
+				"weight"	"400"
+				"yres"		"1024 1199"
+				"antialias" "1"
+			}
+			"5"
+			{
+				"name"		"TF2"
+				"tall"		"180"
+				"range" 	"0x0000 0x00FF"
+				"weight"	"400"
+				"yres"		"1200 10000"
+				"antialias" "1"
+			}
+		}
+		
 		"MenuSmallFont"
 		{
 			"1"
@@ -820,6 +953,17 @@ Scheme
 			{
 				"name"		"TF2 Build"
 				"tall"		"36"
+				"weight"	"500"
+				"additive"	"0"
+				"antialias" "1"
+			}
+		}
+		"HudClassHealth"
+		{
+			"1"
+			{
+				"name"		"TF2"
+				"tall"		"16"
 				"weight"	"500"
 				"additive"	"0"
 				"antialias" "1"

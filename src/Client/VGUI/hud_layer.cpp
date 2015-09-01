@@ -1,4 +1,4 @@
-#include "cl_dll.h"
+#include "hud.h"
 #include <vgui_controls/Panel.h>
 #include <VGUI/ISurface.h>
 #include "ViewPort.h"
@@ -15,6 +15,7 @@ using namespace vgui;
 #include "hud_layer.h"
 #include "hud_menu.h"
 #include "hud_radar.h"
+#include "hud_playerstatus.h"
 
 CHudLayer::CHudLayer(Panel *parent) : Panel(parent, "HudLayer")
 {
@@ -38,8 +39,9 @@ CHudLayer::~CHudLayer(void)
 
 void CHudLayer::Start(void)
 {
-	m_pMenu = (CHudMenu *)AddNewPanel(new CHudMenu);
-	m_pRadar = (CHudRadar *)AddNewPanel(new CHudRadar);
+	m_pMenu = (CHudNewMenu *)AddNewPanel(new CHudNewMenu);
+	m_pRadar = (CHudNewRadar *)AddNewPanel(new CHudNewRadar);
+	m_pTFPlayerStatus = (CTFHudPlayerStatus *)AddNewPanel(new CTFHudPlayerStatus);
 
 	SetVisible(false);
 }
@@ -82,8 +84,16 @@ void CHudLayer::Think(void)
 {
 	for (int i = 0; i < m_Panels.Count(); i++)
 	{
-		if (!m_Panels[i]->IsVisible())
-			m_Panels[i]->Think();
+		//if (!m_Panels[i]->IsVisible())
+		//	m_Panels[i]->Think();
+		bool visible = m_Panels[i]->ShouldDraw();
+
+		// If it's a vgui panel, hide/show as appropriate
+		vgui::Panel *pPanel = dynamic_cast<vgui::Panel *>(m_Panels[i]);
+		if ( pPanel && pPanel->IsVisible() != visible )
+		{
+			pPanel->SetVisible( visible );
+		}
 	}
 }
 

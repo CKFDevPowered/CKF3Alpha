@@ -60,11 +60,11 @@ public:
 	virtual BOOL PlayEmptySound( void );
 	virtual float GetMaxSpeed(void) { return 1.0; }
 
-	void SendWeaponAnim(int iAnim);
-	void ResetEmptySound(void);
-	BOOL GroupDeploy(char *szViewModel, char *szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, const char *szAnimExt);
-	BOOL DefaultDeploy(char *szViewModel, char *szWeaponModel, int iAnim, const char *szAnimExt);
-	BOOL DefaultReload( int iClipSize, int iAnim, float fDelay );
+	virtual void SendWeaponAnim(int iAnim);
+	virtual void ResetEmptySound(void);
+	virtual BOOL GroupDeploy(char *szViewModel, char *szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, const char *szAnimExt);
+	virtual BOOL DefaultDeploy(char *szViewModel, char *szWeaponModel, int iAnim, const char *szAnimExt);
+	virtual BOOL DefaultReload( int iClipSize, int iAnim, float fDelay );
 
 public:
 	char m_szAnimExt[32];
@@ -96,11 +96,11 @@ public:
 class CClientPlayer
 {
 public:
-	BOOL PlayerCanAttack(void);
-	int GetCriticalFire(int iType, unsigned int iRandSeed);
-	void ResetMaxSpeed(void);
-	void Spawn(void);
-	void Killed(void);
+	virtual BOOL PlayerCanAttack(void);
+	virtual int GetCriticalFire(int iType, unsigned int iRandSeed);
+	virtual void ResetMaxSpeed(void);
+	virtual void Spawn(void);
+	virtual void Killed(void);
 public:
 	int random_seed;
 	entvars_t pev;

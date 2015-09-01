@@ -184,6 +184,8 @@ private:
 	void SurfaceSetCursorPos(int x, int y);
 	void SurfaceGetCursorPos(int &x, int &y);
 
+	void UpdateToggleButtonState(void);
+
 	struct InputContext_t
 	{
 		VPANEL _rootPanel;
@@ -228,6 +230,8 @@ private:
 	void PanelDeleted(VPANEL focus, InputContext_t &context);
 
 	HCursor _cursorOverride;
+	bool _updateToggleButtonState;
+
 	char *_keyTrans[KEY_LAST];
 
 	InputContext_t m_DefaultInputContext;
@@ -460,6 +464,11 @@ void CInputWin32::RunFrame(void)
 	}
 
 	InputContext_t *pContext = GetInputContext(m_hContext);
+
+	if (m_hContext == DEFAULT_INPUT_CONTEXT)
+	{
+		_updateToggleButtonState = true;
+	}
 
 	if (pContext->_keyFocus)
 	{
@@ -1104,6 +1113,83 @@ void CInputWin32::SurfaceGetCursorPos(int &x, int &y)
 #endif
 }
 
+void CInputWin32::UpdateToggleButtonState(void)
+{
+	if (m_hContext != DEFAULT_INPUT_CONTEXT)
+		return;
+
+	if (_updateToggleButtonState)
+	{
+		_updateToggleButtonState = false;
+	}
+	else
+	{
+		return;
+	}
+
+	struct key_t
+	{
+		KeyCode code;
+		int winCode;
+
+		KeyCode ignoreIf;
+	};
+
+	static key_t keys[] =
+	{
+		{ KEY_CAPSLOCKTOGGLE, VK_CAPITAL },
+		{ KEY_NUMLOCKTOGGLE, VK_NUMLOCK },
+		{ KEY_SCROLLLOCKTOGGLE, VK_SCROLL },
+		{ KEY_LSHIFT, VK_LSHIFT },
+		{ KEY_RSHIFT, VK_RSHIFT },
+		{ KEY_LCONTROL, VK_LCONTROL },
+		{ KEY_RCONTROL, VK_RCONTROL },
+		{ KEY_LALT, VK_LMENU },
+		{ KEY_RALT, VK_RMENU },
+		{ KEY_RALT, VK_MENU, KEY_LALT },
+		{ KEY_RSHIFT, VK_SHIFT, KEY_LSHIFT },
+		{ KEY_RCONTROL, VK_CONTROL, KEY_LCONTROL },
+	};
+
+	for (int i = 0; i < (sizeof(keys) / sizeof(keys[0])); i++)
+	{
+		bool vState = IsKeyDown(keys[i].code);
+		SHORT winState = System_GetKeyState(keys[i].winCode);
+
+		if (i < 3)
+		{
+			if (LOBYTE(winState) != (BYTE)vState)
+			{
+				if (LOBYTE(winState))
+				{
+					InternalKeyCodePressed(keys[i].code);
+				}
+				else
+				{
+					InternalKeyCodeReleased(keys[i].code);
+				}
+			}
+		}
+		else
+		{
+			if (keys[i].ignoreIf && IsKeyDown(keys[i].ignoreIf))
+				continue;
+
+			if (HIBYTE(winState) != (BYTE)vState)
+			{
+				if (HIBYTE(winState))
+				{
+					InternalKeyCodePressed(keys[i].code);
+				}
+				else
+				{
+					InternalKeyCodeReleased(keys[i].code);
+				}
+			}
+		}
+	}
+}
+
 void CInputWin32::SetCursorOveride(HCursor cursor)
 {
 	_cursorOverride = cursor;
@@ -1300,8 +1386,10 @@ bool CInputWin32::InternalKeyCodePressed(KeyCode code)
 	pContext->_keyPressed[code] = 1;
 	pContext->_keyDown[code] = 1;
 
-	bool bFilter = PostKeyMessage(new KeyValues("KeyCodePressed", "code", code));
-	return bFilter;
+	PostKeyMessage(new KeyValues("KeyCodePressed", "code", code));
+
+	UpdateToggleButtonState();
+	return true;
 }
 
 void CInputWin32::InternalKeyCodeTyped(KeyCode code)

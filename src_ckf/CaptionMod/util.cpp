@@ -80,6 +80,7 @@ BOOL UTIL_IsHullInZone(physent_t *pe, vec3_t vecMins, vec3_t vecMaxs)
 	|| vecMins[1] > pe->maxs[1]
 	|| vecMins[2] > pe->maxs[2])
 		return FALSE;
+
 	hull_t *hull = &(pe->model->hulls[0]);
 	vec3_t vecStart;
 

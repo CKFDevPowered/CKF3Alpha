@@ -14,16 +14,14 @@ namespace vgui
 class ModelPanel : public Panel
 {
 public:
-	DECLARE_CLASS_SIMPLE( ModelPanel, vgui::Panel );
+	DECLARE_CLASS_SIMPLE( ModelPanel, Panel );
 
-	ModelPanel( vgui::Panel *parent, const char *panelName );
+	ModelPanel( Panel *parent, const char *panelName );
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-	virtual void PerformLayout();
+	virtual void Paint(void);
 
-	virtual void PaintTraverse(bool Repaint, bool allowForce = true);
-	virtual void Think();
 	void LoadModel(void);
 	void LoadModel(model_t *mod);
 	void SetModel(const char *szModel);

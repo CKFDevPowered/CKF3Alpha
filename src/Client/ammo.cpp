@@ -282,7 +282,7 @@ int CHudAmmo::Init(void)
 	HOOK_COMMAND("adjust_crosshair", Adjust_Crosshair);
 
 	//g_pfnMSG_CurWeapon = HOOK_MESSAGE(CurWeapon);
-	//g_pfnMSG_HideWeapon = HOOK_MESSAGE(HideWeapon);
+	g_pfnMSG_HideWeapon = HOOK_MESSAGE(HideWeapon);
 	g_pfnMSG_WeaponList = HOOK_MESSAGE(WeaponList);
 	g_pfnMSG_Crosshair = HOOK_MESSAGE(Crosshair);
 
@@ -575,7 +575,9 @@ int CHudAmmo::MsgFunc_HideWeapon(const char *pszName, int iSize, void *pbuf)
 
 	BEGIN_READ(pbuf, iSize);
 
-	gHUD.m_iHideHUDDisplay = READ_BYTE();
+	gHUD.m_iHideHUDDisplay = READ_SHORT();
+
+	SetCrosshair(0, nullrc, 0, 0, 0);
 
 	if (!gEngfuncs.IsSpectateOnly())
 	{
@@ -593,15 +595,15 @@ int CHudAmmo::MsgFunc_HideWeapon(const char *pszName, int iSize, void *pbuf)
 		}
 		else
 		{
-			if (m_pWeapon)
-				SetCrosshair(m_pWeapon->hCrosshair, m_pWeapon->rcCrosshair, 255, 255, 255);
-
+			//if (m_pWeapon)
+			//	SetCrosshair(m_pWeapon->hCrosshair, m_pWeapon->rcCrosshair, 255, 255, 255);
+			SetCrosshair(0, nullrc, 0, 0, 0);
 			m_bObserverCrosshair = false;
 		}
 	}
 
 	MSG_BeginWrite();
-	MSG_WriteByte(gHUD.m_iHideHUDDisplay);
+	MSG_WriteShort(gHUD.m_iHideHUDDisplay);
 	MSG_EndWrite(pszName, g_pfnMSG_HideWeapon);
 	return 1;
 }
@@ -621,7 +623,7 @@ int CHudAmmo::MsgFunc_Crosshair(const char *pszName, int iSize, void *pbuf)
 
 	if (drawn)
 	{
-		SetCrosshair(m_hObserverCrosshair, m_rcObserverCrosshair, 255, 255, 255);
+		//SetCrosshair(m_hObserverCrosshair, m_rcObserverCrosshair, 255, 255, 255);
 	}
 	else
 	{
@@ -642,8 +644,8 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf)
 	BEGIN_READ(pbuf, iSize);
 
 	int iState = READ_BYTE();
-	int iId = READ_CHAR();
-	int iClip = READ_CHAR();
+	int iId = READ_BYTE();
+	int iClip = READ_BYTE();
 
 	if (iState > 1)
 		fOnTarget = TRUE;
@@ -687,10 +689,10 @@ int CHudAmmo::MsgFunc_CurWeapon(const char *pszName, int iSize, void *pbuf)
 	}
 	else
 	{
-		if (fOnTarget && m_pWeapon->hZoomedAutoaim)
-			SetCrosshair(m_pWeapon->hZoomedAutoaim, m_pWeapon->rcZoomedAutoaim, 255, 255, 255);
-		else
-			SetCrosshair(m_pWeapon->hZoomedCrosshair, m_pWeapon->rcZoomedCrosshair, 255, 255, 255);
+		//if (fOnTarget && m_pWeapon->hZoomedAutoaim)
+		//	SetCrosshair(m_pWeapon->hZoomedAutoaim, m_pWeapon->rcZoomedAutoaim, 255, 255, 255);
+		//else
+		//	SetCrosshair(m_pWeapon->hZoomedCrosshair, m_pWeapon->rcZoomedCrosshair, 255, 255, 255);
 	}
 
 	m_fFade = 200.0f;
@@ -786,7 +788,7 @@ int CHudAmmo::MsgFunc_WeaponList(const char *pszName, int iSize, void *pbuf)
 
 	Weapon.iSlot = READ_CHAR();
 	Weapon.iSlotPos = READ_CHAR();
-	Weapon.iId = READ_CHAR();
+	Weapon.iId = READ_BYTE();
 	Weapon.iFlags = READ_BYTE();
 	Weapon.iClip = 0;
 	Weapon.szExtraName[0] = '\0';
@@ -973,7 +975,7 @@ int CHudAmmo::Draw(float flTime)
 
 		if (pw->hZoomedCrosshair)
 		{
-			SetCrosshair(pw->hZoomedCrosshair, pw->rcZoomedCrosshair, 255, 255, 255);
+			//SetCrosshair(pw->hZoomedCrosshair, pw->rcZoomedCrosshair, 255, 255, 255);
 			return 1;
 		}
 

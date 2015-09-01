@@ -5,8 +5,9 @@
 
 namespace vgui
 {
-	class CHudRadar;
-	class CHudMenu;
+	class CHudNewRadar;
+	class CHudNewMenu;
+	class CTFHudPlayerStatus;
 };
 
 class CHudLayer : public vgui::Panel
@@ -43,8 +44,9 @@ private:
 	CUtlVector<CHudElement *> m_Panels;
 
 private:
-	vgui::CHudMenu *m_pMenu;
-	vgui::CHudRadar *m_pRadar;
+	vgui::CHudNewMenu *m_pMenu;
+	vgui::CHudNewRadar *m_pRadar;
+	vgui::CTFHudPlayerStatus *m_pTFPlayerStatus;
 };
 
 #endif

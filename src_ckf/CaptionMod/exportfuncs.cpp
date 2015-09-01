@@ -7,6 +7,7 @@
 #include "GameStudioModelRenderer.h"
 #include "util.h"
 #include "tent.h"
+#include "weapon.h"
 #include "cvar.h"
 #include <pm_defs.h>
 #include <pm_shared.h>
@@ -89,6 +90,22 @@ cl_exportfuncs_t gClientfuncs =
 	NULL,
 	NULL,
 	NULL
+};
+
+ckf_vars_t gCKFVars = 
+{
+	&g_iTeam,
+	&g_iClass,
+	&g_iDesiredClass,
+	&g_iHealth,
+	&g_iMaxHealth,
+	&g_iRoundStatus,
+	&g_iLimitTeams,
+	&g_iMaxRoundTime,
+	&g_flRoundEndTime,
+	(CKFPlayerInfo *)g_PlayerInfo,
+	(CKFPlayerStats *)&g_PlayerStats,
+	(CKFClientPlayer *)&g_Player
 };
 
 cl_enginefunc_t gEngfuncs;
@@ -231,8 +248,18 @@ r_studio_interface_t studio_interface =
 int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
 {
 	memcpy(&IEngineStudio, pstudio, sizeof(engine_studio_api_t));
-	CurrentEntity = *(cl_entity_t ***)((DWORD)pstudio->GetCurrentEntity + 0x1);
-	StudioHeader = *(studiohdr_t ***)((DWORD)pstudio->StudioSetHeader + 0x5);
+
+	DWORD addr;
+
+	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->GetCurrentEntity, 0x10, "\xA1", 1);
+	if(!addr)
+		SIG_NOT_FOUND("currententity");
+	CurrentEntity = *(cl_entity_t ***)(addr + 0x1);
+
+	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->StudioSetHeader, 0x10, "\xA3", 1);
+	if(!addr)
+		SIG_NOT_FOUND("pstudiohdr");
+	StudioHeader = *(studiohdr_t ***)(addr + 1);
 
 	pstudio->StudioEntityLight = StudioEntityLight;
 	pstudio->StudioSetupModel = StudioSetupModel;
@@ -487,9 +514,6 @@ void CL_CreateMove ( float frametime, struct usercmd_s *cmd, int active )
 		cmd->weaponselect = g_WeaponSelect;
 		g_WeaponSelect = 0;
 	}
-
-	if(g_ScoreBoardEnabled)
-		cmd->buttons |= IN_SCORE;
 }
 
 void R_ShotgunMuzzle(cl_entity_t *pEntity, int attachment);

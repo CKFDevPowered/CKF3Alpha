@@ -1,3 +1,4 @@
 bool IsConnected(int playerIndex);
-int GetTeamCounts(short teamnumber);
-int GetTeamAliveCounts(short teamnumber);
+int GetTeamCounts(int teamnumber);
+int GetClassCounts(int iTeam, int iClass);
+int GetTeamAliveCounts(int teamnumber);

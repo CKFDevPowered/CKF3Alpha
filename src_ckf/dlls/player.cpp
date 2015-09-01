@@ -144,9 +144,7 @@ int gmsgFlameIgnite = 0;
 int gmsgObjectMsg = 0;
 int gmsgCPState = 0;
 int gmsgCPInit = 0;
-int gmsgCPZone = 0;
 int gmsgBuildDeath = 0;//build deathmsg
-int gmsgMObjMsg = 0;
 int gmsgDisguise = 0;
 int gmsgHUDStatus = 0;
 int gmsgHUDBuild = 0;
@@ -158,6 +156,7 @@ int gmsgWeaponInfo = 0;
 int gmsgMapObject = 0;
 int gmsgMetaRender = 0;
 int gmsgSpawnInit = 0;
+int gmsgPlayerVars = 0;
 
 void LinkUserMessages(void)
 {
@@ -190,7 +189,7 @@ void LinkUserMessages(void)
 	gmsgAmmoPickup = REG_USER_MSG("AmmoPickup", 2);
 	gmsgWeapPickup = REG_USER_MSG("WeapPickup", 1);
 	gmsgItemPickup = REG_USER_MSG("ItemPickup", -1);
-	gmsgHideWeapon = REG_USER_MSG("HideWeapon", 1);
+	gmsgHideWeapon = REG_USER_MSG("HideWeapon", 2);
 	gmsgSetFOV = REG_USER_MSG("SetFOV", 1);
 	gmsgShowMenu = REG_USER_MSG("ShowMenu", -1);
 	gmsgShake = REG_USER_MSG("ScreenShake", sizeof(ScreenShake));
@@ -227,9 +226,7 @@ void LinkUserMessages(void)
 	gmsgObjectMsg = REG_USER_MSG("ObjectMsg", -1);
 	gmsgCPState = REG_USER_MSG("CPState", 8);
 	gmsgCPInit = REG_USER_MSG("CPInit", -1);
-	gmsgCPZone = REG_USER_MSG("CPZone", -1);
 	gmsgBuildDeath = REG_USER_MSG("BuildDeath", -1);
-	gmsgMObjMsg = REG_USER_MSG("MObjMsg", -1);
 	gmsgDisguise = REG_USER_MSG("Disguise", -1);
 	gmsgHUDStatus = REG_USER_MSG("HUDStatus", -1);
 	gmsgHUDBuild = REG_USER_MSG("HUDBuild", -1);
@@ -241,6 +238,7 @@ void LinkUserMessages(void)
 	gmsgMapObject = REG_USER_MSG("MapObject", -1);
 	gmsgMetaRender = REG_USER_MSG("MetaRender", -1);
 	gmsgSpawnInit = REG_USER_MSG("SpawnInit", 3);
+	gmsgPlayerVars = REG_USER_MSG("PlayerVars", -1);
 }
 
 LINK_ENTITY_TO_CLASS(player, CBasePlayer);
@@ -2537,7 +2535,7 @@ void CBasePlayer::StartObserver(Vector vecPosition, Vector vecViewAngle)
 	WRITE_BYTE(0);
 	MESSAGE_END();
 
-	m_iHideHUD = (HIDEHUD_WEAPONS | HIDEHUD_HEALTH | HIDEHUD_ALL);
+	m_iHideHUD = (HIDEHUD_WEAPONS | HIDEHUD_HEALTH);
 	m_afPhysicsFlags |= PFLAG_OBSERVER;
 	pev->effects = EF_NODRAW;
 	pev->view_ofs = g_vecZero;
@@ -3227,7 +3225,7 @@ void CBasePlayer::PreThink(void)
 
 	if (!(m_flDisplayHistory & DHF_ROUND_STARTED))
 	{
-		HintMessage("#Hint_press_buy_to_purchase");
+		//HintMessage("#Hint_press_buy_to_purchase");
 		m_flDisplayHistory |= DHF_ROUND_STARTED;
 	}
 }
@@ -3902,8 +3900,8 @@ void CBasePlayer::Spawn(void)
 	if (m_iPlayerSound == SOUNDLIST_EMPTY)
 		ALERT(at_console, "Couldn't alloc player sound slot!\n");
 
-	//m_iHideHUD &= ~(HIDEHUD_WEAPONS | HIDEHUD_HEALTH | HIDEHUD_TIMER | HIDEHUD_MONEY);
-	m_iHideHUD = (HIDEHUD_WEAPONS | HIDEHUD_HEALTH | HIDEHUD_TIMER | HIDEHUD_MONEY);
+	m_iHideHUD &= ~(HIDEHUD_WEAPONS | HIDEHUD_HEALTH | HIDEHUD_TIMER | HIDEHUD_MONEY);
+	//m_iHideHUD = (HIDEHUD_WEAPONS | HIDEHUD_HEALTH | HIDEHUD_TIMER | HIDEHUD_MONEY);
 	m_fNoPlayerSound = FALSE;
 	m_pLastItem = NULL;
 	m_fWeapon = FALSE;
@@ -4456,8 +4454,8 @@ void CBasePlayer::CheatImpulseCommands(int iImpulse)
 		case 101:
 		{
 			gEvilImpulse101 = TRUE;
-			AddAccount(16000, TRUE);
-			ALERT(at_console, "Crediting %s with $16000\n", STRING(pev->netname));
+			//AddAccount(16000, TRUE);
+			//ALERT(at_console, "Crediting %s with $16000\n", STRING(pev->netname));
 			break;
 		}
 
@@ -4602,19 +4600,11 @@ void CBasePlayer::HandleSignals(void)
 		//Entering control point
 		if(zoneSave & MAPZONE_CONTROLPOINT)
 		{
-			if(m_pentControlPoint)
-			{
-				CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_pentControlPoint);
-				MESSAGE_BEGIN(MSG_ONE, gmsgCPZone, NULL, pev);
-				WRITE_BYTE(pPoint->m_iIndex);
-				MESSAGE_END();
-			}
+
 		}
 		else
 		{//Leaving control point
-			MESSAGE_BEGIN(MSG_ONE, gmsgCPZone, NULL, pev);
-			WRITE_BYTE(0);
-			MESSAGE_END();
+
 		}
 	}
 }
@@ -4973,7 +4963,7 @@ void CBasePlayer::UpdateClientData(void)
 	if (m_iHideHUD != m_iClientHideHUD)
 	{
 		MESSAGE_BEGIN(MSG_ONE, gmsgHideWeapon, NULL, pev);
-		WRITE_BYTE(m_iHideHUD);
+		WRITE_SHORT(m_iHideHUD);
 		MESSAGE_END();
 
 		m_iClientHideHUD = m_iHideHUD;
@@ -6133,6 +6123,16 @@ void CBasePlayer::SetPrefsFromUserinfo(char *infobuffer)
 		m_iFOV = m_iDefaultFOV;
 }
 
+int CBasePlayer::GetBoostMaxHealth(void)
+{
+	float flBoostMax = pev->max_health * 1.5f;
+
+	int iRoundDown = floor( flBoostMax / 5 );
+	iRoundDown = iRoundDown * 5;
+
+	return iRoundDown;
+}
+
 /*
 iType -1:no random crit, 0:rocket shotgun 1:minigun,flamethrower, 2=melee
 */
@@ -6931,6 +6931,7 @@ void CBasePlayer::Disguise_Think(void)
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
 	WRITE_BYTE(FX_DISGUISEHINT);
+	WRITE_BYTE(1);//fadein
 	MESSAGE_END();
 
 	m_iDisguise = DISGUISE_YES;
@@ -6946,6 +6947,7 @@ void CBasePlayer::Disguise_Stop(void)
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
 	WRITE_BYTE(FX_DISGUISEHINT);
+	WRITE_BYTE(0);//fadeout
 	MESSAGE_END();
 
 	m_iDisguise = DISGUISE_NO;

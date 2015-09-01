@@ -13,12 +13,12 @@
 
 namespace vgui
 {
-class CHudRadar : public Panel, public CHudElement
+class CHudNewRadar : public Panel, public CHudElement
 {
-	DECLARE_CLASS_SIMPLE(CHudRadar, Panel);
+	DECLARE_CLASS_SIMPLE(CHudNewRadar, Panel);
 
 public:
-	CHudRadar(void);
+	CHudNewRadar(void);
 
 public:
 	void Init(void);
@@ -26,6 +26,8 @@ public:
 	void Reset(void);
 	void Think(void);
 	int FireMessage(const char *pszName, int iSize, void *pbuf);
+	bool ShouldDraw( void ){ return  ( !gHUD.IsHidden( m_iHiddenBits ) );}
+
 	void UpdateMapSprite(void);
 	void RenderMapSprite(void);
 	void CalcRefdef(struct ref_params_s *pparams);
