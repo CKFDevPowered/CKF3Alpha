@@ -77,7 +77,7 @@ void CStudioModelRenderer::Init(void)
 	m_pCvarDrawEntities = gpEngineStudio->GetCvar("r_drawentities");
 
 	m_pChromeSprite = gpEngineStudio->GetChromeSprite();
-	m_texFireLayer = gpRefExports->R_LoadTextureEx("resource\\tga\\firelayeredslowtiled512.tga", "firelayeredslowtiled512", NULL, NULL, GLT_SYSTEM, false, false);
+	m_texFireLayer = gRefExports.R_LoadTextureEx("resource\\tga\\firelayeredslowtiled512.tga", "firelayeredslowtiled512", NULL, NULL, GLT_SYSTEM, false, false);
 
 	gpEngineStudio->GetModelCounters(&m_pStudioModelCount, &m_pModelsDrawn);
 
@@ -809,7 +809,7 @@ void CStudioModelRenderer::StudioSaveBones(void)
 		MatrixCopy((*m_plighttransform)[i], m_rgCachedLightTransform[i]);
 	}
 
-	if(gpRefExports->R_GetDrawPass() != r_draw_normal)
+	if(gRefExports.R_GetDrawPass() != r_draw_normal)
 		return;
 
 	CParticleSystem *t;
@@ -1317,7 +1317,7 @@ void CStudioModelRenderer::StudioCalcAttachments(void)
 	for (i = 0; i < m_pStudioHeader->numattachments; i++)
 		VectorTransform(pattachment[i].org, (*m_plighttransform)[pattachment[i].bone], m_pCurrentEntity->attachment[i]);
 
-	if(gpRefExports->R_GetDrawPass() != r_draw_normal)
+	if(gRefExports.R_GetDrawPass() != r_draw_normal)
 		return;
 
 	CParticleSystem *t;
@@ -1344,11 +1344,11 @@ void CStudioModelRenderer::StudioRenderModel(float *lightdir)
 {
 	if(m_pCurrentEntity == cl_viewent && lightdir)
 	{
-		gpRefExports->R_PushRefDef();
+		gRefExports.R_PushRefDef();
 		VectorMA(refdef->vieworg, 200, lightdir, refdef->vieworg);
-		gpRefExports->R_UpdateRefDef();
+		gRefExports.R_UpdateRefDef();
 		gpEngineStudio->SetChromeOrigin();
-		gpRefExports->R_PopRefDef();
+		gRefExports.R_PopRefDef();
 	}
 	else
 	{
@@ -1371,7 +1371,7 @@ void CStudioModelRenderer::StudioRenderModel(float *lightdir)
 
 	if(iSaveRenderFx == kRenderFxCloak)
 	{
-		gpRefExports->R_RenderCloakTexture();
+		gRefExports.R_RenderCloakTexture();
 	}
 
 	gpEngineStudio->SetForceFaceFlags(0);
@@ -1393,7 +1393,7 @@ void CStudioModelRenderer::StudioRenderModel(float *lightdir)
 		m_pCurrentEntity->curstate.renderfx = kRenderFxFireLayer;		
 		m_pCurrentEntity->curstate.renderamt = 192;
 
-		gpRefFuncs->GL_Bind(m_texFireLayer);
+		gRefExports.RefAPI.GL_Bind(m_texFireLayer);
 
 		gpEngineStudio->SetForceFaceFlags(0);
 		StudioRenderFinal();
@@ -1492,10 +1492,10 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware(void)
 
 void CStudioModelRenderer::StudioRenderFinal(void)
 {
-	//if (gpEngineStudio->IsHardware())
+	if (gpEngineStudio->IsHardware())
 		StudioRenderFinal_Hardware();
-	//else
-	//	StudioRenderFinal_Software();
+	else
+		StudioRenderFinal_Software();
 }
 
 void R_StudioInit(void)
@@ -1611,6 +1611,9 @@ int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 	return iResult;
 }
 
+void SpyWatch_Draw(int flags);
+void R_UpdateViewModel(void);
+
 int R_StudioDrawModel(int flags)
 {
 #define DRAWMODEL_FL_SENTRYCLIP (1<<0)
@@ -1627,7 +1630,12 @@ int R_StudioDrawModel(int flags)
 	g_bRenderPlayerWeapon = 0;
 	iDrawFlags = 0;
 
-	if(pEntity->model && (flags & STUDIO_RENDER))
+	if(*CurrentEntity == cl_viewent)
+	{
+		R_UpdateViewModel();
+	}
+
+	if(pEntity->model && (flags & STUDIO_RENDER) && *CurrentEntity != cl_viewent)
 	{
 		studiohdr_t *header = (studiohdr_t *)gpEngineStudio->Mod_Extradata(pEntity->model);
 		if(header)
@@ -1709,6 +1717,11 @@ int R_StudioDrawModel(int flags)
 			qglDisable(GL_CLIP_PLANE1);
 		}
 	}
+
+	if(*CurrentEntity == cl_viewent)
+	{
+		SpyWatch_Draw(flags);
+	}	
 
 	g_fLOD = 0;
 	return iResult;

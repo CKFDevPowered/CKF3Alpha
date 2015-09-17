@@ -766,56 +766,56 @@ int MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
-int MsgFunc_MGUIPrint(const char *pszName, int iSize, void *pbuf)
-{
-	BEGIN_READ(pbuf, iSize);
-	int buftype = READ_BYTE();
-	int part = READ_BYTE();
-	char *str = READ_STRING();
-	if(part == MESSAGEPART_START)
-	{
-		if(buftype == MENUBUF_MOTD)
-		{
-			Motd_ClearBuf();
-		}
-		else if(buftype == MENUBUF_MAPINFO)
-		{
-			MapInfo_ClearBuf();
-		}
-		else if(buftype == MENUBUF_CLASSINTRO)
-		{
-			ClassIntro_ClearBuf();
-		}
-	}
-	if(buftype == MENUBUF_MOTD)
-	{
-		Motd_AddToBuf(str);
-	}
-	else if(buftype == MENUBUF_MAPINFO)
-	{
-		MapInfo_AddToBuf(str);
-	}
-	else if(buftype == MENUBUF_CLASSINTRO)
-	{
-		ClassIntro_AddToBuf(str);
-	}
-	if(part == MESSAGEPART_END)
-	{
-		if(buftype == MENUBUF_MOTD)
-		{
-			Motd_ParseBuf();
-		}
-		else if(buftype == MENUBUF_MAPINFO)
-		{
-			MapInfo_ParseBuf();
-		}
-		else if(buftype == MENUBUF_CLASSINTRO)
-		{
-			ClassIntro_ParseBuf();
-		}
-	}
-	return 1;
-}
+//int MsgFunc_MGUIPrint(const char *pszName, int iSize, void *pbuf)
+//{
+//	BEGIN_READ(pbuf, iSize);
+//	int buftype = READ_BYTE();
+//	int part = READ_BYTE();
+//	char *str = READ_STRING();
+//	if(part == MESSAGEPART_START)
+//	{
+//		if(buftype == MENUBUF_MOTD)
+//		{
+//			Motd_ClearBuf();
+//		}
+//		else if(buftype == MENUBUF_MAPINFO)
+//		{
+//			MapInfo_ClearBuf();
+//		}
+//		else if(buftype == MENUBUF_CLASSINTRO)
+//		{
+//			ClassIntro_ClearBuf();
+//		}
+//	}
+//	if(buftype == MENUBUF_MOTD)
+//	{
+//		Motd_AddToBuf(str);
+//	}
+//	else if(buftype == MENUBUF_MAPINFO)
+//	{
+//		MapInfo_AddToBuf(str);
+//	}
+//	else if(buftype == MENUBUF_CLASSINTRO)
+//	{
+//		ClassIntro_AddToBuf(str);
+//	}
+//	if(part == MESSAGEPART_END)
+//	{
+//		if(buftype == MENUBUF_MOTD)
+//		{
+//			Motd_ParseBuf();
+//		}
+//		else if(buftype == MENUBUF_MAPINFO)
+//		{
+//			MapInfo_ParseBuf();
+//		}
+//		else if(buftype == MENUBUF_CLASSINTRO)
+//		{
+//			ClassIntro_ParseBuf();
+//		}
+//	}
+//	return 1;
+//}
 
 int MsgFunc_WeaponAnimEx(const char *pszName, int iSize, void *pbuf)
 {
@@ -855,30 +855,30 @@ int MsgFunc_HudMenu(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
-int MsgFunc_MGUIMenu(const char *pszName, int iSize, void *pbuf)
-{
-	BEGIN_READ(pbuf, iSize);
-	g_iMenu = READ_BYTE();
-	g_iMenuKeys = READ_SHORT();
-	if(g_iMenu == MENU_CHOOSETEAM)
-	{
-		HudBase_DeactivateMouse();
-	}
-	if(g_iMenu == MENU_CHOOSECLASS)
-	{
-		HudBase_DeactivateMouse();
-	}
-	if(g_iMenu == MENU_INTRO)
-	{
-		HudIntroMenu_SetPage(0);
-		HudBase_DeactivateMouse();
-	}
-	if(g_iMenu == MENU_CLOSE)
-	{
-		HudBase_ActivateMouse();
-	}
-	return 1;
-}
+//int MsgFunc_MGUIMenu(const char *pszName, int iSize, void *pbuf)
+//{
+//	BEGIN_READ(pbuf, iSize);
+//	g_iMenu = READ_BYTE();
+//	g_iMenuKeys = READ_SHORT();
+//	if(g_iMenu == MENU_CHOOSETEAM)
+//	{
+//		HudBase_DeactivateMouse();
+//	}
+//	if(g_iMenu == MENU_CHOOSECLASS)
+//	{
+//		HudBase_DeactivateMouse();
+//	}
+//	if(g_iMenu == MENU_INTRO)
+//	{
+//		HudIntroMenu_SetPage(0);
+//		HudBase_DeactivateMouse();
+//	}
+//	if(g_iMenu == MENU_CLOSE)
+//	{
+//		HudBase_ActivateMouse();
+//	}
+//	return 1;
+//}
 
 int MsgFunc_WeaponInfo(const char *pszName, int iSize, void *pbuf)
 {
@@ -906,7 +906,7 @@ int MsgFunc_InitHUD(const char *pszName, int iSize, void *pbuf)
 	BEGIN_READ(pbuf, iSize);
 
 	CL_InitVars();
-	MapInfo_LoadFromFile();
+	//MapInfo_LoadFromFile();
 
 	return pfnMsgFunc_InitHUD(pszName, 0, pbuf);
 }
@@ -1255,7 +1255,7 @@ int MsgFunc_SpawnInit(const char *pszName, int iSize, void *pbuf)
 
 void UserMsg_InstallHook(void)
 {
-#define HOOK_USERMSG(x) gBTEFuncs.HookUserMsg(#x, MsgFunc_##x);
+#define HOOK_USERMSG(x) g_pBTEClient->HookUserMsg(#x, MsgFunc_##x);
 
 	pfnMsgFunc_Health = HOOK_USERMSG(Health);
 	pfnMsgFunc_ResetHUD = HOOK_USERMSG(ResetHUD);

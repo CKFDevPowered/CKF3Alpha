@@ -1,19 +1,68 @@
 #pragma once
 
 #include <gl/gl.h>
-#include "gl_model.h"
+#include <gl/glext.h>
 
-typedef struct vrect_s
+#include <com_model.h>
+#include <studio.h>
+
+#define TEX_TYPE_NONE 0
+#define TEX_TYPE_ALPHA 1
+#define TEX_TYPE_LUM 2
+#define TEX_TYPE_ALPHA_GRADIENT 3
+#define TEX_TYPE_RGBA 4
+
+#define NL_PRESENT 0
+#define NL_NEEDS_LOADED 1
+#define NL_UNREFERENCED 2
+#define NL_CLIENT 3
+
+#pragma pack(1)
+typedef struct gltexture_s
 {
-	int x, y, width, height;
-	struct vrect_s *pnext;
+	int texnum;
+	short servercount;
+	short paletteIndex;
+	int width;
+	int height;
+	qboolean mipmap;
+	char identifier[64];
+}gltexture_t;
+#pragma pack()
+
+typedef enum
+{
+	GLT_SYSTEM,
+	GLT_DECAL,
+	GLT_HUDSPRITE,
+	GLT_STUDIO,
+	GLT_WORLD,
+	GLT_SPRITE,
 }
-vrect_t;
+GL_TEXTURETYPE;
+
+typedef struct
+{
+	qboolean fog;
+	vec4_t color;
+	float start;
+	float end;
+	float density;
+	float fresnel;
+}water_parm_t;
 
 typedef struct
 {
 	int r, g, b;
 }mcolor24_t;
+
+#ifndef BASETYPES_H
+struct vrect_t
+{
+	int				x,y,width,height;
+	vrect_t			*pnext;
+};
+#endif
 
 typedef struct refdef_s
 {
@@ -43,80 +92,6 @@ typedef struct refdef_s
 	qboolean onlyClientDraws;
 }refdef_t;
 
-typedef struct msurface_s msurface_t;
-
-typedef struct
-{
-	int (*LoadTGA)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-	void (*R_Clear)(void);
-	void (*R_ForceCVars)(qboolean mp);
-	void (*R_RenderView)(void);
-	void (*R_RenderScene)(void);
-	void (*R_NewMap)(void);
-	void (*R_DrawEntitiesOnList)(void);
-	void (*R_DrawTEntitiesOnList)(int onlyClientDraw);
-	void (*R_DrawWorld)(void);
-	void (*R_SetupFrame)(void);
-	void (*R_SetFrustum)(void);
-	void (*R_SetupGL)(void);
-	void (*R_DrawSkyChain)(msurface_t *s);
-	void (*R_DrawSkyBox)(void);
-	qboolean (*R_CullBox)(vec3_t mins, vec3_t maxs);
-	void (*GL_BuildLightmaps)(void);
-	void (*GL_Bind)(int texnum);
-	void (*GL_SelectTexture)(GLenum target);
-	void (*GL_DisableMultitexture)(void);
-	void (*GL_EnableMultitexture)(void);
-	void (*GL_BeginRendering)(int *x, int *y, int *width, int *height);
-	void (*GL_EndRendering)(void);
-	int (*GL_LoadTexture)(char *identifier, int textureType, int width, int height, byte *data, qboolean mipmap, int iType, byte *pPal);
-	int (*GL_LoadTexture2)(char *identifier, int textureType, int width, int height, byte *data, qboolean mipmap, int iType, byte *pPal, int filter);
-	void (*EmitWaterPolys)(msurface_t *fa, int direction);
-	void (*BuildSurfaceDisplayList)(msurface_t *fa);
-	void (*R_DrawSequentialPoly)(msurface_t *s, int face);
-	void (*R_RecursiveWorldNode)(mnode_t *node);
-	texture_t *(*R_TextureAnimation)(msurface_t *fa);
-	void (*R_RenderDynamicLightmaps)(msurface_t *fa);
-	void (*R_DrawDecals)(qboolean bMultitexture);
-	texture_t *(*Draw_DecalTexture)(int index);
-	void (*R_AllocObjects)(int nMax);
-	void (*Draw_MiptexTexture)(cachewad_t *wad, byte *data);
-	void (*R_BuildLightMap)(msurface_t *psurf, byte *dest, int stride);
-	void *(*Mem_Malloc)(size_t);
-	void *(*Hunk_Alloc)(size_t);
-	void (*R_DecalMPoly)(float *v, texture_t *ptexture, msurface_t *psurf, int vertCount);
-	void (*FreeFBObjects)(void);//only above 5953
-	void (*R_MarkLeaves)(void);
-	void (*R_DrawBrushModel)(cl_entity_t *e);
-	float (*GlowBlend)(cl_entity_t *e);
-	void (*R_DrawSpriteModel)(cl_entity_t *ent);
-	int (*CL_FxBlend)(cl_entity_t *ent);
-	mspriteframe_t *(*R_GetSpriteFrame)(msprite_t *spr, int frame);
-	void (*R_GetSpriteAxes)(cl_entity_t *entity, int type, float *vforwrad, float *vright, float *vup);
-	void (*R_SpriteColor)(mcolor24_t *col, cl_entity_t *entity, int renderamt);
-}ref_funcs_t;
-
-typedef struct
-{
-	//Engine Studio
-	void (*R_GLStudioDrawPoints)(void);
-	studiohdr_t *(*R_LoadTextures)(struct model_s *psubmodel);
-	void (*R_LightStrength)(int bone, float *vert, float (*light)[4]);
-	void (*R_StudioLighting)(float *lv, int bone, int flags, vec3_t normal);
-	void (*R_StudioSetupSkin)(studiohdr_t *ptexturehdr, int index);
-	void (*R_LightLambert)(float (*light)[4], float *normal, float *src, float *lambert);
-	void (*BuildNormalIndexTable)(void);
-	void (*BuildGlowShellVerts)(vec3_t *pstudioverts, auxvert_t *pauxverts);
-	void (*R_StudioChrome)(int *pchrome, int bone, vec3_t normal);
-	void (*R_StudioRenderFinal)(void);
-
-	//Studio API
-	void (*studioapi_StudioDrawPoints)(void);
-	void (*studioapi_StudioSetupLighting)(alight_t *plighting);
-	void (*studioapi_SetupRenderer)(int rendermode);
-	void (*studioapi_RestoreRenderer)(void);
-}studio_funcs_t;
-
 typedef struct
 {
 	GLuint (*R_CompileShader)(const char *vscode, const char *fscode, const char *vsfile, const char *fsfile);
@@ -137,6 +112,22 @@ typedef struct
 	void (*GL_MultiTexCoord2f)(GLenum target, float s, float t);
 	void (*GL_MultiTexCoord3f)(GLenum target, float s, float t, float r);
 }shaderapi_t;
+
+typedef struct
+{
+	void (*GL_Bind)(int texnum);
+	void (*GL_SelectTexture)(GLenum target);
+	void (*GL_DisableMultitexture)(void);
+	void (*GL_EnableMultitexture)(void);
+	void (*R_DrawBrushModel)(cl_entity_t *entity);
+	void (*R_DrawSpriteModel)(cl_entity_t *entity);
+	void (*R_GetSpriteAxes)(cl_entity_t *entity, int type, float *vforwrad, float *vright, float *vup);
+	void (*R_SpriteColor)(mcolor24_t *col, cl_entity_t *entity, int renderamt);
+	float (*GlowBlend)(cl_entity_t *entity);
+	int (*CL_FxBlend)(cl_entity_t *entity);
+	int (*R_CullBox)(vec3_t mins, vec3_t maxs);
+	void (*GL_SwapBuffer)(void);
+}engrefapi_t;
 
 typedef struct
 {
@@ -162,6 +153,13 @@ typedef struct
 	int (*R_LoadTextureEx)(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio);
 	int (*GL_LoadTextureEx)(const char *identifier, GL_TEXTURETYPE textureType, int width, int height, byte *data, qboolean mipmap, qboolean ansio);
 	gltexture_t *(*R_GetCurrentGLTexture)(void);
+	int (*LoadBMP)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+	int (*LoadTGA)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+	int (*LoadPNG)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+	int (*LoadDDS)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+	int (*SaveBMP)(const char *file_name, int width, int height, byte *data);
+	int (*SaveTGA)(const char *file_name, int width, int height, byte *data);
+	int (*SavePNG)(const char *file_name, int width, int height, byte *data);
 	//capture screen
 	byte *(*R_GetSCRCaptureBuffer)(int *bufsize);
 	//3dsky
@@ -184,10 +182,9 @@ typedef struct
 	void (*R_FinishDrawHUDInWorld)(void);
 	//shader
 	shaderapi_t ShaderAPI;
+	engrefapi_t RefAPI;
 }ref_export_t;
 
-extern ref_funcs_t gRefFuncs;
-extern studio_funcs_t gStudioFuncs;
 extern ref_export_t gRefExports;
 
 #define r_draw_normal 0
@@ -205,9 +202,4 @@ extern ref_export_t gRefExports;
 #define r_ext_shader (1<<3)
 #define r_ext_shadow (1<<4)
 
-enum
-{
-	kRenderFxCloak = 22,
-	kRenderFxShadow,
-	kRenderFxFireLayer
-};
+#define META_RENDERER_VERSION "Meta Renderer 1.4b"

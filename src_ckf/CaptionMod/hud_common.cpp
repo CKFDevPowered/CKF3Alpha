@@ -51,7 +51,7 @@ int HudCommon_VidInit(void)
 	g_hHitDamageFont = g_pSurface->CreateFont();
 	g_pSurface->AddGlyphSetToFont(g_hHitDamageFont, "TF2", 192, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x0, 0xFFFF);
 
-	g_texFloatText = gpRefExports->R_GLGenTexture(ScreenWidth, ScreenHeight);
+	g_texFloatText = gRefExports.R_GLGenTexture(ScreenWidth, ScreenHeight);
 
 	return 1;
 }
@@ -245,7 +245,7 @@ void DrawHudMask(int col, int x, int y, int w, int h)
 	col = max(0, min(col, 2));
 	if(col == 0 && (g_RefSupportExt & r_ext_shader))
 	{
-		gpRefExports->R_BeginDrawHudMask(41, 41, 41);
+		gRefExports.R_BeginDrawHudMask(41, 41, 41);
 
 		g_pSurface->DrawSetTexture(g_texHudMaskEdge[0]);
 		DrawTexturedEdge(x, y, w, h, g_sizeHudMaskEdge);
@@ -266,7 +266,7 @@ void DrawHudMask(int col, int x, int y, int w, int h)
 		qglVertex3f(x+r,y+h-r,0);
 		qglEnd();
 
-		gpRefExports->ShaderAPI.GL_EndProgram();
+		gRefExports.ShaderAPI.GL_EndProgram();
 	}
 	else
 	{

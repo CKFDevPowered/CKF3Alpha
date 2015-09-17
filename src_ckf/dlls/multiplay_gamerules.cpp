@@ -705,7 +705,7 @@ BOOL CHalfLifeMultiplay::NeededPlayersCheck(BOOL &bNeededPlayers)
 {
 	if (!m_iNumSpawnableTerrorist || !m_iNumSpawnableCT)
 	{
-		UTIL_ClientPrintAll(HUD_PRINTCONSOLE, "#Game_scoring");
+		UTIL_ClientPrintAll(HUD_PRINTCONSOLE, "#CKF3_Game_Scoring");
 		bNeededPlayers = TRUE;
 	}
 

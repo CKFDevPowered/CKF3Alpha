@@ -260,14 +260,25 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 
 	if(g_iClass == CLASS_SPY)
 	{
-		g_Player.m_iDisguise = ((int)(from->client.vuser2[0]) & 1);
-		g_Player.m_iCloak = ((int)(from->client.vuser2[0]) >> 1);
+		g_Player.m_iDisguise = ((int)from->client.vuser2[0]) & 1;
+		g_Player.m_iCloak = ((int)from->client.vuser2[0]) >> 1;
 		g_Player.m_flCloakEnergy = from->client.vuser3[1];
 		if(g_Player.m_iDisguise)
 		{
-			g_Player.m_iDisguiseTeam = from->client.vuser2[1];
-			g_Player.m_iDisguiseClass = from->client.vuser2[2];
+			g_Player.m_iDisguiseTeam = ((int)from->client.vuser2[1]) & 3;
+			g_Player.m_iDisguiseClass = ( ((int)from->client.vuser2[1]) >> 2) & 15;
 			g_Player.m_iDisguiseHealth = from->client.vuser3[0];
+			g_Player.m_iDisguiseWeaponBody = from->client.vuser3[2];
+			g_Player.m_iDisguiseWeapon = from->client.vuser4[0];
+			g_Player.m_iDisguiseSequence = from->client.vuser2[2];
+		}
+		else
+		{
+			g_Player.m_iDisguiseTeam = 0;
+			g_Player.m_iDisguiseClass = 0;
+			g_Player.m_iDisguiseHealth = 0;
+			g_Player.m_iDisguiseWeapon = 0;
+			g_Player.m_iDisguiseWeaponBody = 0;
 		}
 	}
 	else if(g_iClass == CLASS_MEDIC)
@@ -577,6 +588,7 @@ BOOL CClientWeapon::GroupDeploy(char *szViewModel, char *szWeaponModel, int iVie
 		return FALSE;
 
 	gEngfuncs.CL_LoadModel( szViewModel, &g_Player.pev.viewmodel );
+	gEngfuncs.CL_LoadModel( szWeaponModel, &g_Player.pev.weaponmodel );
 
 	if ( g_runfuncs )
 	{
@@ -630,6 +642,7 @@ BOOL CClientWeapon::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 	m_bMeleeAttack = FALSE;
 
 	strcpy(g_Player.m_szAnimExtention, szAnimExt);
+
 	char szSequenceName[32];
 	sprintf(szSequenceName, "ref_aim_%s", szAnimExt);
 	model_t *mod = gEngfuncs.GetLocalPlayer()->model;

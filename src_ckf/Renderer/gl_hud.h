@@ -135,5 +135,6 @@ void R_LuminAdaptation(FBO_Container_t *src, FBO_Container_t *dst, FBO_Container
 void R_PartialBlur(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertical);
 void R_ToneMapping(FBO_Container_t *src, FBO_Container_t *blur, FBO_Container_t *lum, FBO_Container_t *dst);
 void R_BlitToScreen(FBO_Container_t *src);
+void R_BlitToFBO(FBO_Container_t *src, FBO_Container_t *dst);
 
 void GLBeginHud(void);

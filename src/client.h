@@ -8,7 +8,7 @@ void CL_QueueHTTPDownload(const char *filename);
 int CL_FindModelIndex(const char *pmodel);
 struct model_s *CL_GetModelByIndex(int index);
 void CL_AddToResourceList(resource_t *pResource, resource_t *pList);
-void CL_FireEvents(void);
+//void CL_FireEvents(void);
 int CL_ConnectionlessPacket(const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size);
 
 void CL_Init(void);

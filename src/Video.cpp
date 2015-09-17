@@ -5,6 +5,7 @@
 #include "cvar.h"
 #include "console.h"
 #include "hud.h"
+#include "cl_util.h"
 #include "Video.h"
 #include "Plugins.h"
 #include <keydefs.h>
@@ -25,13 +26,13 @@ BOOL g_fMinimized = FALSE;
 
 VOID **g_ppvVideoBuffer = NULL;
 
-ATOM (WINAPI *g_pfnRegisterClassA)(WNDCLASSA *lpWndClass) = NULL;
+//ATOM (WINAPI *g_pfnRegisterClassA)(WNDCLASSA *lpWndClass) = NULL;
 HWND (WINAPI *g_pfnCreateWindowExA)(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) = NULL;
 BOOL (WINAPI *g_pfnDestroyWindow)(HWND hWnd) = NULL;
 BOOL (WINAPI *g_pfnSetCursorPos)(int X, int Y) = NULL;
 HBITMAP (WINAPI *g_pfnCreateDIBSection)(HDC hdc, CONST BITMAPINFO *lpbmi, UINT usage, VOID **ppvBits, HANDLE hSection, DWORD offset);
 
-hook_t *g_phRegisterClassA = NULL;
+//hook_t *g_phRegisterClassA = NULL;
 hook_t *g_phCreateWindowExA = NULL;
 hook_t *g_phDestroyWindow = NULL;
 hook_t *g_phSetCursorPos = NULL;
@@ -59,10 +60,11 @@ static unsigned short s_usStateRamp[768];
 
 LRESULT VID_MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-ATOM WINAPI VID_RegisterClassA(WNDCLASSA *lpWndClass)
-{
-	return g_pfnRegisterClassA(lpWndClass);
-}
+//
+//ATOM WINAPI VID_RegisterClassA(WNDCLASSA *lpWndClass)
+//{
+//	return g_pfnRegisterClassA(lpWndClass);
+//}
 
 HWND WINAPI VID_CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
@@ -79,20 +81,7 @@ HWND WINAPI VID_CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWi
 
 	if (bIsMainWnd && !g_hMainWnd)
 	{
-		g_hMainDC = GetDC(hWnd);
-		g_hMainWnd = hWnd;
-		g_WndProc = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
-
-		RAWINPUTDEVICE Rid;
-		Rid.usUsagePage = 0x01;
-		Rid.usUsage = 0x02;
-		Rid.dwFlags = RIDEV_CAPTUREMOUSE;
-		Rid.hwndTarget = hWnd;
-
-		if (RegisterRawInputDevices(&Rid, 1, sizeof(Rid)) != FALSE)
-			s_bSupportRelative = true;
-
-		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)VID_MainWndProc);
+		VID_SetMainWindow(hWnd);
 	}
 
 	return hWnd;
@@ -100,7 +89,7 @@ HWND WINAPI VID_CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWi
 
 BOOL WINAPI VID_DestroyWindow(HWND hWnd)
 {
-	if (hWnd == g_hMainWnd)
+	if ( hWnd == g_hMainWnd )
 		VID_RestoreGamma();
 
 	return g_pfnDestroyWindow(hWnd);
@@ -123,11 +112,6 @@ BOOL WINAPI VID_SetCursorPos(int X, int Y)
 BOOL VID_IsMinimized(void)
 {
 	return g_fMinimized;
-}
-
-HWND VID_GetMainWindow(void)
-{
-	return g_hMainWnd;
 }
 
 void VID_BuildGamma(void)
@@ -313,6 +297,24 @@ void VID_ClearMouseState(void)
 
 static bool s_bIMEComposing = false;
 static HWND s_hLastHWnd = 0;
+
+void VID_SetMainWindow(HWND hWnd)
+{
+	g_hMainWnd = hWnd;
+	g_hMainDC = GetDC(hWnd);
+	g_WndProc = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
+
+	RAWINPUTDEVICE Rid;
+	Rid.usUsagePage = 0x01;
+	Rid.usUsage = 0x02;
+	Rid.dwFlags = RIDEV_CAPTUREMOUSE;
+	Rid.hwndTarget = hWnd;
+
+	if (RegisterRawInputDevices(&Rid, 1, sizeof(Rid)) != FALSE)
+		s_bSupportRelative = true;
+
+	SetWindowLong(hWnd, GWL_WNDPROC, (LONG)VID_MainWndProc);	
+}
 
 LRESULT VID_MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -524,19 +526,34 @@ LRESULT VID_MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProc(g_WndProc, hWnd, uMsg, wParam, lParam);
 }
 
-BOOL CALLBACK VID_EnumWindowsProc(HWND hWnd, LPARAM)
-{
-	char szClassName[32];
-	GetClassNameA(hWnd, szClassName, sizeof(szClassName));
-
-	if (!strcmp(szClassName, "Valve001") || !strcmp(szClassName, "SDL_app"))
-	{
-		g_hMainWnd = hWnd;
-		return FALSE;
-	}
-
-	return TRUE;
-}
+//BOOL CALLBACK VID_EnumWindowsProc(HWND hWnd, LPARAM)
+//{
+//	//if((*g_pGame)->GetMainWindow())
+//	//{
+//	HWND hWndMain = ;
+//		if (hWnd == hWndMain)
+//		{
+//			g_hMainWnd = hWnd;
+//
+//			g_hMainDC = GetDC(hWnd);
+//			g_WndProc = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
+//
+//			RAWINPUTDEVICE Rid;
+//			Rid.usUsagePage = 0x01;
+//			Rid.usUsage = 0x02;
+//			Rid.dwFlags = RIDEV_CAPTUREMOUSE;
+//			Rid.hwndTarget = hWnd;
+//
+//			if (RegisterRawInputDevices(&Rid, 1, sizeof(Rid)) != FALSE)
+//				s_bSupportRelative = true;
+//
+//			SetWindowLong(hWnd, GWL_WNDPROC, (LONG)VID_MainWndProc);
+//			return FALSE;
+//		}
+//	//}
+//
+//	return TRUE;
+//}
 
 HRESULT CALLBACK VID_EnumDisplayModesProc(void *lpDDSurfaceDesc, DWORD *pBPP)
 {
@@ -545,7 +562,7 @@ HRESULT CALLBACK VID_EnumDisplayModesProc(void *lpDDSurfaceDesc, DWORD *pBPP)
 	DWORD dwBPP = *(DWORD *)((DWORD)lpDDSurfaceDesc + 0x54);
 
 	if (dwHeight >= 480 && dwWidth > dwHeight && dwBPP == *pBPP)
-		g_pVideoMode->AddMode(dwWidth, dwHeight, dwBPP);
+		(*g_pVideoMode)->AddMode(dwWidth, dwHeight, dwBPP);
 
 	return 1;
 }
@@ -603,36 +620,75 @@ void VID_Shutdown(void)
 	s_bSupportGamma = false;
 	s_bSupportRelative = false;
 
-	if (g_phRegisterClassA)
-	{
-		g_pMetaHookAPI->UnHook(g_phRegisterClassA);
-		g_phRegisterClassA = NULL;
-	}
+	//if (g_phRegisterClassA)
+	//{
+	//	g_pMetaHookAPI->UnHook(g_phRegisterClassA);
+	//	g_phRegisterClassA = NULL;
+	//}
 
-	if (g_phCreateWindowExA)
-	{
-		g_pMetaHookAPI->UnHook(g_phCreateWindowExA);
-		g_phCreateWindowExA = NULL;
-	}
+	//if (g_phCreateWindowExA)
+	//{
+	//	g_pMetaHookAPI->UnHook(g_phCreateWindowExA);
+	//	g_phCreateWindowExA = NULL;
+	//}
 
-	if (g_phDestroyWindow)
-	{
-		g_pMetaHookAPI->UnHook(g_phDestroyWindow);
-		g_phDestroyWindow = NULL;
-	}
+	//if (g_phDestroyWindow)
+	//{
+	//	g_pMetaHookAPI->UnHook(g_phDestroyWindow);
+	//	g_phDestroyWindow = NULL;
+	//}
 
-	if (g_phSetCursorPos)
-	{
-		g_pMetaHookAPI->UnHook(g_phSetCursorPos);
-		g_phSetCursorPos = NULL;
-	}
+	//if (g_phSetCursorPos)
+	//{
+	//	g_pMetaHookAPI->UnHook(g_phSetCursorPos);
+	//	g_phSetCursorPos = NULL;
+	//}
 
-	if (g_phCreateDIBSection)
-	{
-		g_pMetaHookAPI->UnHook(g_phCreateDIBSection);
-		g_phCreateDIBSection = NULL;
-	}
+	//if (g_phCreateDIBSection)
+	//{
+	//	g_pMetaHookAPI->UnHook(g_phCreateDIBSection);
+	//	g_phCreateDIBSection = NULL;
+	//}
 }
+
+xcommand_t g_pfnVID_RestartGame;
+
+void __CmdFunc_VID_RestartGame(void)
+{
+	char szFilePath[260];
+	char szFilePath2[260];
+	char szCommand[260];
+	char szCurDirectory[260];
+
+	HANDLE hObject = OpenMutexA(MUTEX_ALL_ACCESS, FALSE, "ValveHalfLifeLauncherMutex");
+	if(hObject)
+	{
+		BOOL release = ReleaseMutex(hObject);
+	}
+
+	LPSTR lpCmd = GetCommandLineA();
+
+	GetCurrentDirectoryA(sizeof(szCurDirectory), szCurDirectory);
+
+	sscanf(lpCmd, "\"%[^\"]\"%[^\n]", szFilePath, szCommand);
+
+	sprintf(szFilePath2, "\"%s\"", szFilePath);
+	SHELLEXECUTEINFOA ShExecInfo;
+	ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+	ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
+	ShExecInfo.hwnd = NULL;
+	ShExecInfo.lpVerb = NULL;
+	ShExecInfo.lpFile = szFilePath2;
+	ShExecInfo.lpParameters = szCommand;
+	ShExecInfo.lpDirectory = szCurDirectory;
+	ShExecInfo.nShow = SW_SHOW;
+	ShExecInfo.hInstApp = NULL;
+
+	BOOL result = ShellExecuteExA(&ShExecInfo);
+
+	gEngfuncs.pfnClientCmd("quit\n");
+}
+
 
 void VID_InstallHook(void)
 {
@@ -653,6 +709,8 @@ void VID_Init(void)
 	}
 
 	Cvar_RegisterVariable(&vid_monitorgamma);
+
+	g_pfnVID_RestartGame = HOOK_COMMAND("_restart", VID_RestartGame);
 }
 
 void VID_Frame(void)

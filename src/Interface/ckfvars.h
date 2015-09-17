@@ -115,6 +115,9 @@ public:
 	int m_iDisguiseTeam;
 	int m_iDisguiseClass;
 	int m_iDisguiseHealth;
+	int m_iDisguiseWeapon;
+	int m_iDisguiseWeaponBody;
+	int m_iDisguiseSequence;
 	int m_iCloak;
 	float m_flCloakEnergy;
 

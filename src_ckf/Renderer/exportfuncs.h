@@ -1,7 +1,6 @@
 #pragma once
 
-typedef HWND (WINAPI *type_CreateWindowExA)(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
-typedef HWND (WINAPI *type_CreateWindowExW)(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
+void BTE_Init(void);
 
 int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion);
 void HUD_Init(void);
@@ -19,8 +18,9 @@ int HUD_Redraw(float time, int intermission);
 void HUD_CreateEntities(void);
 void HUD_Frame(double time);
 
-void Sys_ErrorEx(const char *error);
+void Sys_ErrorEx(const char *fmt, ...);
+char *UTIL_VarArgs(char *format, ...);
 
 #define GetCallAddress(addr) (addr + (*(DWORD *)((addr)+1)) + 5)
 
-#define SIG_NOT_FOUND(name) Sys_ErrorEx(UTIL_VarArgs("Unable to locate: %s\nEngine buildnum£º%d", name, g_dwEngineBuildnum));
+#define SIG_NOT_FOUND(name) Sys_ErrorEx("Could not found: %s\nEngine buildnum£º%d", name, g_dwEngineBuildnum);

@@ -44,10 +44,10 @@ static void RenderModel(int x, int y, int w, int h)
 
 	cl_entity_t *pEnt = &g_PlayerEntity;
 
-	gpRefExports->R_PushRefDef();
+	gRefExports.R_PushRefDef();
 	VectorClear(refdef->viewangles);
 	VectorClear(refdef->vieworg);
-	gpRefExports->R_UpdateRefDef();
+	gRefExports.R_UpdateRefDef();
 	VectorClear(pEnt->origin);
 	VectorClear(pEnt->angles);
 
@@ -66,20 +66,20 @@ static void RenderModel(int x, int y, int w, int h)
 		int left = w/2 + ScreenHeight * 0.05;
 		int top = h/2 + ScreenHeight * 0.05;
 
-		gpRefExports->R_BeginDrawTrianglesInHUD_FBO(centerX, centerY, left, top);
+		gRefExports.R_BeginDrawTrianglesInHUD_FBO(centerX, centerY, left, top);
 		g_StudioRenderer.StudioDrawPlayer_3DHUD();
-		gpRefExports->R_FinishDrawTrianglesInHUD();
+		gRefExports.R_FinishDrawTrianglesInHUD();
 
 		qglEnable(GL_SCISSOR_TEST);
 		qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
 
 		if(g_RefSupportExt & r_ext_shader)
-			gpRefExports->R_BeginFXAA(ScreenWidth, ScreenHeight);
+			gRefExports.R_BeginFXAA(ScreenWidth, ScreenHeight);
 
-		gpRefExports->R_Draw3DHUDQuad(centerX, centerY, left, top);
+		gRefExports.R_Draw3DHUDQuad(centerX, centerY, left, top);
 
 		if(g_RefSupportExt & r_ext_shader)
-			gpRefExports->ShaderAPI.GL_EndProgram();
+			gRefExports.ShaderAPI.GL_EndProgram();
 
 		qglDisable(GL_SCISSOR_TEST);
 	}
@@ -91,15 +91,15 @@ static void RenderModel(int x, int y, int w, int h)
 		qglEnable(GL_SCISSOR_TEST);
 		qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
 
-		gpRefExports->R_BeginDrawTrianglesInHUD_Direct(centerX, centerY);
+		gRefExports.R_BeginDrawTrianglesInHUD_Direct(centerX, centerY);
 		g_StudioRenderer.StudioDrawPlayer_3DHUD();
-		gpRefExports->R_FinishDrawTrianglesInHUD();
+		gRefExports.R_FinishDrawTrianglesInHUD();
 
 		qglDisable(GL_SCISSOR_TEST);
 	}
 
 	*CurrentEntity = pSaveEnt;
-	gpRefExports->R_PopRefDef();
+	gRefExports.R_PopRefDef();
 }
 
 void DrawCross(int x, int y, float health, float scale);

@@ -15,6 +15,8 @@
 #include "KeyValuesSystem.h"
 #include <IEngineSurface.h>
 
+#include <ICKFClient.h>
+
 IEngineSurface *staticSurface = NULL;
 
 static void (__fastcall *m_pfnBaseUI_Initialize)(void *pthis, int, CreateInterfaceFn *factories, int count) = NULL;
@@ -54,6 +56,8 @@ void CBaseUI::Initialize(CreateInterfaceFn *factories, int count)
 
 	m_pfnBaseUI_Initialize(this, 0, factories, count);
 	g_hVGUI2 = (HINTERFACEMODULE)GetModuleHandle("vgui2.dll");
+
+	g_pCKFClient->BaseUI_Initalize(factories, count);
 }
 
 void CBaseUI::Start(struct cl_enginefuncs_s *engineFuncs, int interfaceVersion)

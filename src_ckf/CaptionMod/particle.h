@@ -21,6 +21,8 @@ extern tgasprite_t g_texStarFlash;
 extern tgasprite_t g_texCritHit;
 extern tgasprite_t g_texMiniCritHit;
 
+typedef vec_t matrix3x4[3][4];
+
 //add new particle system here
 enum PartSysEnum
 {

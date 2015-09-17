@@ -10,6 +10,7 @@
 #include <vgui_controls/EditablePanel.h>
 #include <vgui_controls/Label.h>
 #include <vgui_controls/ImagePanel.h>
+#include <game_controls/ModelPanel.h>
 #include "hud_element.h"
 
 namespace vgui
@@ -18,6 +19,30 @@ namespace vgui
 class EditablePanel;
 class ImagePanel;
 class Label;
+class ModelPanel;
+
+
+
+class TFPlayerModelPanel : public ModelPanel
+{
+public:
+	DECLARE_CLASS_SIMPLE( TFPlayerModelPanel, ModelPanel );
+
+	TFPlayerModelPanel( vgui::Panel *parent, const char *name );
+
+	void SetClass( int iTeam, int iClass );
+	void ApplySettings( KeyValues *inResourceData );
+
+private:
+	model_t *m_modPlayerModels[11];
+
+	struct
+	{
+		vec3_t origin;
+		vec3_t angles;
+		int use;
+	}m_CustomClassData[10];
+};
 
 //-----------------------------------------------------------------------------
 // Purpose: Display class images
@@ -81,13 +106,14 @@ private:
 	ImagePanel			*m_pSpyImage; // used when spies are disguised
 	ImagePanel			*m_pSpyOutlineImage;
 	ImagePanel			*m_pClassImageBG;
-	Label				*m_pHealthValue;
+	TFPlayerModelPanel	*m_pPlayerModel;
 
 	int					m_nTeam;
 	int					m_nClass;
 	int					m_nDisguise;
 	int					m_nDisguiseTeam;
 	int					m_nDisguiseClass;
+	int					m_nShow3DHUD;
 };
 
 //-----------------------------------------------------------------------------
@@ -118,6 +144,7 @@ private:
 	TFHealthPanel		*m_pHealthImage;
 	ImagePanel			*m_pHealthBonusImage;
 	ImagePanel			*m_pHealthImageBG;
+	Label				*m_pHealthValue;
 
 	int					m_nHealth;
 	int					m_nMaxHealth;
@@ -146,7 +173,6 @@ public:
 	virtual void Init(void);
 	virtual void VidInit(void);
 	virtual void Reset(void);
-	virtual void Think(void);
 	virtual bool ShouldDraw( void );
 
 	DECLARE_HUD_ELEMENT_SIMPLE();

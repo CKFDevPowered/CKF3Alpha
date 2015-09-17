@@ -125,27 +125,27 @@ void R_LoadStudioTextures(qboolean loadmap)
 	}
 	else
 	{
-		strcpy( szFileName, gEngfuncs.pfnGetLevelName() );
+		strcpy( szFileName, g_pMetaSave->pEngineFuncs->pfnGetLevelName() );
 		if ( !strlen(szFileName) )
 		{
-			gEngfuncs.Con_Printf("R_LoadStudioTextures failed to GetLevelName.\n");
+			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures failed to GetLevelName.\n");
 			return;
 		}
 		szFileName[strlen(szFileName)-4] = 0;
 		strcat(szFileName, "_studio.txt");
 	}
 
-	pFile = (char *)gEngfuncs.COM_LoadFile(szFileName, 5, NULL);
+	pFile = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile(szFileName, 5, NULL);
 	if (!pFile)
 	{
-		gEngfuncs.Con_Printf("R_LoadStudioTextures failed to load %s.\n", szFileName);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures failed to load %s.\n", szFileName);
 		return;
 	}
 
 	cJSON *root = cJSON_Parse(pFile);
 	if (!root)
 	{
-		gEngfuncs.Con_Printf("R_LoadStudioTextures failed to parse %s.\n", szFileName);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures failed to parse %s.\n", szFileName);
 		return;
 	}
 	//texture array load
@@ -172,7 +172,7 @@ void R_LoadStudioTextures(qboolean loadmap)
 		cJSON *modelname = cJSON_GetObjectItem(mod, "modelname");
 		if(!modelname || !modelname->valuestring)
 		{
-			gEngfuncs.Con_Printf("R_LoadStudioTextures parse %s with error, model #%d has no \"model\" component.\n", szFileName, i);
+			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures parse %s with error, model #%d has no \"model\" component.\n", szFileName, i);
 			continue;
 		}
 
@@ -180,7 +180,7 @@ void R_LoadStudioTextures(qboolean loadmap)
 		cJSON *textures = cJSON_GetObjectItem(mod, "textures");
 		if(!textures)
 		{
-			gEngfuncs.Con_Printf("R_LoadStudioTextures parse %s with error, model #%d has no \"textures\" component.\n", szFileName, i);
+			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures parse %s with error, model #%d has no \"textures\" component.\n", szFileName, i);
 			continue;
 		}
 
@@ -208,7 +208,7 @@ void R_LoadStudioTextures(qboolean loadmap)
 			cJSON *base = cJSON_GetObjectItem(tex, "base");
 			if(!base || !base->valuestring)
 			{
-				gEngfuncs.Con_Printf("R_LoadStudioTextures parse %s with error, model #%d's texture #%d has no \"base\" component.\n", szFileName, i, j);
+				g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadStudioTextures parse %s with error, model #%d's texture #%d has no \"base\" component.\n", szFileName, i, j);
 				continue;
 			}
 			//increment
@@ -222,15 +222,15 @@ void R_LoadStudioTextures(qboolean loadmap)
 		}//texture load end			
 	}//model load end		
 	cJSON_Delete(root);
-	gEngfuncs.COM_FreeFile((void *) pFile );
+	g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) pFile );
 }
 
 void R_InitStudio(void)
 {
 	if(gl_shader_support)
 	{
-		char *studio_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\studio_shader.vsh", 5, 0);
-		char *studio_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\studio_shader.fsh", 5, 0);
+		char *studio_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\studio_shader.vsh", 5, 0);
+		char *studio_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\studio_shader.fsh", 5, 0);
 
 		if(studio_vscode && studio_fscode)
 		{
@@ -249,15 +249,15 @@ void R_InitStudio(void)
 				SHADER_ATTRIB_INIT(studio, binormal, "binormal");
 			}
 		}
-		gEngfuncs.COM_FreeFile((void *) studio_vscode);
-		gEngfuncs.COM_FreeFile((void *) studio_fscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) studio_vscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) studio_fscode);
 	}
 
-	gl_studionormal = gEngfuncs.pfnRegisterVariable("gl_studionormal", "0", FCVAR_CLIENTDLL);
-	r_pplightambient = gEngfuncs.pfnRegisterVariable("r_pplightambient", "0.1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_pplightdiffuse = gEngfuncs.pfnRegisterVariable("r_pplightdiffuse", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_pplightspecular = gEngfuncs.pfnRegisterVariable("r_pplightspecular", "0.1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_pplightshiness = gEngfuncs.pfnRegisterVariable("r_pplightshiness", "2.0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	gl_studionormal = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("gl_studionormal", "0", FCVAR_CLIENTDLL);
+	r_pplightambient = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_pplightambient", "0.1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_pplightdiffuse = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_pplightdiffuse", "0.3", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_pplightspecular = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_pplightspecular", "0.1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_pplightshiness = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_pplightshiness", "2.0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 }
 
 //Engine Studio
@@ -397,7 +397,7 @@ void R_GLStudioDrawPointsEx(void)
 
 	for (j = 0; j < (*psubmodel)->nummesh; j++)
 	{
-		flags = ptexture[pskinref[pmesh->skinref]].flags | (*g_ForcedFaceFlags);
+		flags = ptexture[pskinref[pmesh[j].skinref]].flags | (*g_ForcedFaceFlags);
 
 		if (r_fullbright->value >= 2)
 			flags &= ~STUDIO_NF_FULLBRIGHT;
@@ -642,8 +642,8 @@ void R_GLStudioDrawPointsEx(void)
 		}
 		else if (flags & STUDIO_NF_CHROME)//chrome start
 		{
-			s = (1.0 / (float)ptexture[pskinref[pmesh->skinref]].width) * (1.0/1024);
-			t = (1.0 / (float)ptexture[pskinref[pmesh->skinref]].height) * (1.0/1024);
+			s = (1 / (float)ptexture[pskinref[pmesh->skinref]].width) / 1024;
+			t = (1 / (float)ptexture[pskinref[pmesh->skinref]].height) / 1024;
 
 			if((*currententity)->curstate.renderfx != kRenderFxFireLayer)
 			{

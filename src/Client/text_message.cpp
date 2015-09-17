@@ -82,7 +82,9 @@ char *CHudTextMessage::LookupString(const char *msg, int *msg_dest)
 		client_textmessage_t *clmsg = TextMessageGet(msg + 1);
 
 		if (!clmsg || !(clmsg->pMessage))
+		{
 			return (char *)msg;
+		}
 
 		if (msg_dest)
 		{

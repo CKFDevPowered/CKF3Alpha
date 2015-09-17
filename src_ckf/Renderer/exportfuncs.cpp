@@ -1,10 +1,91 @@
 #include <metahook.h>
+#include <IBTEClient.h>
 #include "exportfuncs.h"
 #include "gl_local.h"
 #include "screen.h"
 #include "command.h"
 #include "parsemsg.h"
 #include "qgl.h"
+
+//Error when can't find sig
+void Sys_ErrorEx(const char *fmt, ...)
+{
+	va_list argptr;
+	char msg[1024];
+
+	va_start(argptr, fmt);
+	_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
+
+	if(g_pMetaSave->pEngineFuncs)
+		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
+	if(g_pBTEClient)
+		MessageBox(g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
+	else
+		MessageBox(NULL, msg, "Error", MB_ICONERROR);
+	exit(0);
+}
+
+int Q_stricmp_slash(const char *s1, const char *s2)
+{
+	int c1, c2;
+
+	while (1)
+	{
+		c1 = *s1++;
+		c2 = *s2++;
+
+		if (c1 != c2)
+		{
+			if (c1 >= 'a' && c1 <= 'z')
+				c1 -= ('a' - 'A');
+
+			if (c2 >= 'a' && c2 <= 'z')
+				c2 -= ('a' - 'A');
+
+			if (c1 == '\\')
+				c1 = '/';
+
+			if (c2 == '\\')
+				c2 = '/';
+
+			if (c1 != c2)
+				return -1;
+		}
+
+		if (!c1)
+			return 0;
+	}
+	return -1;
+}
+
+char *UTIL_VarArgs(char *format, ...)
+{
+	va_list argptr;
+	static int index = 0;
+	static char string[16][1024];
+
+	va_start(argptr, format);
+	vsprintf(string[index], format, argptr);
+	va_end(argptr);
+
+	char *result = string[index];
+	index = (index + 1) % 16;
+	return result;
+}
+
+#define LIB_NOT_FOUND(name) Sys_ErrorEx("Couldn't load: %s", name);
+
+IBTEClient *g_pBTEClient = NULL;
+
+void BTE_Init(void)
+{
+	HINTERFACEMODULE hBTEClient = (HINTERFACEMODULE)GetModuleHandle("CSBTE.dll");
+	//if(!hBTEClient)
+	//	LIB_NOT_FOUND("CSBTE.dll");
+	if(hBTEClient)
+		g_pBTEClient = (IBTEClient *)((CreateInterfaceFn)Sys_GetFactory(hBTEClient))(BTECLIENT_API_VERSION, NULL);
+}
 
 cl_exportfuncs_t gClientfuncs =
 {
@@ -58,11 +139,6 @@ engine_studio_api_t IEngineStudio;
 r_studio_interface_t StudioInterface;
 r_studio_interface_t *gpStudioInterface;
 
-type_CreateWindowExA			g_pfn_CreateWindowExA;
-type_CreateWindowExW			g_pfn_CreateWindowExW;
-
-HWND g_hWnd;
-
 double g_flFrameTime = 0;
 
 shaderapi_t ShaderAPI = 
@@ -84,6 +160,22 @@ shaderapi_t ShaderAPI =
 	GL_VertexAttrib3fv,
 	GL_MultiTexCoord2f,
 	GL_MultiTexCoord3f
+};
+
+engrefapi_t RefAPI = 
+{
+	GL_Bind,
+	GL_SelectTexture,
+	GL_DisableMultitexture,
+	GL_EnableMultitexture,
+	R_DrawBrushModel,
+	R_DrawSpriteModel,
+	R_GetSpriteAxes,
+	R_SpriteColor,
+	GlowBlend,
+	CL_FxBlend,
+	R_CullBox,
+	GL_SwapBuffer
 };
 
 ref_export_t gRefExports =
@@ -110,6 +202,13 @@ ref_export_t gRefExports =
 	R_LoadTextureEx,
 	GL_LoadTextureEx,
 	R_GetCurrentGLTexture,
+	LoadBMP,
+	LoadTGA,
+	LoadPNG,
+	LoadDDS,
+	SaveBMP,
+	SaveTGA,
+	SavePNG,
 	//capture screen
 	R_GetSCRCaptureBuffer,
 	//3dsky
@@ -131,71 +230,62 @@ ref_export_t gRefExports =
 	R_BeginDrawHUDInWorld,
 	R_FinishDrawHUDInWorld,
 	//shader
-	ShaderAPI
+	ShaderAPI,
+	RefAPI
 };
 
-//Error when can't find sig
-void Sys_ErrorEx(const char *error)
+RECT *VID_GetWindowRect(void)
 {
-	if(g_pMetaSave->pEngineFuncs)
-		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
-	MessageBox(g_hWnd, error, "Error", MB_ICONERROR);
-	exit(0);
+	return window_rect;
 }
 
-int Q_stricmp_slash(const char *s1, const char *s2)
+void hudGetMousePos(struct tagPOINT *ppt)
 {
-	int c1, c2;
+	g_pMetaSave->pEngineFuncs->pfnGetMousePos(ppt);
 
-	while (1)
+	if ( !g_bWindowed && g_pBTEClient )
 	{
-		c1 = *s1++;
-		c2 = *s2++;
-
-		if (c1 != c2)
-		{
-			if (c1 >= 'a' && c1 <= 'z')
-				c1 -= ('a' - 'A');
-
-			if (c2 >= 'a' && c2 <= 'z')
-				c2 -= ('a' - 'A');
-
-			if (c1 == '\\')
-				c1 = '/';
-
-			if (c2 == '\\')
-				c2 = '/';
-
-			if (c1 != c2)
-				return -1;
-		}
-
-		if (!c1)
-			return 0;
+		RECT rectWin;
+		GetWindowRect(g_pBTEClient->GetMainHWND(), &rectWin);
+		int videoW = g_iVideoWidth;
+		int videoH = g_iVideoHeight;
+		int winW = rectWin.right - rectWin.left;
+		int winH = rectWin.bottom - rectWin.top;
+		ppt->x *= (float)videoW / winW;
+		ppt->y *= (float)videoH / winH;
+		ppt->x *= (windowvideoaspect_old - 1) * (ppt->x - videoW / 2);
+		ppt->y *= (videowindowaspect_old - 1) * (ppt->y - videoH / 2);
 	}
-	return -1;
 }
 
-char *UTIL_VarArgs(char *format, ...)
+void hudGetMousePosition(int *x, int *y)
 {
-	va_list argptr;
-	static int index = 0;
-	static char string[16][1024];
+	g_pMetaSave->pEngineFuncs->GetMousePosition(x, y);
 
-	va_start(argptr, format);
-	vsprintf(string[index], format, argptr);
-	va_end(argptr);
-
-	char *result = string[index];
-	index = (index + 1) % 16;
-	return result;
+	if ( !g_bWindowed && g_pBTEClient )
+	{
+		RECT rectWin;
+		GetWindowRect(g_pBTEClient->GetMainHWND(), &rectWin);
+		int videoW = g_iVideoWidth;
+		int videoH = g_iVideoHeight;
+		int winW = rectWin.right - rectWin.left;
+		int winH = rectWin.bottom - rectWin.top;
+		*x *= (float)videoW / winW;
+		*y *= (float)videoH / winH;
+		*x *= (windowvideoaspect_old - 1) * (*x - videoW / 2);
+		*y *= (videowindowaspect_old - 1) * (*y - videoH / 2);
+	}
 }
-
-#define LIB_NOT_FOUND(name) Sys_ErrorEx(UTIL_VarArgs("Couldn't load: %s", name));
 
 int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion)
 {
 	memcpy(&gEngfuncs, pEnginefuncs, sizeof(gEngfuncs));
+
+	if(g_dwEngineBuildnum < 5953)
+	{
+		pEnginefuncs->pfnGetMousePos = hudGetMousePos;
+		pEnginefuncs->GetMousePosition = hudGetMousePosition;
+	}
 
 	Cmd_GetCmdBase = *(cmd_function_t *(**)(void))((DWORD)pEnginefuncs + 0x198);
 
@@ -253,10 +343,10 @@ void HUD_Init(void)
 	GL_Init();
 	R_Init();
 
-	gEngfuncs.pfnHookUserMsg("MetaRender", MsgFunc_MetaRender);
+	g_pMetaSave->pEngineFuncs->pfnHookUserMsg("MetaRender", MsgFunc_MetaRender);
 
 	//cvar registered in client.dll HUD_Init();
-	cl_righthand = gEngfuncs.pfnGetCvarPointer("cl_righthand");
+	cl_righthand = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("cl_righthand");
 }
 
 int HUD_VidInit(void)
@@ -436,7 +526,7 @@ int HUD_GetStudioModelInterface(int version, struct r_studio_interface_s **ppint
 	pbonetransform = (float (*)[MAXSTUDIOBONES][3][4])pstudio->StudioGetBoneTransform();
 	plighttransform = (float (*)[MAXSTUDIOBONES][3][4])pstudio->StudioGetLightTransform();
 
-	cl_viewent = gEngfuncs.GetViewModel();
+	cl_viewent = g_pMetaSave->pEngineFuncs->GetViewModel();
 
 	//Save Studio API
 	memcpy(&IEngineStudio, pstudio, sizeof(IEngineStudio));
@@ -494,26 +584,6 @@ int HUD_AddEntity(int type, cl_entity_t *ent, const char *model)
 void HUD_TempEntUpdate(double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, 	int (*pfnAddVisibleEntity)(cl_entity_t *),	void (*pfnTempEntPlaySound)( TEMPENTITY *, float damp))
 {
 	g_flFrameTime = frametime;
-}
-
-HWND WINAPI Hook_CreateWindowExA(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-	HWND hWnd = g_pfn_CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-	if((DWORD)lpClassName > 0xFFFF && (!strcmp(lpClassName, "Valve001") || !strcmp(lpClassName, "SDL_app")) && !hWndParent)//not an atom string
-	{
-		g_hWnd = hWnd;
-	}
-	return hWnd;
-}
-
-HWND WINAPI Hook_CreateWindowExW(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-	HWND hWnd = g_pfn_CreateWindowExW(dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-	if((DWORD)lpClassName > 0xFFFF && (!wcscmp(lpClassName, L"Valve001") || !wcscmp(lpClassName, L"SDL_app")) && !hWndParent)//not an atom string
-	{
-		g_hWnd = hWnd;
-	}
-	return hWnd;
 }
 
 void HUD_Frame(double time)

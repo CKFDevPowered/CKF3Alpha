@@ -152,7 +152,7 @@ int CL_GetViewBody(void)
 
 qboolean CL_IsFirstPersonSpec(void)
 {
-	return (g_iUser1 == OBS_IN_EYE || (g_iUser1 && (gHUD_m_pip->value == INSET_IN_EYE)));
+	return (g_iUser1 == OBS_IN_EYE || (g_iUser1 && (gHUD_m_pip && gHUD_m_pip->value == INSET_IN_EYE)));
 }
 
 qboolean CL_IsThirdPerson(void)
@@ -166,11 +166,9 @@ qboolean CL_CanDrawViewModel(void)
 {
 	if(gExportfuncs.CL_IsThirdPerson() || chase_active->value != 0 || *envmap || !r_drawentities->value || refparams.health <= 0 || refparams.viewentity > refparams.maxclients)
 		return false;
-	if(gpRefExports->R_GetDrawPass() != r_draw_normal)
+	if(gRefExports.R_GetDrawPass() != r_draw_normal)
 		return false;
-	if(HudBase_IsFullScreenMenu() && g_bGameUIActivate)
-		return false;
-	if(gBTEFuncs.GetHUDFov() < 60)
+	if(g_pBTEClient->GetHUDFov() < 60)
 		return false;
 	return true;
 }

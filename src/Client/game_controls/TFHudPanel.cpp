@@ -28,8 +28,6 @@ typedef int (*pfnUserMsgHook)(const char *pszName, int iSize, void *pbuf);
 
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 using namespace vgui;
 
 TFHudPanel::TFHudPanel( Panel *parent, const char *name ) : BaseClass( parent, name )

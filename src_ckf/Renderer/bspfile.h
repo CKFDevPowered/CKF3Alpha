@@ -1,3 +1,5 @@
+#pragma once
+
 #define MAX_MAP_HULLS 4
 
 #define MAX_MAP_MODELS 400

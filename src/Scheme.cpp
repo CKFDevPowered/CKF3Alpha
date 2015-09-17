@@ -599,6 +599,11 @@ void CScheme::ReloadFontGlyphs(void)
 			int blur = fontdata->GetInt("blur");
 			int scanlines = fontdata->GetInt("scanlines");
 
+			//if(!stricmp(fontdata->GetString("name"), "TF2") && !stricmp(m_FontAliases[i]._trueFontName.String(), "HudClassHealth"))
+			//{
+			//	Msg("sb");
+			//}
+
 			if ((!fontYResMin && !fontYResMax) && m_FontAliases[i].m_bProportional)
 			{
 				tall = g_Scheme.GetProportionalScaledValueEx(this, tall);
@@ -606,8 +611,9 @@ void CScheme::ReloadFontGlyphs(void)
 				scanlines = g_Scheme.GetProportionalScaledValueEx(this, scanlines);
 			}
 
-			if (tall > 127)
-				tall = 127;
+			//Out maximum value in s_pFontPageSize is 256, so we have largest of 255
+			if (tall > 255)
+				tall = 255;
 
 			if (tall < minimumFontHeight)
 				tall = minimumFontHeight;
@@ -617,10 +623,6 @@ void CScheme::ReloadFontGlyphs(void)
 			}
 			else
 			{
-				if(fontdata->GetInt("weight") == 700 && tall == 12)
-				{
-					Msg("sb");
-				}
 				g_pSurface->AddGlyphSetToFont(m_FontAliases[i]._font, fontdata->GetString("name"), tall, fontdata->GetInt("weight"), blur, scanlines, flags, 0x0, 0xFFFF);
 			}
 

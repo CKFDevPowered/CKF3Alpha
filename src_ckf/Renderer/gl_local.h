@@ -36,7 +36,7 @@
 #include "gl_3dsky.h"
 #include "gl_cloak.h"
 
-#include "ref_int.h"
+#include "ref_int_internal.h"
 
 extern refdef_t *r_refdef;
 extern ref_params_t r_params;
@@ -51,6 +51,13 @@ extern cl_entity_t **currententity;
 extern int *maxTransObjs;
 extern transObjRef **transObjects;
 extern int numTransObjs;
+
+extern RECT *window_rect;
+
+extern float *videowindowaspect;
+extern float *windowvideoaspect;
+extern float videowindowaspect_old;
+extern float windowvideoaspect_old;
 
 extern GLuint screenframebuffer;
 extern GLuint lastframebuffer;
@@ -97,6 +104,7 @@ extern qboolean bDoMSAAFBO;
 extern qboolean bDoScaledFBO;
 extern qboolean bDoDirectBlit;
 extern qboolean bDoHDR;
+extern qboolean bNoStretchAspect;
 
 extern FBO_Container_t s_MSAAFBO;
 extern FBO_Container_t s_BackBufferFBO;
@@ -207,15 +215,30 @@ void R_DrawSkyChain(msurface_t *s);
 void R_ClearSkyBox(void);
 void R_DrawSkyBox(void);
 void R_DrawEntitiesOnList(void);
-void R_DrawTEntitiesOnList(int onlyClientDraw);
-void R_DrawBrushModel(cl_entity_t *e);
 void R_DrawSequentialPoly(msurface_t *s, int face);
-void R_AllocObjects(int nMax);
 float *R_GetAttachmentPoint(int entity, int attachment);
-void R_DrawSpriteModel(cl_entity_t *e);
+void R_DrawBrushModel(cl_entity_t *entity);
+void R_DrawSpriteModel(cl_entity_t *entity);
+void R_GetSpriteAxes(cl_entity_t *entity, int type, float *vforwrad, float *vright, float *vup);
+void R_SpriteColor(mcolor24_t *col, cl_entity_t *entity, int renderamt);
+float GlowBlend(cl_entity_t *entity);
+int CL_FxBlend(cl_entity_t *entity);
+
+int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadPNG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadDDS(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int SaveBMP(const char *file_name, int width, int height, byte *data);
+int SaveTGA(const char *file_name, int width, int height, byte *data);
+int SavePNG(const char *file_name, int width, int height, byte *data);
+
+void R_DrawTEntitiesOnList(int onlyClientDraw);
+void R_AllocObjects(int nMax);
 void R_AddTEntity(cl_entity_t *pEnt);
 void R_SortTEntities(void);
 
+RECT *VID_GetWindowRect(void);
+void GL_SwapBuffer(void);
 void GL_Init(void);
 void GL_BeginRendering(int *x, int *y, int *width, int *height);
 void GL_EndRendering(void);
@@ -263,16 +286,14 @@ void R_LoadRendererEntities(void);
 void GL_FreeTexture(gltexture_t *glt);
 void R_GLBindFrameBuffer(GLuint fb, GLuint fbo);
 void R_InitRefHUD(void);
-//crack engine limitation
-void CL_VisEdicts_Crack(void);
-void Lightmaps_Crack(void);
+
+//patch engine limitation
+void CL_VisEdicts_Patch(void);
+void Lightmaps_Patch(void);
 //for screenshot
 byte *R_GetSCRCaptureBuffer(int *bufsize);
 void CL_ScreenShot_f(void);
-typedef qboolean (*typeSaveImage)(const char *, int, int, byte *);
-qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data);
-qboolean GL_SaveTGA(const char *file_name, int width, int height, byte *data);
-qboolean GL_SaveBMP(const char *file_name, int width, int height, byte *data);
+typedef int (*typeSaveImage)(const char *, int, int, byte *);
 
 //player state for StudioDrawPlayer
 entity_state_t *R_GetPlayerState(int index);

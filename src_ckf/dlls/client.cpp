@@ -898,9 +898,9 @@ int HandleMenu_ChooseClass(CBasePlayer *pPlayer, int keys)
 	if(!bInstantSpawn)
 	{
 		if(pPlayer->m_iClass == 0)
-			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#game_spawn_as", classname);
+			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#CKF3_Spawn_as", classname);
 		else
-			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#game_respawn_as", classname);
+			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#CKF3_Respawn_as", classname);
 	}
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgPlayerVars, NULL, pPlayer->pev);
@@ -1123,9 +1123,9 @@ BOOL HandleMenu_ChooseTeam(CBasePlayer *pPlayer, int keys)
 		name = "<unconnected>";
 
 	if (team == TEAM_RED)
-		UTIL_ClientPrintAll(HUD_PRINTTALK, "#Game_join_red", name);
+		UTIL_ClientPrintAll(HUD_PRINTTALK, "#CKF3_Join_Red", name);
 	else
-		UTIL_ClientPrintAll(HUD_PRINTTALK, "#Game_join_blue", name);
+		UTIL_ClientPrintAll(HUD_PRINTTALK, "#CKF3_Join_Blue", name);
 
 	UTIL_LogPrintf("\"%s<%i><%s><%s>\" joined team \"%s\"\n", STRING(pPlayer->pev->netname), GETPLAYERUSERID(pPlayer->edict()), GETPLAYERAUTHID(pPlayer->edict()), GetTeam(oldteam), GetTeam(team));
 	return TRUE;
@@ -1784,7 +1784,7 @@ void ClientUserInfoChanged(edict_t *pEntity, char *infobuffer)
 		{
 			pPlayer->m_bNameChanged = TRUE;
 			_snprintf(pPlayer->m_szNewName, sizeof(pPlayer->m_szNewName), "%s", sName);
-			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#Name_change_at_respawn");
+			ClientPrint(pPlayer->pev, HUD_PRINTTALK, "#CKF3_Name_Change_at_Respawn");
 			g_engfuncs.pfnSetClientKeyValue(iClientIndex, infobuffer, "name", (char *)STRING(pEntity->v.netname));
 		}
 		else
@@ -2513,7 +2513,7 @@ int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *ho
 			{
 				if(pPlayer->m_iTeam != pHost->m_iTeam)
 				{
-					state->weaponmodel = MODEL_INDEX(STRING(pPlayer->m_iDisguiseWeapon));
+					state->weaponmodel = pPlayer->m_iDisguiseWeapon;
 					state->sequence = pPlayer->m_iDisguiseSequence;
 					state->scale = pPlayer->m_iDisguiseWeaponBody;
 					state->startpos.x = pPlayer->m_iDisguiseHealth;
@@ -2835,7 +2835,7 @@ int GetWeaponData(struct edict_s *player, struct weapon_data_s *info)
 					item->m_iId = II.iId;
 
 					item->m_iClip = gun->m_iClip;
-					item->iuser2 = gun->iMaxClip();
+					item->iuser2 = (gun->iMaxClip() < 0) ? 0 : gun->iMaxClip();
 					item->iuser3 = (gun->pszAmmo1()) ? pl->m_rgAmmo[gun->m_iPrimaryAmmoType] : 0;
 					item->iuser4 = (gun->pszAmmo1()) ? gun->iMaxAmmo1() : 0;
 
@@ -2981,12 +2981,18 @@ void UpdateClientData(const struct edict_s *ent, int sendweapons, struct clientd
 		if(pl->m_iClass == CLASS_SPY)
 		{
 			cd->vuser2.x = (float)((pl->m_iCloak << 1) | (pl->m_iDisguise & 1));
+			cd->vuser2.y = 0;
+			cd->vuser2.z = 0;
+			cd->vuser3.x = 0;
 			cd->vuser3.y = pl->m_flCloakEnergy;
+			cd->vuser3.z = 0;
 			if(pl->m_iDisguise)
 			{
-				cd->vuser2.y = (int)pl->m_iDisguiseTeam;
-				cd->vuser2.z = (int)pl->m_iDisguiseClass;
+				cd->vuser2.y = (int)((pl->m_iDisguiseTeam & 3) | (pl->m_iDisguiseClass << 2));
+				cd->vuser2.z = (int)pl->m_iDisguiseStandSequence;
 				cd->vuser3.x = (int)pl->m_iDisguiseHealth;
+				cd->vuser3.z = (int)pl->m_iDisguiseWeaponBody;
+				cd->vuser4.x = (int)pl->m_iDisguiseWeapon;
 				cd->maxspeed = (int)pl->m_iDisguiseMaxSpeed;
 			}
 		}

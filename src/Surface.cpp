@@ -1558,9 +1558,9 @@ void CSurface::PaintHTMLWindow(IHTML *htmlwin)
 
 	if (IE)
 	{
-		HDC hdc = ::GetDC(reinterpret_cast<HWND>(g_hMainWnd));
+		HDC hdc = ::GetDC(g_hMainWnd);
 		IE->OnPaint(hdc);
-		::ReleaseDC(reinterpret_cast<HWND>(g_hMainWnd), hdc);
+		::ReleaseDC(g_hMainWnd, hdc);
 	}
 #endif
 }
@@ -1621,14 +1621,14 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 		Q_snprintf(name, sizeof(name), "%s.tga", filename);
 
 		int width, height;
-		bool success = LoadTGA2(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+		bool success = LoadTGA(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 
 		if (!success)
 		{
 			const char *psz = Q_stristr(name, "vgui/");
 
 			if (psz)
-				success = LoadTGA2(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+				success = LoadTGA(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 		}
 
 		if (!success)
@@ -1641,6 +1641,23 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 
 				if (psz)
 					success = LoadBMP(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+			}
+			else
+			{
+				success = true;
+			}
+		}
+
+		if (!success)
+		{
+			Q_snprintf(name, sizeof(name), "%s.png", filename);
+
+			if (!LoadPNG(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+			{
+				const char *psz = Q_stristr(name, "vgui/");
+
+				if (psz)
+					success = LoadPNG(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 			}
 			else
 			{

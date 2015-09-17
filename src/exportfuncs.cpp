@@ -62,16 +62,17 @@ int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion)
 	pEnginefuncs->pfnSetCrosshair = SetCrosshair;
 
 	// 应该换个位置
-	{
+	//{
 		Cache_Init();
 		COM_Init();
 		VID_Init();
+		//QGL_Init is called at LoadEngine for drawing loading screen
 		QGL_Init();
 		SVC_Init();
 		MSG_Init();
 
 		VGui_Startup();
-	}
+	//}
 
 	int result = gExportfuncs.Initialize(pEnginefuncs, iVersion);
 

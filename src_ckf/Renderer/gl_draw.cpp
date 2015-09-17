@@ -110,30 +110,30 @@ void Draw_TextureMode_f(void)
 {
 	int i;
 
-	if (gEngfuncs.Cmd_Argc() == 1)
+	if (g_pMetaSave->pEngineFuncs->Cmd_Argc() == 1)
 	{
 		for (i = 0; i < 6; i++)
 		{
 			if (gl_filter_min == modes[i].minimize)
 			{
-				gEngfuncs.Con_Printf("%s\n", modes[i].name);
+				g_pMetaSave->pEngineFuncs->Con_Printf("%s\n", modes[i].name);
 				return;
 			}
 		}
 
-		gEngfuncs.Con_Printf("current filter is unknown???\n");
+		g_pMetaSave->pEngineFuncs->Con_Printf("current filter is unknown???\n");
 		return;
 	}
 
 	for (i = 0; i < 6; i++)
 	{
-		if (!stricmp(modes[i].name, gEngfuncs.Cmd_Argv(1)))
+		if (!stricmp(modes[i].name, g_pMetaSave->pEngineFuncs->Cmd_Argv(1)))
 			break;
 	}
 
 	if (i == 6)
 	{
-		gEngfuncs.Con_Printf("bad filter name\n");
+		g_pMetaSave->pEngineFuncs->Con_Printf("bad filter name\n");
 		return;
 	}
 
@@ -153,7 +153,7 @@ void Draw_UpdateAnsios(void)
 			{
 				char cmd[64];
 				sprintf(cmd, "gl_texturemode %s\n", modes[i].name);
-				gEngfuncs.pfnClientCmd(cmd);
+				g_pMetaSave->pEngineFuncs->pfnClientCmd(cmd);
 				break;
 			}
 		}
@@ -448,7 +448,7 @@ int GL_AllocTexture(const char *identifier, GL_TEXTURETYPE textureType, int widt
 	}
 	else
 	{
-		gEngfuncs.Con_DPrintf("NULL Texture\n");
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("NULL Texture\n");
 		return 0;
 	}
 
@@ -459,7 +459,7 @@ int GL_AllocTexture(const char *identifier, GL_TEXTURETYPE textureType, int widt
 
 		if (*numgltextures >= MAX_GLTEXTURES)
 		{
-			gEngfuncs.Con_Printf("Texture Overflow: MAX_GLTEXTURES\n");
+			g_pMetaSave->pEngineFuncs->Con_Printf("Texture Overflow: MAX_GLTEXTURES\n");
 			return 0;
 		}
 	}
@@ -526,6 +526,87 @@ int GL_LoadTextureEx(const char *identifier, GL_TEXTURETYPE textureType, int wid
 	return texnum;
 }
 
+int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
+{
+	FileHandle_t file = g_pFileSystem->Open(szFilename, "rb");
+
+	if (!file)
+	{
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("LoadBMP: couldn't open file %s\n", szFilename);
+		return FALSE;
+	}
+
+	BITMAPFILEHEADER bmfHeader;
+	LPBITMAPINFO lpbmi;
+	DWORD dwFileSize = g_pFileSystem->Size(file);
+
+	if (!g_pFileSystem->Read(&bmfHeader, sizeof(bmfHeader), file))
+	{
+		*width = 0;
+		*height = 0;
+
+		g_pFileSystem->Close(file);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadBMP: file %s has no BMP header.\n", szFilename);
+		return FALSE;
+	}
+
+	if (bmfHeader.bfType == DIB_HEADER_MARKER)
+	{
+		DWORD dwBitsSize = dwFileSize - sizeof(bmfHeader);
+
+		HGLOBAL hDIB = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, dwBitsSize);
+		char *pDIB = (LPSTR)::GlobalLock((HGLOBAL)hDIB);
+
+		if (!g_pFileSystem->Read(pDIB, dwBitsSize, file))
+		{
+			::GlobalUnlock(hDIB);
+			::GlobalFree((HGLOBAL)hDIB);
+
+			*width = 0;
+			*height = 0;
+
+			g_pFileSystem->Close(file);
+			g_pMetaSave->pEngineFuncs->Con_Printf("LoadBMP: file %s has no DIB info.\n", szFilename);
+			return FALSE;
+		}
+
+		lpbmi = (LPBITMAPINFO)pDIB;
+
+		if (width)
+			*width = lpbmi->bmiHeader.biWidth;
+
+		if (height)
+			*height = lpbmi->bmiHeader.biHeight;
+
+		unsigned char *rgba = (unsigned char *)(pDIB + sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+
+		for (int j = 0; j < lpbmi->bmiHeader.biHeight; j++)
+		{
+			for (int i = 0; i < lpbmi->bmiHeader.biWidth; i++)
+			{
+				int y = (lpbmi->bmiHeader.biHeight - j - 1);
+
+				int offs = (y * lpbmi->bmiHeader.biWidth + i);
+				int offsdest = (j * lpbmi->bmiHeader.biWidth + i) * 4;
+				unsigned char *src = rgba + offs;
+				unsigned char *dst = buffer + offsdest;
+
+				dst[0] = lpbmi->bmiColors[*src].rgbRed;
+				dst[1] = lpbmi->bmiColors[*src].rgbGreen;
+				dst[2] = lpbmi->bmiColors[*src].rgbBlue;
+				dst[3] = 255;
+			}
+		}
+
+		::GlobalUnlock(hDIB);
+		::GlobalFree((HGLOBAL)hDIB);
+	}
+
+	g_pFileSystem->Close(file);
+
+	return TRUE;
+}
+
 DWORD ByteToUInt( byte *byte )
 {
 	DWORD iValue = byte[0];
@@ -554,7 +635,7 @@ qboolean PowerOfTwo(int iWidth,int iHeight)
 	return true;
 }
 
-int GL_LoadDDS(const char *path, byte *buf, size_t bufsize, int *width, int *height)
+int LoadDDS(const char *szFilename, byte *buf, int bufsize, int *width, int *height)
 {
 	dds_header_t *header;
 	byte *pFile;
@@ -565,11 +646,11 @@ int GL_LoadDDS(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 	if (height)
 		*height = 0;
 
-	pFile = (byte *)gEngfuncs.COM_LoadFile((char *)path, 5, NULL);
+	pFile = (byte *)g_pMetaSave->pEngineFuncs->COM_LoadFile((char *)szFilename, 5, NULL);
 
 	if(!pFile)
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: couldn't open file %s\n", path);
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("LoadDDS: couldn't open file %s\n", szFilename);
 		return FALSE;
 	}
 
@@ -587,52 +668,52 @@ int GL_LoadDDS(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 
 	if(!PowerOfTwo(w, h))
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: texture %s size is not power of 2\n", path);
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: texture %s size is not power of 2\n", szFilename);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(iMagic != DDS_MAGIC)
 	{
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(iSize != 124)
 	{
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_PIXELFORMAT))
 	{
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_CAPS))
 	{
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(!(iPFFlags & DDPF_FOURCC))
 	{
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(iFourCC != D3DFMT_DXT1 && iFourCC != D3DFMT_DXT3 && iFourCC != D3DFMT_DXT5)
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: %s nou supported, Only DXT1/3/5 are supported!\n", path);
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: %s nou supported, Only DXT1/3/5 are supported!\n", szFilename);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if(iLinSize > bufsize)
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: Texture %s is too large!\n", path);
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is too large!\n", szFilename);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
@@ -650,11 +731,11 @@ int GL_LoadDDS(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 	*width = w;
 	*height = h;
 
-	gEngfuncs.COM_FreeFile(pFile);
+	g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 	return TRUE;
 }
 
-void GL_ReadPNG(png_structp png_ptr, png_bytep data, png_size_t length)
+void ReadPNGCallBack(png_structp png_ptr, png_bytep data, png_size_t length)
 {
 	png_source *src = (png_source *)png_get_io_ptr(png_ptr);
 	if(src->offset + length <= src->size)
@@ -663,10 +744,10 @@ void GL_ReadPNG(png_structp png_ptr, png_bytep data, png_size_t length)
 		src->offset += length;
 	}
 	else
-		png_error(png_ptr, "GL_ReadPNG failed");
+		png_error(png_ptr, "ReadPNGCallBack failed");
 }
 
-int GL_LoadPNG(const char *path, byte *buf, size_t bufsize, int *width, int *height)
+int LoadPNG(const char *szFilename, byte *buf, int bufsize, int *width, int *height)
 {
 	int iFileLength;
 	byte *pFile;
@@ -684,17 +765,17 @@ int GL_LoadPNG(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 	if (height)
 		*height = 0;
 
-	pFile = (byte *)gEngfuncs.COM_LoadFile((char *)path, 5, &iFileLength);
+	pFile = (byte *)g_pMetaSave->pEngineFuncs->COM_LoadFile((char *)szFilename, 5, &iFileLength);
 
 	if(!pFile)
 	{
-		gEngfuncs.Con_Printf("GL_LoadPNG: Couldn't open file %s\n", path);
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("LoadPNG: Couldn't open file %s\n", szFilename);
 		return FALSE;
 	}
 
 	if(png_sig_cmp(pFile, 0, 8))
     {
-		gEngfuncs.Con_Printf("GL_LoadPNG: File %s is not a PNG image.\n", path);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadPNG: File %s is not a PNG image.\n", szFilename);
 		return FALSE;
     }
 
@@ -719,7 +800,7 @@ int GL_LoadPNG(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 	src.size = iFileLength;
 	src.offset = 0;
 
-	png_set_read_fn(png_ptr, &src, GL_ReadPNG);
+	png_set_read_fn(png_ptr, &src, ReadPNGCallBack);
 	png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_STRIP_ALPHA, 0);
 	w = png_get_image_width(png_ptr, info_ptr);
 	h = png_get_image_height(png_ptr, info_ptr);
@@ -734,17 +815,17 @@ int GL_LoadPNG(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 		block_size = 4;
 	else
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: %s not supported, Only RGB/RGBA are supported!\n", path);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: %s not supported, Only RGB/RGBA are supported!\n", szFilename);
 		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 
 	if((size_t)(w * h * 4) > bufsize)
 	{
-		gEngfuncs.Con_Printf("GL_LoadDDS: Texture %s is too large!\n", path);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is too large!\n", szFilename);
 		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		gEngfuncs.COM_FreeFile(pFile);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 		return FALSE;
 	}
 	
@@ -767,17 +848,33 @@ int GL_LoadPNG(const char *path, byte *buf, size_t bufsize, int *width, int *hei
 	gl_loadtexture_size = pos;
 
 	png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-	gEngfuncs.COM_FreeFile(pFile);
+	g_pMetaSave->pEngineFuncs->COM_FreeFile(pFile);
 	return TRUE;
+}
+
+int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
+{
+	return gRefFuncs.LoadTGA(szFilename, buffer, bufferSize, width, height);
 }
 
 int R_LoadTextureEx(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio)
 {
 	int w, h;
 	const char *extension = path + strlen(path) - 4;
-	if(!stricmp(extension, ".dds"))
+	if(!stricmp(extension, ".bmp"))
 	{
-		if(GL_LoadDDS(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+		if(LoadBMP(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+		{
+			if(width)
+				*width = w;
+			if(height)
+				*height = h;
+			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
+		}
+	}
+	else if(!stricmp(extension, ".dds"))
+	{
+		if(LoadDDS(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
 		{
 			if(width)
 				*width = w;
@@ -789,7 +886,7 @@ int R_LoadTextureEx(const char *path, const char *name, int *width, int *height,
 	else if(!stricmp(extension, ".tga"))
 	{
 		gl_loadtexture_format = GL_RGBA;
-		if(gRefFuncs.LoadTGA(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+		if(LoadTGA(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
 		{
 			if(width)
 				*width = w;
@@ -801,7 +898,7 @@ int R_LoadTextureEx(const char *path, const char *name, int *width, int *height,
 	else if(!stricmp(extension, ".png"))
 	{
 		gl_loadtexture_format = GL_RGBA;
-		if(GL_LoadPNG(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+		if(LoadPNG(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
 		{
 			if(width)
 				*width = w;
@@ -812,10 +909,10 @@ int R_LoadTextureEx(const char *path, const char *name, int *width, int *height,
 	}
 	else
 	{
-		gEngfuncs.Con_Printf("R_LoadTextureEx: %s unsupported texture extension \"%s\".\n", path, extension);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: %s unsupported texture format \"%s\".\n", path, extension);
 		return 0;
 	}
-	gEngfuncs.Con_Printf("R_LoadTextureEx: failed to load texture %s.\n", path);
+	g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: failed to load texture %s.\n", path);
 	return 0;
 }
 
@@ -845,19 +942,19 @@ void Draw_MiptexTexture(cachewad_t *wad, byte *data)
 	R_LinkDecalTexture(t);
 }
 
-void GL_WritePNG(png_structp png_ptr, png_bytep data, png_size_t length)
+void WritePNG(png_structp png_ptr, png_bytep data, png_size_t length)
 {
 	png_dest *dst = (png_dest *)png_get_io_ptr(png_ptr);
 	g_pFileSystem->Write(data, length, dst->fp);
 }
 
-void GL_FlushPNG(png_structp png_ptr)
+void FlushPNG(png_structp png_ptr)
 {
 	png_dest *dst = (png_dest *)png_get_io_ptr(png_ptr);
 	g_pFileSystem->Flush(dst->fp);
 }
 
-qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
+int SavePNG(const char *file_name, int width, int height, byte *data)
 {
     int i;
 	png_dest dst;
@@ -868,7 +965,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
     if (!fp)
     {
-		gEngfuncs.Con_Printf("GL_SavePNG: Couldn't open %s for write\n", file_name);
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Couldn't open %s for write\n", file_name);
         return FALSE;  
     }
 
@@ -877,7 +974,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 
     if (!png_ptr)  
     {
-		gEngfuncs.Con_Printf("GL_SavePNG: png_create_write_struct failed");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_create_write_struct failed");
 		g_pFileSystem->Close(fp);
         return FALSE;  
     }
@@ -885,7 +982,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
     info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr)  
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: png_create_info_struct failed");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_create_info_struct failed");
 		g_pFileSystem->Close(fp);
 		png_destroy_write_struct(&png_ptr, NULL);
 		return FALSE;  
@@ -893,7 +990,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 
     if (setjmp(png_jmpbuf(png_ptr)))
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: png_set_write_fn failed ");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_set_write_fn failed ");
 		g_pFileSystem->Close(fp);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
         return FALSE;  
@@ -901,11 +998,11 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 
 	dst.fp = fp;
 
-	png_set_write_fn(png_ptr, &dst, GL_WritePNG, GL_FlushPNG);
+	png_set_write_fn(png_ptr, &dst, WritePNG, FlushPNG);
 
 	if (setjmp(png_jmpbuf(png_ptr)))  
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: Error writing header");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error writing header");
 		g_pFileSystem->Close(fp);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		return FALSE;
@@ -918,7 +1015,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 	row_pointers = (png_bytepp)malloc(height * sizeof(png_bytep));
 	if(!row_pointers)
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: Error during allocate row_pointers");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during allocate row_pointers");
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		g_pFileSystem->Close(fp);
         return FALSE;
@@ -930,7 +1027,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
     /* write bytes */  
     if (setjmp(png_jmpbuf(png_ptr)))
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: Error during writing bytes");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during writing bytes");
 		g_pFileSystem->Close(fp);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		free(row_pointers);
@@ -941,7 +1038,7 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
   
     if (setjmp(png_jmpbuf(png_ptr)))  
     {  
-		gEngfuncs.Con_Printf("GL_SavePNG: Error during end of write");
+		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during end of write");
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		free(row_pointers);
 		g_pFileSystem->Close(fp);
@@ -955,12 +1052,12 @@ qboolean GL_SavePNG(const char *file_name, int width, int height, byte *data)
 	return TRUE;
 }
 
-qboolean GL_SaveTGA(const char *file_name, int width, int height, byte *data)
+int SaveTGA(const char *file_name, int width, int height, byte *data)
 {
 	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
     if (!fp)
     {
-		gEngfuncs.Con_Printf("GL_SaveTGA: Couldn't open %s for write\n", file_name);
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveTGA: Couldn't open %s for write\n", file_name);
 		return FALSE;
     }
 	tgaheader_t header;
@@ -992,12 +1089,12 @@ qboolean GL_SaveTGA(const char *file_name, int width, int height, byte *data)
 	return TRUE;
 }
 
-qboolean GL_SaveBMP(const char *file_name, int width, int height, byte *data)
+int SaveBMP(const char *file_name, int width, int height, byte *data)
 {
 	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
     if (!fp)
     {
-		gEngfuncs.Con_Printf("GL_SaveBMP: Couldn't open %s for write\n", file_name);
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveBMP: Couldn't open %s for write\n", file_name);
         return FALSE;  
     }
 

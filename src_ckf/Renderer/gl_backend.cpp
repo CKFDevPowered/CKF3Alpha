@@ -4,34 +4,40 @@
 byte *scrcapture_buffer = NULL;
 int scrcapture_bufsize = 0;
 
-void R_CaptureScreen(void)
-{
-	if(scrcapture_bufsize < glwidth*glheight*3)
-	{
-		if(scrcapture_buffer)
-			delete []scrcapture_buffer;
-		scrcapture_bufsize = glwidth*glheight*3;
-		scrcapture_buffer = new byte[scrcapture_bufsize];
-	}
+char scrcapture_ext[32];
 
-	qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
-}
-
-void CL_ScreenShot_f(void)
+void R_CaptureScreen(const char *szExt)
 {
-	char *szExt = "png";
 	int iFileIndex = 0;
 	char *pLevelName;
 	char szLevelName[64];
-	char szFileName[260];	
+	char szFileName[260];
 	typeSaveImage pfnSaveImage;
 
-	R_CaptureScreen();
+	if(scrcapture_ext[0] != '\0')
+		szExt = scrcapture_ext;
 
-	if(gEngfuncs.Cmd_Argc() > 1)
-		szExt = gEngfuncs.Cmd_Argv(1);
+	if(s_BackBufferFBO.s_hBackBufferFBO)
+	{
+		int current_readfbo;
+		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &current_readfbo);
+		if(current_readfbo != s_BackBufferFBO.s_hBackBufferFBO)
+		{
+			R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
+			qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
+			R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, current_readfbo);
+		}
+		else
+		{
+			qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
+		}
+	}
+	else
+	{
+		qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
+	}
 
-	const char *pLevel = gEngfuncs.pfnGetLevelName();
+	const char *pLevel = g_pMetaSave->pEngineFuncs->pfnGetLevelName();
 	if(!pLevel || !pLevel[0])
 	{
 		strcpy(szLevelName, "screenshot");
@@ -47,19 +53,19 @@ void CL_ScreenShot_f(void)
 
 	if(!stricmp(szExt, "png"))
 	{
-		pfnSaveImage = (typeSaveImage)GL_SavePNG;
+		pfnSaveImage = (typeSaveImage)SavePNG;
 	}
 	else if(!stricmp(szExt, "tga"))
 	{
-		pfnSaveImage = (typeSaveImage)GL_SaveTGA;
+		pfnSaveImage = (typeSaveImage)SaveTGA;
 	}
 	else if(!stricmp(szExt, "bmp"))
 	{
-		pfnSaveImage = (typeSaveImage)GL_SaveBMP;
+		pfnSaveImage = (typeSaveImage)SaveBMP;
 	}
 	else
 	{
-		gEngfuncs.Con_Printf("Unsupported image format: \".%s\"\n", szExt);
+		g_pMetaSave->pEngineFuncs->Con_Printf("Unsupported image format: \".%s\"\n", szExt);
 		return;
 	}
 
@@ -71,8 +77,27 @@ void CL_ScreenShot_f(void)
 
 	if(pfnSaveImage(szFileName, glwidth, glheight, scrcapture_buffer))
 	{
-		gEngfuncs.Con_Printf("Screenshot %s saved.\n", szFileName);
+		g_pMetaSave->pEngineFuncs->Con_Printf("Screenshot %s saved.\n", szFileName);
 	}
+}
+
+void CL_ScreenShot_f(void)
+{
+	if(scrcapture_bufsize < glwidth*glheight*3)
+	{
+		if(scrcapture_buffer)
+			delete []scrcapture_buffer;
+		scrcapture_bufsize = glwidth*glheight*3;
+		scrcapture_buffer = new byte[scrcapture_bufsize];
+	}
+
+	char *szExt = "png";
+	if(g_pMetaSave->pEngineFuncs->Cmd_Argc() > 1)
+	{
+		szExt = g_pMetaSave->pEngineFuncs->Cmd_Argv(1);
+	}
+
+	R_CaptureScreen(szExt);
 }
 
 byte *R_GetSCRCaptureBuffer(int *bufsize)

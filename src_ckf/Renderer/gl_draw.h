@@ -97,3 +97,5 @@ typedef struct tgaheader_s
 #define D3DFMT_DXT1     '1TXD'    //  DXT1 compression texture format 
 #define D3DFMT_DXT3     '3TXD'    //  DXT5 compression texture format 
 #define D3DFMT_DXT5     '5TXD'    //  DXT5 compression texture format 
+
+#define DIB_HEADER_MARKER ((WORD)('M' << 8) | 'B')

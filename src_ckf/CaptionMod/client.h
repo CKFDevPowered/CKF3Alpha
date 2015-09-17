@@ -440,6 +440,4 @@ extern float g_flRoundEndTime;
 extern float g_flRoundStatusChangeTime;
 extern int g_iCapPointIndex;
 
-extern int g_ScoreBoardEnabled;
-
 #define SPY_MIN_ALPHA 50

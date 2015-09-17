@@ -18,8 +18,6 @@
 
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 using namespace vgui;
 
 CClassMenu::CClassMenu(void) : Frame(NULL, NULL)

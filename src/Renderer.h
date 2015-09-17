@@ -1,8 +1,12 @@
 #include <IRenderer.h>
 #include <ICKFClient.h>
+#include <IBTEClient.h>
+#include <IPlugins.h>
 
-extern IRenderer *g_pRenderer;
-extern ICKFClient *g_pCKFClient;
+#define METAHOOK_PLUGIN_API_VERSION "METAHOOK_PLUGIN_API_VERSION002"
+
+extern IPlugins *g_pRendererPlugins;
+extern IPlugins *g_pCKFClientPlugins;
 
 void Renderer_Init(void);
 void CKF_Init(void);

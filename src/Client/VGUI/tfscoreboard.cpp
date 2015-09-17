@@ -27,8 +27,6 @@
 
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 using namespace vgui;
 
 static const char *g_sClassName[] = {

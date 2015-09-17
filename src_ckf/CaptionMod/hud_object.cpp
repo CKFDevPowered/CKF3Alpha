@@ -179,18 +179,18 @@ int HudObject_VidInit(void)
 	g_texControlPointMan = Surface_LoadTGA("resource\\tga\\cp_man");
 	g_texControlPointFans = Surface_LoadTGA("resource\\tga\\cp_fans");
 
-	cp_bar_program.program = gpRefExports->ShaderAPI.R_CompileShader(cp_bar_program_vertex, cp_bar_program_fragment, "cp_bar_program.vsh", "cp_bar_program.fsh");
+	cp_bar_program.program = gRefExports.ShaderAPI.R_CompileShader(cp_bar_program_vertex, cp_bar_program_fragment, "cp_bar_program.vsh", "cp_bar_program.fsh");
 	if(cp_bar_program.program)
 	{
-		cp_bar_program.base = gpRefExports->ShaderAPI.GL_GetUniformLoc(cp_bar_program.program, "base");
-		cp_bar_program.mask = gpRefExports->ShaderAPI.GL_GetUniformLoc(cp_bar_program.program, "mask");
+		cp_bar_program.base = gRefExports.ShaderAPI.GL_GetUniformLoc(cp_bar_program.program, "base");
+		cp_bar_program.mask = gRefExports.ShaderAPI.GL_GetUniformLoc(cp_bar_program.program, "mask");
 	}
-	cp_fans_program.program = gpRefExports->ShaderAPI.R_CompileShader(cp_fans_program_vertex, cp_fans_program_fragment, "cp_fans_program.vsh", "cp_fans_program.fsh");
+	cp_fans_program.program = gRefExports.ShaderAPI.R_CompileShader(cp_fans_program_vertex, cp_fans_program_fragment, "cp_fans_program.vsh", "cp_fans_program.fsh");
 	if(cp_fans_program.program)
 	{
-		cp_fans_program.fade = gpRefExports->ShaderAPI.GL_GetUniformLoc(cp_fans_program.program, "fade");
+		cp_fans_program.fade = gRefExports.ShaderAPI.GL_GetUniformLoc(cp_fans_program.program, "fade");
 	}
-	cp_rings_program.program = gpRefExports->ShaderAPI.R_CompileShader(cp_rings_program_vertex, cp_rings_program_fragment, "cp_rings_program.vsh", "cp_rings_program.fsh");
+	cp_rings_program.program = gRefExports.ShaderAPI.R_CompileShader(cp_rings_program_vertex, cp_rings_program_fragment, "cp_rings_program.vsh", "cp_rings_program.fsh");
 	return 1;
 }
 
@@ -336,8 +336,8 @@ void DrawTimer(void)
 	{
 		if(g_RefSupportExt & r_ext_shader)
 		{
-			gpRefExports->ShaderAPI.GL_UseProgram(cp_fans_program.program);
-			gpRefExports->ShaderAPI.GL_Uniform2f(cp_fans_program.fade, 0.05, 0.95);
+			gRefExports.ShaderAPI.GL_UseProgram(cp_fans_program.program);
+			gRefExports.ShaderAPI.GL_Uniform2f(cp_fans_program.fade, 0.05, 0.95);
 		}
 
 		qglEnable(GL_BLEND);
@@ -354,51 +354,51 @@ void DrawTimer(void)
 		qglEnable(GL_TEXTURE_2D);
 
 		if(g_RefSupportExt & r_ext_shader)
-			gpRefExports->ShaderAPI.GL_EndProgram();
+			gRefExports.ShaderAPI.GL_EndProgram();
 	}
 }
 
 void DrawControlPoint_Bar(controlpoint_t *cp, int x, int y, int w, int h, float progress)
 {
-	gpRefExports->ShaderAPI.GL_UseProgram(cp_bar_program.program);
-	gpRefExports->ShaderAPI.GL_Uniform1i(cp_bar_program.base, 0);
-	gpRefExports->ShaderAPI.GL_Uniform1i(cp_bar_program.mask, 1);
+	gRefExports.ShaderAPI.GL_UseProgram(cp_bar_program.program);
+	gRefExports.ShaderAPI.GL_Uniform1i(cp_bar_program.base, 0);
+	gRefExports.ShaderAPI.GL_Uniform1i(cp_bar_program.mask, 1);
 
 	int iCapTeam = max(min(cp->iCapTeam-1, 2), 0);
 
 	qglEnable(GL_BLEND);
 	qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	gpRefFuncs->GL_DisableMultitexture();
-	gpRefFuncs->GL_Bind(g_texControlPointProgressBar[iCapTeam]);
-	gpRefFuncs->GL_EnableMultitexture();
-	gpRefFuncs->GL_Bind(g_texControlPoint[0]);
+	gRefExports.RefAPI.GL_DisableMultitexture();
+	gRefExports.RefAPI.GL_Bind(g_texControlPointProgressBar[iCapTeam]);
+	gRefExports.RefAPI.GL_EnableMultitexture();
+	gRefExports.RefAPI.GL_Bind(g_texControlPoint[0]);
 
 	float s = (progress * 105 + (1 - progress) * 280) / 512.0f;
 
 	qglBegin(GL_QUADS);
 
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s, 0);
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 0, 0);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s, 0);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 0, 0);
 	qglVertex3f(x, y, 0);
 
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s, 1);
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 0, 1);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s, 1);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 0, 1);
 	qglVertex3f(x, y+h, 0);
 
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s + 128 / 512.0f, 1);	
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 1, 1);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s + 128 / 512.0f, 1);	
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 1, 1);
 	qglVertex3f(x+w, y+h, 0);
 
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s + 128 / 512.0f, 0);
-	gpRefExports->ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 1, 0);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE0, s + 128 / 512.0f, 0);
+	gRefExports.ShaderAPI.GL_MultiTexCoord2f(GL_TEXTURE1, 1, 0);
 	qglVertex3f(x+w, y, 0);
 
 	qglEnd();
 
-	gpRefFuncs->GL_Bind(0);
-	gpRefFuncs->GL_DisableMultitexture();
-	gpRefExports->ShaderAPI.GL_EndProgram();
+	gRefExports.RefAPI.GL_Bind(0);
+	gRefExports.RefAPI.GL_DisableMultitexture();
+	gRefExports.ShaderAPI.GL_EndProgram();
 }
 
 void DrawControlPoint_Rings(controlpoint_t *cp, int x, int y, float progress, BOOL bReversed)
@@ -411,7 +411,7 @@ void DrawControlPoint_Rings(controlpoint_t *cp, int x, int y, float progress, BO
 	float radius_end = ScreenHeight * 22 / 600;
 
 	if(g_RefSupportExt & r_ext_shader)
-		gpRefExports->ShaderAPI.GL_UseProgram(cp_rings_program.program);
+		gRefExports.ShaderAPI.GL_UseProgram(cp_rings_program.program);
 
 	if(bReversed)
 	{
@@ -519,7 +519,7 @@ void DrawControlPoint_Rings(controlpoint_t *cp, int x, int y, float progress, BO
 	}
 
 	if(g_RefSupportExt & r_ext_shader)
-		gpRefExports->ShaderAPI.GL_EndProgram();
+		gRefExports.ShaderAPI.GL_EndProgram();
 }
 
 void DrawControlPoint_Fans(controlpoint_t *cp, int x, int y, int w, int h, float progress)
@@ -531,8 +531,8 @@ void DrawControlPoint_Fans(controlpoint_t *cp, int x, int y, int w, int h, float
 
 	if(g_RefSupportExt & r_ext_shader)
 	{
-		gpRefExports->ShaderAPI.GL_UseProgram(cp_fans_program.program);
-		gpRefExports->ShaderAPI.GL_Uniform2f(cp_fans_program.fade, 0.04, 0.96);
+		gRefExports.ShaderAPI.GL_UseProgram(cp_fans_program.program);
+		gRefExports.ShaderAPI.GL_Uniform2f(cp_fans_program.fade, 0.04, 0.96);
 	}
 
 	qglDisable(GL_TEXTURE_2D);
@@ -562,7 +562,7 @@ void DrawControlPoint_Fans(controlpoint_t *cp, int x, int y, int w, int h, float
 	qglEnd();
 
 	if(g_RefSupportExt & r_ext_shader)
-		gpRefExports->ShaderAPI.GL_EndProgram();
+		gRefExports.ShaderAPI.GL_EndProgram();
 
 	//bg
 	if(cp->iTeam == 1)

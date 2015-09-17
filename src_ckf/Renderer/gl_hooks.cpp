@@ -126,6 +126,12 @@
 
 #define FREEFBOBJECTS_SIG_NEW "\xA1\x2A\x2A\x2A\x2A\x56\x33\xF6\x3B\xC6\x74\x0D\x68\x2A\x2A\x2A\x2A\x6A\x01\xFF\x15"
 
+#define GL_SWAPBUFFER_SIG "\xFF\x25"
+#define GL_SWAPBUFFER_SIG_NEW "\xFF\x15\x2A\x2A\x2A\x2A\x5B\x8B\xE5\x5D\xC3"
+
+#define VID_UPDATEWINDOWVARS_SIG "\x56\x8B\x74\x24\x08\x8B\xC6\x8B\x08\x89\x0D\x2A\x2A\x2A\x2A\x8B\x50\x04\x89\x15"
+#define VID_UPDATEWINDOWVARS_SIG_NEW "\x55\x8B\xEC\x51\x56\x8B\x75\x08\x8B\xC6\x8B\x08\x89\x0D\x2A\x2A\x2A\x2A\x8B\x50\x04\x89\x15"
+
 //Studio Funcs
 #define R_GLSTUDIODRAWPOINTS_SIG "\x83\xEC\x44\xA1\x2A\x2A\x2A\x2A\x8B\x0D\x2A\x2A\x2A\x2A\x53\x55\x56\x8B\x70\x54\x8B\x40\x60\x57"
 #define R_GLSTUDIODRAWPOINTS_SIG2 "\x83\xEC\x48\x8B\x0D\x2A\x2A\x2A\x2A\x8B\x15\x2A\x2A\x2A\x2A\x53\x55\x8B\x41\x54\x8B\x59\x60"
@@ -173,19 +179,18 @@
 #define R_DRAWSRPITEMODEL_SIG "\x83\xEC\x40\x53\x56\x57\x8B\x7C\x24\x50\x8B\x87\x94\x0B\x00\x00"
 #define R_DRAWSRPITEMODEL_SIG_NEW "\x55\x8B\xEC\x83\xEC\x44\x53\x56\x57\x8B\x7D\x08\x8B\x87\x94\x0B\x00\x00\xD9\x87\xE0\x02\x00\x00"
 
-void Sys_ErrorEx(const char *error);
-char *UTIL_VarArgs(char *format, ...);
+void Sys_ErrorEx(const char *fmt, ...);
 
 void R_FillAddress(void)
 {
 	DWORD addr;
 	if(g_iVideoMode == 2)
 	{
-		Sys_ErrorEx("D3D mode is not supported");
+		Sys_ErrorEx("D3D mode is not supported.");
 	}
 	if(g_iVideoMode == 0)
 	{
-		Sys_ErrorEx("Software mode is not supported");
+		Sys_ErrorEx("Software mode is not supported.");
 	}
 	if (g_dwEngineBuildnum >= 5953)
 	{
@@ -337,10 +342,20 @@ void R_FillAddress(void)
 		if(!gRefFuncs.Draw_MiptexTexture)
 			SIG_NOT_FOUND("Draw_MiptexTexture");
 
+		gRefFuncs.VID_UpdateWindowVars = (void (*)(RECT *prc, int x, int y))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VID_UPDATEWINDOWVARS_SIG_NEW, sizeof(VID_UPDATEWINDOWVARS_SIG_NEW)-1);
+		if(!gRefFuncs.VID_UpdateWindowVars)
+			SIG_NOT_FOUND("VID_UpdateWindowVars");
+
 		//5953 above only
 		gRefFuncs.FreeFBObjects = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, g_dwEngineSize - ((DWORD)gRefFuncs.GL_EndRendering-g_dwEngineBase), FREEFBOBJECTS_SIG_NEW, sizeof(FREEFBOBJECTS_SIG_NEW)-1);
 		if(!gRefFuncs.FreeFBObjects)
 			SIG_NOT_FOUND("FreeFBObjects");
+
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, g_dwEngineSize - ((DWORD)gRefFuncs.GL_EndRendering-g_dwEngineBase), GL_SWAPBUFFER_SIG_NEW, sizeof(GL_SWAPBUFFER_SIG_NEW)-1);
+		if(!addr)
+			SIG_NOT_FOUND("GL_SwapBuffer");
+		addr = *(DWORD *)(addr+2);
+		gRefFuncs.GL_SwapBuffer = (void (**)(void))addr;
 
 		//Studio Funcs
 
@@ -570,6 +585,16 @@ void R_FillAddress(void)
 			gRefFuncs.Draw_MiptexTexture = (void (*)(cachewad_t *, byte *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, DRAW_MIPTEXTEXTURE_SIG2, sizeof(DRAW_MIPTEXTEXTURE_SIG2)-1);
 		if(!gRefFuncs.Draw_MiptexTexture)
 			SIG_NOT_FOUND("Draw_MiptexTexture");
+
+		gRefFuncs.VID_UpdateWindowVars = (void (*)(RECT *prc, int x, int y))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VID_UPDATEWINDOWVARS_SIG, sizeof(VID_UPDATEWINDOWVARS_SIG)-1);
+		if(!gRefFuncs.VID_UpdateWindowVars)
+			SIG_NOT_FOUND("VID_UpdateWindowVars");
+
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, g_dwEngineSize - ((DWORD)gRefFuncs.GL_EndRendering-g_dwEngineBase), GL_SWAPBUFFER_SIG, sizeof(GL_SWAPBUFFER_SIG)-1);
+		if(!addr)
+			SIG_NOT_FOUND("GL_SwapBuffer");
+		addr = *(DWORD *)(addr+2);
+		gRefFuncs.GL_SwapBuffer = (void (**)(void))addr;
 
 		//Studio Funcs
 		gStudioFuncs.R_GLStudioDrawPoints = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, R_GLSTUDIODRAWPOINTS_SIG, sizeof(R_GLSTUDIODRAWPOINTS_SIG)-1);
@@ -833,6 +858,13 @@ void R_FillAddress(void)
 		SIG_NOT_FOUND("d_lightstylevalue");
 	d_lightstylevalue = *(int **)(addr + 8);
 
+#define WINDOW_RECT_SIG "\x89\x0D"
+		//89 0D 20 42 7B 02		mov     window_rect.left, ecx
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.VID_UpdateWindowVars, 0x50, WINDOW_RECT_SIG, sizeof(WINDOW_RECT_SIG)-1);
+		if(!addr)
+			SIG_NOT_FOUND("window_rect");
+		window_rect = *(RECT **)(addr+2);
+
 	//Engine special
 
 	if(g_dwEngineBuildnum >= 5953)
@@ -855,6 +887,17 @@ void R_FillAddress(void)
 		gHostSpawnCount = *(int **)(addr+3);
 
 		//5953 use qglGenTexture instead of currenttexid
+
+		//6153 have to use windowvideoaspect
+#define WINDOW_VIDEO_ASPECT_SIG_NEW "\xA3\x2A\x2A\x2A\x2A\xA3\x2A\x2A\x2A\x2A\xA1"
+		//A3 F8 4D E4 01		mov     videowindowaspect, eax
+		//A3 F4 4D E4 01		mov     windowvideoaspect, eax
+		//A1 F0 4D E4 01		mov     eax, bNoStretchAspect
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, 0x200, WINDOW_VIDEO_ASPECT_SIG_NEW, sizeof(WINDOW_VIDEO_ASPECT_SIG_NEW)-1);
+		if(!addr)
+			SIG_NOT_FOUND("windowvideoaspect");
+		videowindowaspect = *(float **)(addr+1);
+		windowvideoaspect = *(float **)(addr+6);
 	}
 	else
 	{
@@ -904,16 +947,18 @@ void R_FillAddress(void)
 		if(!addr)
 			SIG_NOT_FOUND("currenttexid");
 		currenttexid = *(int **)(addr+4);
+
+		//< 5953 don't have videowindowaspect & windowvideoaspect so we create one;
+		
+		videowindowaspect = &videowindowaspect_old;
+		windowvideoaspect = &windowvideoaspect_old;
 	}
 }
 
 void R_InstallHook(void)
 {
-	if (g_dwEngineBuildnum < 5953)
-	{
-		g_pMetaHookAPI->InlineHook(gRefFuncs.GL_BeginRendering, GL_BeginRendering, (void *&)gRefFuncs.GL_BeginRendering);
-		//g_pMetaHookAPI->InlineHook(gRefFuncs.GL_EndRendering, GL_EndRendering, (void *&)gRefFuncs.GL_EndRendering);
-	}
+	g_pMetaHookAPI->InlineHook(gRefFuncs.GL_BeginRendering, GL_BeginRendering, (void *&)gRefFuncs.GL_BeginRendering);
+	g_pMetaHookAPI->InlineHook(gRefFuncs.GL_EndRendering, GL_EndRendering, (void *&)gRefFuncs.GL_EndRendering);
 
 	g_pMetaHookAPI->InlineHook(gRefFuncs.R_RenderView, R_RenderView, (void *&)gRefFuncs.R_RenderView);
 	g_pMetaHookAPI->InlineHook(gRefFuncs.R_RenderScene, R_RenderScene, (void *&)gRefFuncs.R_RenderScene);
@@ -936,21 +981,9 @@ void R_InstallHook(void)
 	g_pMetaHookAPI->InlineHook(gRefFuncs.R_DrawTEntitiesOnList, R_DrawTEntitiesOnList, (void *&)gRefFuncs.R_DrawTEntitiesOnList);
 }
 
-extern type_CreateWindowExA			g_pfn_CreateWindowExA;
-extern type_CreateWindowExW			g_pfn_CreateWindowExW;
-HWND WINAPI Hook_CreateWindowExA(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
-HWND WINAPI Hook_CreateWindowExW(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
-
-void API_InstallHook(void)
+void Lightmaps_Patch(void)
 {
-	HMODULE hUser32 = GetModuleHandle("user32.dll");
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExA"), Hook_CreateWindowExA, (void *&)g_pfn_CreateWindowExA);
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExW"), Hook_CreateWindowExW, (void *&)g_pfn_CreateWindowExW);
-}
-
-void Lightmaps_Crack(void)
-{
-	max_lightmaps = 64;
+	max_lightmaps = 128;
 	const char *s_num;
 	if(g_pInterface->CommandLine->CheckParm("-lightmaps", &s_num))
 	{
@@ -977,7 +1010,7 @@ void Lightmaps_Crack(void)
 	memset(lightmaps_new, 0, sizeof(byte) * max_lightmaps * BLOCK_WIDTH * BLOCK_HEIGHT * LIGHTMAP_BYTES);
 }
 
-void CL_VisEdicts_Crack(void)
+void CL_VisEdicts_Patch(void)
 {
 	cl_maxvisedicts = 512;
 	const char *s_num;
@@ -991,19 +1024,19 @@ void CL_VisEdicts_Crack(void)
 	}
 
 	//search in CL_CreateVisibleEntity
-	DWORD addr_cl_numvisedicts = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gEngfuncs.CL_CreateVisibleEntity, 0x50, "\x8B\x0D\x2A\x2A\x2A\x2A\x81\xF9\x00\x02\x00\x00", sizeof("\x8B\x0D\x2A\x2A\x2A\x2A\x81\xF9\x00\x02\x00\x00")-1);
+	DWORD addr_cl_numvisedicts = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_pMetaSave->pEngineFuncs->CL_CreateVisibleEntity, 0x50, "\x8B\x0D\x2A\x2A\x2A\x2A\x81\xF9\x00\x02\x00\x00", sizeof("\x8B\x0D\x2A\x2A\x2A\x2A\x81\xF9\x00\x02\x00\x00")-1);
 	if(!addr_cl_numvisedicts)
 		SIG_NOT_FOUND("cl_numvisedicts");
 	cl_numvisedicts = *(int **)(addr_cl_numvisedicts+2);
 
 	//search cl_visedicts
-	DWORD addr_cl_visedicts = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gEngfuncs.CL_CreateVisibleEntity, 0x100, "\xB8\x01\x00\x00\x00\x89\x14\x8D\x2A\x2A\x2A\x2A\x41", sizeof("\xB8\x01\x00\x00\x00\x89\x14\x8D\x2A\x2A\x2A\x2A\x41")-1);
+	DWORD addr_cl_visedicts = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_pMetaSave->pEngineFuncs->CL_CreateVisibleEntity, 0x100, "\xB8\x01\x00\x00\x00\x89\x14\x8D\x2A\x2A\x2A\x2A\x41", sizeof("\xB8\x01\x00\x00\x00\x89\x14\x8D\x2A\x2A\x2A\x2A\x41")-1);
 	if(!addr_cl_visedicts)
 		SIG_NOT_FOUND("cl_visedicts");
 	cl_visedicts_old = *(cl_entity_t ***)(addr_cl_visedicts + 8);
 
-	//not replaced
-	if(cl_maxvisedicts == 512)
+	//no need to patch
+	if(cl_maxvisedicts <= 512)
 	{
 		cl_visedicts_new = cl_visedicts_old;
 		return;
@@ -1013,13 +1046,13 @@ void CL_VisEdicts_Crack(void)
 	cl_visedicts_new = (cl_entity_t **)malloc(cl_maxvisedicts*sizeof(cl_entity_t *));
 	if(!cl_visedicts_new)
 	{
-		Sys_ErrorEx("CL_VisEdicts_Crack: out of memory");
+		Sys_ErrorEx("CL_VisEdicts_Patch: out of memory");
 		return;
 	}
 
 	//replace this first
 	g_pMetaHookAPI->WriteDWORD((void *)(cl_visedicts_old+8), (DWORD)cl_visedicts_new);
-	gEngfuncs.Con_Printf("CL_VisEdicts_Crack: cl_visedicts in CL_CreateVisibleEntity has been replaced.\n");
+	g_pMetaSave->pEngineFuncs->Con_Printf("CL_VisEdicts_Patch: CL_CreateVisibleEntity patched.\n");
 
 	//replace all "cmp cl_numvisedicts, 200h"
 	char sig[32];
@@ -1042,9 +1075,9 @@ void CL_VisEdicts_Crack(void)
 		count ++;
 		addr += 10;
 	}
-	gEngfuncs.Con_Printf("CL_VisEdicts_Crack: %d of \"cmp cl_numvisedicts, 200h\" has been replaced.\n", count);
+	g_pMetaSave->pEngineFuncs->Con_DPrintf("CL_VisEdicts_Patch: %d of \"cmp cl_numvisedicts, 200h\" patched.\n", count);
 
-	//replace ClientDLL_AddEntity
+	//patch ClientDLL_AddEntity
 	memcpy(sig, "\x89\x34\x85\x2A\x2A\x2A\x2A\x40\xA3\x2A\x2A\x2A\x2A", 13);
 	*(DWORD *)(&sig[3]) = (DWORD)cl_visedicts_old;
 	*(DWORD *)(&sig[9]) = (DWORD)cl_numvisedicts;
@@ -1052,19 +1085,21 @@ void CL_VisEdicts_Crack(void)
 	if(!addr)
 		SIG_NOT_FOUND("ClientDLL_AddEntity->cl_visedicts");
 	g_pMetaHookAPI->WriteDWORD((void *)(addr+3), (DWORD)cl_visedicts_new);
-	gEngfuncs.Con_Printf("CL_VisEdicts_Crack: cl_visedicts in ClientDLL_AddEntity has been replaced.\n");
+	g_pMetaSave->pEngineFuncs->Con_DPrintf("CL_VisEdicts_Patch: ClientDLL_AddEntity patched.\n");
 
-	//replace CL_MoveAiments
+	//patch CL_MoveAiments
 	memcpy(sig, "\x8B\x04\x95\x2A\x2A\x2A\x2A\x8B\x88\x44\x03\x00\x00", 13);
 	*(DWORD *)(&sig[3]) = (DWORD)cl_visedicts_old;
 	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, sig, 13);
 	if(!addr)
 		SIG_NOT_FOUND("CL_MoveAiments->cl_visedicts");
 	g_pMetaHookAPI->WriteDWORD((void *)(addr+3), (DWORD)cl_visedicts_new);
-	gEngfuncs.Con_Printf("CL_VisEdicts_Crack: cl_visedicts in CL_MoveAiments has been replaced.\n");
+	g_pMetaSave->pEngineFuncs->Con_DPrintf("CL_VisEdicts_Patch: CL_MoveAiments patched.\n");
 
-	//replace R_DrawEntitiesOnList
-	count = 0;
+	//we have already rewrite the R_DrawEntitiesOnList code
+	//no need to patch R_DrawEntitiesOnList
+
+	/*count = 0;
 	memcpy(sig, "\x8B\x2A\x2A\x2A\x2A\x2A\x2A", 7);
 	*(DWORD *)(&sig[3]) = (DWORD)cl_visedicts_old;
 	addr = (DWORD)gRefFuncs.R_DrawEntitiesOnList;
@@ -1079,6 +1114,7 @@ void CL_VisEdicts_Crack(void)
 		g_pMetaHookAPI->WriteDWORD((void *)(addr+3), (DWORD)cl_visedicts_new);
 		count ++;
 		addr += 7;
-	}while(1);
-	gEngfuncs.Con_Printf("CL_VisEdicts_Crack: %d replaced in R_DrawEntitiesOnList\n", count);
+	}while(1);*/
+	
+	//g_pMetaSave->pEngineFuncs->Con_DPrintf("CL_VisEdicts_Patch: %d replaced in R_DrawEntitiesOnList\n", count);
 }

@@ -10,7 +10,6 @@ public:
 	virtual void Init(void) = 0;
 	virtual void VidInit(void) = 0;
 	virtual void Reset(void) = 0;
-	virtual void Think(void) = 0;
 	virtual int FireMessage(const char *pszName, int iSize, void *pbuf) = 0;
 	virtual bool ShouldDraw( void ) = 0;
 public:

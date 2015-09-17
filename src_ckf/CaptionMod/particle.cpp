@@ -41,7 +41,7 @@ void R_LoadTGASprite(tgasprite_t *tga, const char *path, int xsplit, int ysplit,
 	w = 0;
 	h = 0;
 
-	tga->tex = gpRefExports->R_LoadTextureEx(path, path, &w, &h, GLT_SYSTEM, false, false);
+	tga->tex = gRefExports.R_LoadTextureEx(path, path, &w, &h, GLT_SYSTEM, false, false);
 
 	if(!tga->tex || !w || !h)
 		return;
@@ -205,7 +205,7 @@ void R_DrawParticles(void)
 	for(i = 0; i < size; ++i)
 	{
 		v = &g_visparts[i];
-		if(v->partsys->GetCull() && gpRefFuncs->R_CullBox(v->org, v->org))
+		if(v->partsys->GetCull() && gRefExports.RefAPI.R_CullBox(v->org, v->org))
 		{
 			v->discard = 1;
 		}

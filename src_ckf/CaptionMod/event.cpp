@@ -801,7 +801,8 @@ void EV_StickyLauncher(event_args_t *args)
 {
 	if(args->iparam2 == 1)
 	{
-		gHookFuncs.S_StopSound(args->entindex, CHAN_WEAPON);
+		//gHookFuncs.S_StopSound(args->entindex, CHAN_WEAPON);
+		gEngfuncs.pEventAPI->EV_StopAllSounds(args->entindex, CHAN_WEAPON);
 	}
 	else if(args->iparam2 == 2)
 	{
@@ -903,7 +904,8 @@ void EV_Minigun(event_args_t *args)
 		}
 		else
 		{
-			gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
+			//gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
+			gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 		}
 	}
 	else
@@ -1002,7 +1004,8 @@ void EV_Flamethrower(event_args_t *args)
 	}
 	else
 	{
-		gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
+		//gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
+		gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 	}
 }
 

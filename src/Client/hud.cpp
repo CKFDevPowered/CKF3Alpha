@@ -49,7 +49,7 @@ cvar_t *cl_min_t = NULL;
 cvar_t *cl_min_ct = NULL;
 cvar_t *cl_corpsestay = NULL;
 cvar_t *cl_corpsefade = NULL;
-
+cvar_t *cl_3dhud = NULL;
 cvar_t *hud_saytext_time;
 
 pfnUserMsgHook g_pfnMSG_SetFOV;
@@ -364,6 +364,7 @@ void CHud::Init(void)
 	cl_newradar_dark = gEngfuncs.pfnRegisterVariable("cl_newradar_dark", "0.8", FCVAR_ARCHIVE);
 	cl_newchat = gEngfuncs.pfnRegisterVariable("cl_newchat", "1", FCVAR_ARCHIVE);
 	cl_scoreboard = gEngfuncs.pfnRegisterVariable("cl_scoreboard", "1", FCVAR_ARCHIVE);
+	cl_3dhud = gEngfuncs.pfnRegisterVariable("cl_3dhud", "1", FCVAR_ARCHIVE);
 
 	if (!cl_righthand)
 		cl_righthand = gEngfuncs.pfnRegisterVariable("cl_righthand", "1", FCVAR_ARCHIVE);

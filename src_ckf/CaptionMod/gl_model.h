@@ -18,3 +18,21 @@ enum
 	kRenderAddColor = 6,
 	kRenderTransAlphaNoDepth
 };
+
+enum
+{
+	kRenderFxCloak = 22,
+	kRenderFxShadow,
+	kRenderFxFireLayer
+};
+
+#define SPR_VP_PARALLEL_UPRIGHT 0
+#define SPR_FACING_UPRIGHT 1
+#define SPR_VP_PARALLEL 2
+#define SPR_ORIENTED 3
+#define SPR_VP_PARALLEL_ORIENTED 4
+
+#define SPR_NORMAL 0
+#define SPR_ADDITIVE 1
+#define SPR_INDEXALPHA 2
+#define SPR_ALPHTEST 3

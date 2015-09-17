@@ -184,7 +184,7 @@ int HudClassMenu_VidInit(void)
 	{
 		for(int j = 0; j < 3; ++j)
 		{
-			sprintf(tempName, "gfx/vgui/class/class_sel_sm_%s_%d", g_szClassName[i], j ? "blu" : "red" );
+			sprintf(tempName, "gfx/vgui/class/class_sel_sm_%s_%s", g_szClassName[i], j ? "blu" : "red" );
 			g_texButton[i][j] = Surface_LoadTGA(tempName);
 		}
 	}

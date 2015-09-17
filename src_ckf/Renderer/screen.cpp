@@ -7,7 +7,7 @@ void SCR_Init(void)
 {
 	SCREENINFO scrinfo;
 	scrinfo.iSize = sizeof(scrinfo);
-	gEngfuncs.pfnGetScreenInfo(&scrinfo);
+	g_pMetaSave->pEngineFuncs->pfnGetScreenInfo(&scrinfo);
 
 	glwidth = scrinfo.iWidth;
 	glheight = scrinfo.iHeight;

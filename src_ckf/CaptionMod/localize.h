@@ -1,3 +1,4 @@
+#include <VGUI/KeyCode.h>
 #include <VGUI/ILocalize.h>
 #include <IGameUIFuncs.h>
 #include "vgui_internal.h"

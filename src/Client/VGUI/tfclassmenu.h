@@ -8,6 +8,7 @@
 #include <game_controls/TFImageButton.h>
 #include <game_controls/classmenu.h>
 #include <vgui_controls/KeyRepeat.h>
+#include <vgui/hud_playerstatus.h>
 
 namespace vgui
 {
@@ -15,9 +16,9 @@ namespace vgui
 	class Button;
 	class ImagePanel;
 	class ScalableImagePanel;
-	class ModelPanel;
 	class TFImageButton;
 	class TFClassTipsListPanel;
+	class TFPlayerModelPanel;
 	class CKeyRepeatHandler;
 
 	class TFClassMenuButton : public TFImageButton
@@ -83,7 +84,7 @@ protected:
 
 	vgui::EditablePanel			*m_pClassTipsPanel;
 
-	vgui::ModelPanel			*m_pModelPanel;
+	vgui::TFPlayerModelPanel	*m_pPlayerModel;
 
 	vgui::IImage				*m_pImageClassImage[2][10];
 

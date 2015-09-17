@@ -28,13 +28,12 @@ void StudioEntityLight(struct alight_s *plight);
 void StudioSetupModel(int bodypart, void **ppbodypart, void **ppsubmodel);
 void StudioModelRenderer_InstallHook(void);
 void CL_TraceEntity(void);
-void SpyWatch_Draw(void);
+//void SpyWatch_Draw(void);
 
 void T_VidInit(void);
 void T_UpdateTEnts(void);
 void T_DrawTEnts(void);
 
-void Renderer_Init(void);
 void Cvar_HudInit(void);
 
 void R_UpdateParticles(void);
@@ -154,7 +153,8 @@ int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion)
 	cls_viewmodel_body = *(int **)(addr + 17);
 
 	QGL_Init();
-	Renderer_Init();
+
+	refdef = gRefExports.R_GetRefDef();
 
 	return 1;
 }
@@ -231,12 +231,12 @@ void IN_MouseEvent(int mstate)
 	}
 }
 
-void Hook_IN_MouseMove(float frametime, usercmd_t *cmd)
-{
-	if(HudBase_IsFullScreenMenu())
-		return;
-	gHookFuncs.IN_MouseMove(frametime, cmd);
-}
+//void Hook_IN_MouseMove(float frametime, usercmd_t *cmd)
+//{
+//	if(HudBase_IsFullScreenMenu())
+//		return;
+//	gHookFuncs.IN_MouseMove(frametime, cmd);
+//}
 
 r_studio_interface_t studio_interface =
 {
@@ -276,15 +276,15 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 
 void V_CalcRefdef(struct ref_params_s *pparams)
 {
-	if(HudBase_IsFullScreenMenu() && !g_bGameUIActivate)
-	{
-		pparams->viewangles[0] = 0;
-		pparams->viewangles[1] = 0;
-		pparams->viewangles[2] = 0;
-		pparams->vieworg[0] = 0;
-		pparams->vieworg[1] = 0;
-		pparams->vieworg[2] = 0;
-	}
+	//if(HudBase_IsFullScreenMenu() && !g_bGameUIActivate)
+	//{
+	//	pparams->viewangles[0] = 0;
+	//	pparams->viewangles[1] = 0;
+	//	pparams->viewangles[2] = 0;
+	//	pparams->vieworg[0] = 0;
+	//	pparams->vieworg[1] = 0;
+	//	pparams->vieworg[2] = 0;
+	//}
 	memcpy(&refparams, pparams, sizeof(ref_params_t));
 	CL_TraceEntity();
 }
@@ -334,42 +334,6 @@ void HUD_DrawTransparentTriangles(void)
 	R_DrawParticles();
 }
 
-BOOL WINAPI Hook_SetWindowTextA(HWND hwnd, LPCTSTR lpString)
-{
-	if(hwnd == g_hWnd)
-	{
-		return gHookFuncs.SetWindowText(hwnd, g_szGameName);
-	}
-	return gHookFuncs.SetWindowText(hwnd, lpString);
-}
-
-int WINAPI Hook_SetCursorPos(int X, int Y)
-{
-	if(HudBase_IsFullScreenMenu())
-		return 1;
-	return gHookFuncs.SetCursorPos(X, Y);
-}
-
-HWND WINAPI Hook_CreateWindowExA(DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-	if((DWORD)lpClassName > 0xFFFF && (!strcmp(lpClassName, "Valve001") || !strcmp(lpClassName, "SDL_app")) && !hWndParent)//not an atom string
-	{
-		g_hWnd = gHookFuncs.CreateWindowExA(dwExStyle, lpClassName, g_szGameName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-		return g_hWnd;
-	}
-	return gHookFuncs.CreateWindowExA(dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-}
-
-HWND WINAPI Hook_CreateWindowExW(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
-{
-	if((DWORD)lpClassName > 0xFFFF && (!wcscmp(lpClassName, L"Valve001") || !wcscmp(lpClassName, L"SDL_app")) && !hWndParent)//not an atom string
-	{
-		g_hWnd = gHookFuncs.CreateWindowExW(dwExStyle, lpClassName, ANSIToUnicode(g_szGameName), dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-		return g_hWnd;
-	}
-	return gHookFuncs.CreateWindowExW(dwExStyle, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam);
-}
-
 void R_UpdateViewModel(void)
 {
 	*CurrentEntity = cl_viewent;
@@ -385,17 +349,17 @@ void R_UpdateViewModel(void)
 	}
 }
 
-void Hook_R_DrawViewModel(void)
-{
-	R_UpdateViewModel();
-
-	if(CL_CanDrawViewModel())
-	{
-		gHookFuncs.R_DrawViewModel();
-
-		SpyWatch_Draw();
-	}
-}
+//void Hook_R_DrawViewModel(void)
+//{
+//	R_UpdateViewModel();
+//
+//	if(CL_CanDrawViewModel())
+//	{
+//		gHookFuncs.R_DrawViewModel();
+//
+//		SpyWatch_Draw();
+//	}
+//}
 
 int HUD_AddEntity(int iType, struct cl_entity_s *pEntity, const char *szModel)
 {
@@ -545,3 +509,4 @@ void HUD_StudioEvent( const struct mstudioevent_s *ev, const struct cl_entity_s 
 		break;
 	}
 }
+

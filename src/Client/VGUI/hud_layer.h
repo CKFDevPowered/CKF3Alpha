@@ -8,6 +8,8 @@ namespace vgui
 	class CHudNewRadar;
 	class CHudNewMenu;
 	class CTFHudPlayerStatus;
+	class CTFHudWeaponAmmo;
+	class CTFHudMedicChargeMeter;
 };
 
 class CHudLayer : public vgui::Panel
@@ -47,6 +49,8 @@ private:
 	vgui::CHudNewMenu *m_pMenu;
 	vgui::CHudNewRadar *m_pRadar;
 	vgui::CTFHudPlayerStatus *m_pTFPlayerStatus;
+	vgui::CTFHudWeaponAmmo *m_pTFWeaponAmmo;
+	vgui::CTFHudMedicChargeMeter *m_pMedicChargeMeter;
 };
 
 #endif

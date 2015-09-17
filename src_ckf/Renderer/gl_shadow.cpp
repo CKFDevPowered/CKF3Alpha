@@ -56,8 +56,8 @@ void R_InitShadow(void)
 {
 	if(gl_shader_support)
 	{
-		const char *shadow_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\shadow_shader.vsh", 5, 0);
-		const char *shadow_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\shadow_shader.fsh", 5, 0);
+		const char *shadow_vscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\shadow_shader.vsh", 5, 0);
+		const char *shadow_fscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\shadow_shader.fsh", 5, 0);
 		if(shadow_vscode && shadow_fscode)
 		{
 			shadow_program = R_CompileShader(shadow_vscode, shadow_fscode, "shadow_shader.vsh", "shadow_shader.fsh");
@@ -70,12 +70,12 @@ void R_InitShadow(void)
 				SHADER_UNIFORM_INIT(shadow, fard, "fard");
 			}
 		}
-		gEngfuncs.COM_FreeFile((void *)shadow_vscode);
-		gEngfuncs.COM_FreeFile((void *)shadow_fscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)shadow_vscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)shadow_fscode);
 	}
 
-	r_shadow = gEngfuncs.pfnRegisterVariable("r_shadow", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_shadow_debug = gEngfuncs.pfnRegisterVariable("r_shadow_debug", "0", FCVAR_CLIENTDLL);
+	r_shadow = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_shadow", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_shadow_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_shadow_debug", "0", FCVAR_CLIENTDLL);
 
 	shadow_update_counter = 0;
 	drawshadow = false;
@@ -200,13 +200,13 @@ void R_CreateShadowLight(cl_entity_t *entity, vec3_t angles, float radius, float
 {
 	if(!sdlights_free)
 	{
-		gEngfuncs.Con_DPrintf("R_CreateShadowLight: Overflow %d shadow lights!\n", MAX_SHADOW_LIGHTS);
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("R_CreateShadowLight: Overflow %d shadow lights!\n", MAX_SHADOW_LIGHTS);
 		return;
 	}
 
 	if(!entity)
 	{
-		gEngfuncs.Con_DPrintf("R_CreateShadowLight: Null Entity!\n");
+		g_pMetaSave->pEngineFuncs->Con_DPrintf("R_CreateShadowLight: Null Entity!\n");
 		return;
 	}
 
@@ -703,7 +703,7 @@ void R_CreateShadowManager(char *affectmodel, vec3_t angles, float radius, float
 	{
 		if(numsdmanagers >= MAX_SHADOW_MANAGERS)
 		{
-			gEngfuncs.Con_DPrintf("R_CreateShadowManager: Overflow %d shadow managers!\n", MAX_SHADOW_MANAGERS);
+			g_pMetaSave->pEngineFuncs->Con_DPrintf("R_CreateShadowManager: Overflow %d shadow managers!\n", MAX_SHADOW_MANAGERS);
 			return;
 		}
 		sm = &sdmanagers[numsdmanagers];

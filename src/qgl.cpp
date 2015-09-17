@@ -403,12 +403,17 @@ void QGL_Init(void)
 			qglTexCoordPointer = (void (APIENTRY *)(GLint, GLenum, GLsizei, const GLvoid *))GetProcAddress(hOpenGL, "glTexCoordPointer");
 			qglEnableClientState = (void (APIENTRY *)(GLenum))GetProcAddress(hOpenGL, "glEnableClientState");
 			qglDisableClientState = (void (APIENTRY *)(GLenum))GetProcAddress(hOpenGL, "glDisableClientState");
+			qglMatrixMode = (void (APIENTRY *)(GLenum))GetProcAddress(hOpenGL, "glMatrixMode");
+			qglLoadIdentity = (void (APIENTRY *)(void))GetProcAddress(hOpenGL, "glLoadIdentity");
+			qglOrtho = (void (APIENTRY *)(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble))GetProcAddress(hOpenGL, "glOrtho");
+			qglClearColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))GetProcAddress(hOpenGL, "glClearColor");
+			qglViewport = (void (APIENTRY *)(GLint, GLint, GLsizei, GLsizei))GetProcAddress(hOpenGL, "glViewport");
 		}
 	}
 
 	if (!initialized)
 	{
-		DWORD base = *(DWORD *)((DWORD)gEngfuncs.pTriAPI->RenderMode + 0x47);
+		DWORD base = *(DWORD *)((DWORD)g_pMetaSave->pEngineFuncs->pTriAPI->RenderMode + 0x47);
 
 		qglAccum = (void (APIENTRY *)(GLenum, GLfloat))(*(DWORD *)(base - 0xB4));
 		qglAlphaFunc = (void (APIENTRY *)(GLenum, GLclampf))(*(DWORD *)(base - 0x374));
@@ -444,6 +449,11 @@ void QGL_Init(void)
 		qglTexCoord2fv = (void (APIENTRY *)(const GLfloat *))(*(DWORD *)(base - 0xE4));
 		qglTexParameterf = (void (APIENTRY *)(GLenum, GLenum, GLfloat))(*(DWORD *)(base - 0xA0));
 		qglPixelStorei = (void (APIENTRY *)(GLenum, GLint))(*(DWORD *)(base - 0x394));
+		qglMatrixMode = (void (APIENTRY *)(GLenum))(*(DWORD *)(base - 0x314));
+		qglLoadIdentity = (void (APIENTRY *)(void))(*(DWORD *)(base - 0x53C));
+		qglOrtho = (void (APIENTRY *)(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble))(*(DWORD *)(base - 0x208));
+		qglClearColor = (void (APIENTRY *)(GLclampf, GLclampf, GLclampf, GLclampf))(*(DWORD *)(base + 0x290));
+		qglViewport = (void (APIENTRY *)(GLint, GLint, GLsizei, GLsizei))(*(DWORD *)(base + 0x30));
 
 		if (g_dwEngineBuildnum < 4554)
 		{

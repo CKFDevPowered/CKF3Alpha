@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="..\..\Test\csbte\dlls\mp.dll"
+				OutputFile="$(OutDir)\mp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile="mp.def"
@@ -112,7 +112,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy $(OutDir)\mp.dll ..\..\Test\ckf3\dlls\mp.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -216,7 +216,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\mp.dll ..\..\Test\csbte\dlls\mp.dll&#x0D;&#x0A;"
+				CommandLine="copy $(OutDir)\mp.dll &quot;..\..\Test\ckf3\dlls\mp.dll&quot;&#x0D;&#x0A;copy $(OutDir)\mp.dll &quot;F:\Steam\steamapps\common\Half-Life\ckf3\dlls\mp.dll&quot;"
 			/>
 		</Configuration>
 		<Configuration

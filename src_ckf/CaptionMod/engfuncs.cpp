@@ -6,6 +6,7 @@
 
 #include <ICKFClient.h>
 #include <IRenderer.h>
+#include <IBTEClient.h>
 
 hook_funcs_t gHookFuncs;
 
@@ -40,23 +41,27 @@ refdef_t *refdef = NULL;
 playermove_t *cl_pmove = NULL;
 int *envmap = NULL;
 
-//Renderer.dll csbte.dll funcs
-ref_export_t *gpRefExports;
-ref_funcs_t *gpRefFuncs;
-studio_funcs_t *gpStudioFuncs;
-bte_funcs_t gBTEFuncs;
+//Renderer.dll funcs
+ref_export_t gRefExports;
 
 //api stuffs
-HWND g_hWnd;
 
 //Error when can't find sig
-void Sys_ErrorEx(const char *error)
+
+void Sys_ErrorEx(const char *fmt, ...)
 {
+	va_list argptr;
+	char msg[1024];
+
+	va_start(argptr, fmt);
+	_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
+
 	if(g_pMetaSave->pEngineFuncs)
 	{
 		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
 	}
-	MessageBox(g_hWnd, error, "Error", MB_ICONERROR);
+	MessageBox(g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
 	exit(0);
 }
 
@@ -73,10 +78,6 @@ void Engine_InstallHook(void)
 		gHookFuncs.R_DrawViewModel = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, R_DRAWVIEWMODEL_SIG_NEW, sizeof(R_DRAWVIEWMODEL_SIG_NEW)-1);
 		if(!gHookFuncs.R_DrawViewModel)
 			SIG_NOT_FOUND("R_DrawViewModel");
-
-		gHookFuncs.S_StopSound = (void (*)(int, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, S_STOPSOUND_SIG_NEW, sizeof(S_STOPSOUND_SIG_NEW)-1);
-		if(!gHookFuncs.S_StopSound)
-			SIG_NOT_FOUND("S_StopSound");
 	}
 	else
 	{
@@ -89,10 +90,6 @@ void Engine_InstallHook(void)
 		gHookFuncs.R_DrawViewModel = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, R_DRAWVIEWMODEL_SIG, sizeof(R_DRAWVIEWMODEL_SIG)-1);
 		if(!gHookFuncs.R_DrawViewModel)
 			SIG_NOT_FOUND("R_DrawViewModel");
-
-		gHookFuncs.S_StopSound = (void (*)(int, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, S_STOPSOUND_SIG, sizeof(S_STOPSOUND_SIG)-1);
-		if(!gHookFuncs.S_StopSound)
-			SIG_NOT_FOUND("S_StopSound");
 	}
 
 	//cmp     dword ptr envmap, edi
@@ -105,34 +102,17 @@ void Engine_InstallHook(void)
 	envmap = *(int **)(addr + 2);
 
 	//hook funcs at the end, just in case
-	g_pMetaHookAPI->InlineHook((void *)gHookFuncs.R_DrawViewModel, Hook_R_DrawViewModel, (void *&)gHookFuncs.R_DrawViewModel);
+	//g_pMetaHookAPI->InlineHook((void *)gHookFuncs.R_DrawViewModel, Hook_R_DrawViewModel, (void *&)gHookFuncs.R_DrawViewModel);
 	g_pMetaHookAPI->InlineHook((void *)gHookFuncs.SV_StudioSetupBones, Hook_SV_StudioSetupBones, (void *&)gHookFuncs.SV_StudioSetupBones);
-}
-
-void API_InstallHook(void)
-{
-	HMODULE hUser32 = GetModuleHandle("user32.dll");
-	
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "SetWindowTextA"), Hook_SetWindowTextA, (void *&)gHookFuncs.SetWindowTextA);
-	//g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "SetCursorPos"), Hook_SetCursorPos, (void *&)gHookFuncs.SetCursorPos);
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExA"), Hook_CreateWindowExA, (void *&)gHookFuncs.CreateWindowExA);
-	g_pMetaHookAPI->InlineHook(GetProcAddress(hUser32, "CreateWindowExW"), Hook_CreateWindowExW, (void *&)gHookFuncs.CreateWindowExW);
 }
 
 void Client_InstallHook(void)
 {
-	//DWORD addr;
-
-	//gHookFuncs.IN_MouseMove = (void (*)(float, usercmd_t *))g_pMetaHookAPI->SearchPattern((void *)g_pMetaSave->pExportFuncs->IN_MouseEvent, 0x300, IN_MOUSEMOVE_SIG, sizeof(IN_MOUSEMOVE_SIG)-1);
-	//if(!gHookFuncs.IN_MouseMove)
-	//	SIG_NOT_FOUND("IN_MouseMove");
-
-	//g_pMetaHookAPI->InlineHook((void *)gHookFuncs.IN_MouseMove, Hook_IN_MouseMove, (void *&)gHookFuncs.IN_MouseMove);
 }
 
 void Renderer_Init(void)
 {
-	HINTERFACEMODULE hRenderer = Sys_LoadModule("Renderer.dll");
+	HINTERFACEMODULE hRenderer = (HINTERFACEMODULE)GetModuleHandle("Renderer.dll");
 	if(!hRenderer)
 		LIB_NOT_FOUND("Renderer.dll");
 
@@ -141,7 +121,18 @@ void Renderer_Init(void)
 	if(!pRenderer)
 		LIB_NOT_FOUND("Renderer.dll");
 
-	pRenderer->GetInterface(&gpRefExports, &gpRefFuncs, &gpStudioFuncs);
+	pRenderer->GetInterface(&gRefExports, META_RENDERER_VERSION);
+}
 
-	refdef = gpRefExports->R_GetRefDef();
+extern float *ev_punchangle;
+
+void BTE_Init(void)
+{
+	HINTERFACEMODULE hBTEClient = (HINTERFACEMODULE)GetModuleHandle("CSBTE.dll");
+	if(!hBTEClient)
+		LIB_NOT_FOUND("CSBTE.dll");
+
+	g_pBTEClient = (IBTEClient *)((CreateInterfaceFn)Sys_GetFactory(hBTEClient))(BTECLIENT_API_VERSION, NULL);
+
+	ev_punchangle = g_pBTEClient->GetPunchAngles();
 }

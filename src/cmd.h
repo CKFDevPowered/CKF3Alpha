@@ -1,3 +1,5 @@
+#pragma once
+
 typedef void (*xcommand_t)(void);
 
 typedef struct cmd_function_s

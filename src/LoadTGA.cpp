@@ -7,6 +7,7 @@
 #include "cvardef.h"
 #include "developer.h"
 #include "console.h"
+#include "ref_int.h"
 
 #pragma pack(1)
 
@@ -24,7 +25,8 @@ TargaHeader;
 
 int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
 {
-	return g_pfnLoadTGA(szFilename, buffer, bufferSize, width, height);
+	//return g_pfnLoadTGA(szFilename, buffer, bufferSize, width, height);
+	return gRefExports.LoadTGA(szFilename, buffer, bufferSize, width, height);
 }
 
 bool LoadTGA2(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
@@ -255,73 +257,73 @@ bool LoadTGA2(const char *szFilename, byte *buffer, int bufferSize, int *width, 
 	return TRUE;
 }
 
-bool GetTGASize(const char *szFilename, int *width, int *height)
-{
-	FileHandle_t fp = g_pFileSystem->Open(szFilename, "rb");
-
-	if (!fp)
-		return FALSE;
-
-	TargaHeader header;
-
-	if (!g_pFileSystem->Read(&header, sizeof(header), fp))
-	{
-		*width = 0;
-		*height = 0;
-	}
-	else
-	{
-		*width = header.width;
-		*height = header.height;
-	}
-
-	g_pFileSystem->Close(fp);
-	return TRUE;
-}
-
-bool WriteTGA(byte *pixels, int width, int height, const char *szFilename)
-{
-	TargaHeader header;
-	memset(&header, 0, sizeof(header));
-
-	header.width = width;
-	header.height = height;
-	header.pixel_size = 24;
-	header.attributes = 0x20;
-	header.image_type = 2;
-
-	char filename[MAX_PATH];
-	sprintf(filename, "%s/%s", gConfigs.szGameLangDir, szFilename);
-
-	FILE *fp = fopen(filename, "wb");
-
-	if (!fp)
-		return FALSE;
-
-	if (!fwrite(&header, sizeof(header), 1, fp))
-	{
-		fclose(fp);
-		return FALSE;
-	}
-
-	int numpixels = width * height;
-
-	for (int i = 0; i < numpixels; i++)
-	{
-		register unsigned char color[3];
-
-		color[0] = pixels[2];
-		color[1] = pixels[1];
-		color[2] = pixels[0];
-		pixels += 3;
-
-		if (!fwrite(color, 3, 1, fp))
-		{
-			fclose(fp);
-			return FALSE;
-		}
-	}
-
-	fclose(fp);
-	return TRUE;
-}
+//bool GetTGASize(const char *szFilename, int *width, int *height)
+//{
+//	FileHandle_t fp = g_pFileSystem->Open(szFilename, "rb");
+//
+//	if (!fp)
+//		return FALSE;
+//
+//	TargaHeader header;
+//
+//	if (!g_pFileSystem->Read(&header, sizeof(header), fp))
+//	{
+//		*width = 0;
+//		*height = 0;
+//	}
+//	else
+//	{
+//		*width = header.width;
+//		*height = header.height;
+//	}
+//
+//	g_pFileSystem->Close(fp);
+//	return TRUE;
+//}
+//
+//bool WriteTGA(byte *pixels, int width, int height, const char *szFilename)
+//{
+//	TargaHeader header;
+//	memset(&header, 0, sizeof(header));
+//
+//	header.width = width;
+//	header.height = height;
+//	header.pixel_size = 24;
+//	header.attributes = 0x20;
+//	header.image_type = 2;
+//
+//	char filename[MAX_PATH];
+//	sprintf(filename, "%s/%s", gConfigs.szGameLangDir, szFilename);
+//
+//	FILE *fp = fopen(filename, "wb");
+//
+//	if (!fp)
+//		return FALSE;
+//
+//	if (!fwrite(&header, sizeof(header), 1, fp))
+//	{
+//		fclose(fp);
+//		return FALSE;
+//	}
+//
+//	int numpixels = width * height;
+//
+//	for (int i = 0; i < numpixels; i++)
+//	{
+//		register unsigned char color[3];
+//
+//		color[0] = pixels[2];
+//		color[1] = pixels[1];
+//		color[2] = pixels[0];
+//		pixels += 3;
+//
+//		if (!fwrite(color, 3, 1, fp))
+//		{
+//			fclose(fp);
+//			return FALSE;
+//		}
+//	}
+//
+//	fclose(fp);
+//	return TRUE;
+//}

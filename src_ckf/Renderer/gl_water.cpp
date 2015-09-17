@@ -103,8 +103,8 @@ void R_InitWater(void)
 {
 	if(gl_shader_support)
 	{
-		const char *water_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\water_shader.vsh", 5, 0);
-		const char *water_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\water_shader.fsh", 5, 0);
+		const char *water_vscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\water_shader.vsh", 5, 0);
+		const char *water_fscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\water_shader.fsh", 5, 0);
 		if(water_vscode && water_fscode)
 		{
 			water_program = R_CompileShader(water_vscode, water_fscode, "water_shader.vsh", "water_shader.fsh");
@@ -121,8 +121,8 @@ void R_InitWater(void)
 				SHADER_UNIFORM_INIT(water, reflectmap, "reflectmap");
 			}
 		}
-		gEngfuncs.COM_FreeFile((void *)water_vscode);
-		gEngfuncs.COM_FreeFile((void *)water_fscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)water_vscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)water_fscode);
 	}
 
 	water_normalmap_default = R_LoadTextureEx("resource\\tga\\water_normalmap.tga", "resource\\tga\\water_normalmap.tga", NULL, NULL, GLT_SYSTEM, false, false);
@@ -131,9 +131,9 @@ void R_InitWater(void)
 	if(!water_texture_size)//don't support FBO?
 		water_texture_size = 512;
 
-	r_water = gEngfuncs.pfnRegisterVariable("r_water", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_water_debug = gEngfuncs.pfnRegisterVariable("r_water_debug", "0", FCVAR_CLIENTDLL);
-	r_water_fresnel = gEngfuncs.pfnRegisterVariable("r_water_fresnel", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_water = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_water_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water_debug", "0", FCVAR_CLIENTDLL);
+	r_water_fresnel = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water_fresnel", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 
 	water_parm.fog = 1;
 	water_parm.start = 100;

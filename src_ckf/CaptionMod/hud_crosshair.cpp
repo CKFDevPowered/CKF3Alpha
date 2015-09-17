@@ -22,13 +22,10 @@ int HudCrosshair_Redraw(float flTime, int iIntermission)
 	if(iIntermission)
 		return 0;
 
-	if(g_ScoreBoardEnabled)
-		return 0;
-
 	if((g_iHideHUD & HIDEHUD_WEAPONS))
 		return 0;
 
-	if(gBTEFuncs.GetHUDFov() < 60)
+	if(g_pBTEClient->GetHUDFov() < 60)
 		return 0;
 
 	if(g_crosshair_style->value <= 0)

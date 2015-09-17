@@ -9,8 +9,6 @@
 #include "CounterStrikeViewport.h"
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 WEAPON *gpActiveSel;
 WEAPON *gpLastSel;
 

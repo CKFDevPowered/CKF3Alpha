@@ -22,10 +22,10 @@ BEGIN
 		BLOCK "000004b0"
 
 		BEGIN
-			VALUE "FileDescription", "Counter-Strike BreakThrough Edition"
-			VALUE "FileVersion", "3.0.3.0"
-			VALUE "InternalName", "CSBTE"
-			VALUE "OriginalFilename", "CSBTE.exe"
+			VALUE "FileDescription", "Chicken Fortress 3"
+			VALUE "FileVersion", "Alpha 3"
+			VALUE "InternalName", "CKF3"
+			VALUE "OriginalFilename", "CKF3.exe"
 		END
 	END
 
@@ -35,5 +35,3 @@ BEGIN
 		VALUE "Translation", 0x0, 1200
 	END
 END
-
-IDR_RESOURCEDLL ResourceDLL "Debug/CSBTE.dll"

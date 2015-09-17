@@ -134,7 +134,7 @@ int HudOverlay_Redraw(float flTime, int iIntermission)
 	if(!CL_IsAlive())
 		return 0;
 
-	if(gBTEFuncs.GetHUDFov() < 60)
+	if(g_pBTEClient->GetHUDFov() < 60)
 	{
 		DrawScope(flTime);
 	}

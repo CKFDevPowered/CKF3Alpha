@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;libpng\"
+				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;..\..\src\Interface"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;RENDERER_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="..\..\test\csbte\metahook\renderer.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				IgnoreDefaultLibraryNames="libcmt.lib"
@@ -95,7 +94,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\Test\ckf3\renderer.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\renderer.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -127,7 +126,7 @@
 				Optimization="2"
 				FavorSizeOrSpeed="1"
 				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1"
+				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;..\..\src\Interface"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;RENDERER_EXPORTS;SSE"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="0"
@@ -182,7 +181,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\Test\csbte\renderer.dll&quot;&#x0D;&#x0A;"
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\test\ckf3\renderer.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\renderer.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -566,10 +565,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ref_int.h"
-				>
-			</File>
-			<File
 				RelativePath=".\screen.h"
 				>
 			</File>
@@ -586,7 +581,15 @@
 			Name="Interface"
 			>
 			<File
-				RelativePath=".\IRenderer.h"
+				RelativePath="..\..\src\Interface\IBTEClient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Interface\IRenderer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ref_int_internal.h"
 				>
 			</File>
 		</Filter>

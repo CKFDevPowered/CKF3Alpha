@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;..\engine"
+				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;..\..\src\Interface"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;CLIENT_WEAPONS;HARDWARE_MODE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib"
-				OutputFile="..\..\Test\csbte\ckf3.dll"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -94,7 +94,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\Test\ckf3\ckf3.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\ckf3.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -123,7 +123,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1"
+				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1;..\..\src\Interface"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="0"
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\..\test\metahook\ckf3.dll&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll ..\..\Test\csbte\ckf3.dll&#x0D;&#x0A;"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll &quot;..\..\Test\ckf3\ckf3.dll&quot;&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll &quot;F:\Steam\steamapps\common\Half-Life\ckf3\ckf3.dll&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -186,6 +186,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\background.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\client.cpp"
 				>
@@ -288,10 +292,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\hud_classmenu.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\hud_common.cpp"
 					>
 				</File>
@@ -320,10 +320,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\hud_intromenu.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\hud_localize.cpp"
 					>
 				</File>
@@ -340,15 +336,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\hud_scoreboard.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\hud_statusbar.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\hud_teammenu.cpp"
 					>
 				</File>
 			</Filter>
@@ -388,30 +376,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\FontAmalgam.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FontAmalgam.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FontManager.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FontManager.h"
-					>
-				</File>
-				<File
-					RelativePath=".\FontTextureCache.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\FontTextureCache.h"
-					>
-				</File>
-				<File
 					RelativePath=".\KeyValues.cpp"
 					>
 				</File>
@@ -436,10 +400,6 @@
 					>
 				</File>
 				<File
-					RelativePath=".\surface.cpp"
-					>
-				</File>
-				<File
 					RelativePath=".\SourceSDK\tier1\utlbuffer.cpp"
 					>
 				</File>
@@ -449,14 +409,6 @@
 				</File>
 				<File
 					RelativePath=".\vgui_internal.h"
-					>
-				</File>
-				<File
-					RelativePath=".\Win32Font.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\Win32Font.h"
 					>
 				</File>
 			</Filter>
@@ -731,10 +683,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ckfvars.h"
-				>
-			</File>
-			<File
 				RelativePath=".\client.h"
 				>
 			</File>
@@ -755,15 +703,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\metahook\Interface\ICKFClient.h"
-				>
-			</File>
-			<File
 				RelativePath="..\common\interface.h"
-				>
-			</File>
-			<File
-				RelativePath="..\metahook\Interface\IRenderer.h"
 				>
 			</File>
 			<File
@@ -787,10 +727,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ref_int.h"
-				>
-			</File>
-			<File
 				RelativePath=".\surface.h"
 				>
 			</File>
@@ -808,6 +744,30 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="Interface"
+			>
+			<File
+				RelativePath="..\..\src\Interface\ckfvars.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Interface\IBTEClient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Interface\ICKFClient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Interface\irenderer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\Interface\ref_int.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

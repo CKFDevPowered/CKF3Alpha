@@ -22,8 +22,6 @@
 
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 using namespace vgui;
 
 const char *GetStringTeamColor(int i)

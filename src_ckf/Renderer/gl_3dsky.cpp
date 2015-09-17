@@ -31,8 +31,8 @@ void R_Init3DSky(void)
 {
 	R_Clear3DSky();
 
-	r_3dsky = gEngfuncs.pfnRegisterVariable("r_3dsky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_3dsky_debug = gEngfuncs.pfnRegisterVariable("r_3dsky_debug", "0", FCVAR_CLIENTDLL);
+	r_3dsky = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_3dsky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_3dsky_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_3dsky_debug", "0", FCVAR_CLIENTDLL);
 }
 
 void R_SetupGL_3DSky(void)
@@ -241,7 +241,7 @@ void R_Draw3DSkyEntities(void)
 		*r_blend = (*r_blend) / 255.0;
 
 		if ((*currententity)->curstate.rendermode == kRenderGlow && (*currententity)->model->type != mod_sprite)
-			gEngfuncs.Con_DPrintf("Non-sprite set to glow!\n");
+			g_pMetaSave->pEngineFuncs->Con_DPrintf("Non-sprite set to glow!\n");
 
 		switch ((*currententity)->model->type)
 		{

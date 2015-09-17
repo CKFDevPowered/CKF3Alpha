@@ -4,33 +4,56 @@
 #include "plugins.h"
 #include "interface.h"
 
-IRenderer *g_pRenderer = NULL;
-ICKFClient *g_pCKFClient = NULL;
-
+//Renderer.dll
 HINTERFACEMODULE g_hRenderer;
-HINTERFACEMODULE g_hCKFClient;
-
+IRenderer *g_pRenderer = NULL;
+IPlugins *g_pRendererPlugins = NULL;
 cl_exportfuncs_t gRefClientFuncs;
+
+ref_export_t gRefExports;
+
+//ckf3.dll
+HINTERFACEMODULE g_hCKFClient;
+ICKFClient *g_pCKFClient = NULL;
+IPlugins *g_pCKFClientPlugins = NULL;
 cl_exportfuncs_t gCkfClientFuncs;
 
-ref_export_t *gpRefExports = NULL;
-ref_funcs_t *gpRefFuncs = NULL;
-studio_funcs_t *gpStudioFuncs = NULL;
+ckf_vars_t gCKFVars;
 
+//bte client
 int BTE_GetHUDFov(void);
 float *EV_GetPunchAngles(void);
 pfnUserMsgHook MSG_HookUserMsg(char *szMsgName, pfnUserMsgHook pfn);
 xcommand_t Cmd_HookCmd(char *cmd_name, xcommand_t newfuncs);
 
-ckf_vars_t gCKFVars;
-
-bte_funcs_t gBTEFuncs =
+int IBTEClient::GetHUDFov(void)
 {
-	BTE_GetHUDFov,
-	EV_GetPunchAngles,
-	MSG_HookUserMsg,
-	Cmd_HookCmd
-};
+	return BTE_GetHUDFov();
+}
+
+float *IBTEClient::GetPunchAngles(void)
+{
+	return EV_GetPunchAngles();
+}
+
+pfnUserMsgHook IBTEClient::HookUserMsg(char *pMsgName, pfnUserMsgHook pfnHook)
+{
+	return MSG_HookUserMsg(pMsgName, pfnHook);
+}
+
+xcommand_t IBTEClient::HookCmd(char *cmd_name, xcommand_t newfuncs)
+{
+	return Cmd_HookCmd(cmd_name,  newfuncs);
+}
+
+extern HWND g_hMainWnd;
+
+HWND IBTEClient::GetMainHWND(void)
+{
+	return g_hMainWnd;
+}
+
+EXPOSE_SINGLE_INTERFACE(IBTEClient, IBTEClient, BTECLIENT_API_VERSION);
 
 void Renderer_Init(void)
 {
@@ -51,16 +74,20 @@ void Renderer_Init(void)
 	}
 
 	g_pRenderer = (IRenderer *)((CreateInterfaceFn)Sys_GetFactory(g_hRenderer))(RENDERER_API_VERSION, NULL);
+	g_pRendererPlugins = (IPlugins *)((CreateInterfaceFn)Sys_GetFactory(g_hRenderer))(METAHOOK_PLUGIN_API_VERSION, NULL);
 
 	if (!g_pRenderer)
 	{
 		gConfigs.bEnableRenderer = false;
 	}
-
+	if (!g_pRendererPlugins)
+	{
+		gConfigs.bEnableRenderer = false;
+	}
 	if(gConfigs.bEnableRenderer)
 	{
 		g_pRenderer->GetClientFuncs(&gRefClientFuncs);
-		g_pRenderer->GetInterface(&gpRefExports, &gpRefFuncs, &gpStudioFuncs);
+		g_pRenderer->GetInterface(&gRefExports, META_RENDERER_VERSION);
 	}
 }
 
@@ -77,12 +104,15 @@ void CKF_Init(void)
 		return;
 
 	g_pCKFClient = (ICKFClient *)((CreateInterfaceFn)Sys_GetFactory(g_hCKFClient))(CKFCLIENT_API_VERSION, NULL);
+	g_pCKFClientPlugins = (IPlugins *)((CreateInterfaceFn)Sys_GetFactory(g_hCKFClient))(METAHOOK_PLUGIN_API_VERSION, NULL);
 
-	if (!g_hCKFClient)
+	if (!g_pCKFClient)
+		return;
+
+	if (!g_pCKFClientPlugins)
 		return;
 
 	g_pCKFClient->GetClientFuncs(&gCkfClientFuncs);
-	g_pCKFClient->GetBTEFuncs(&gBTEFuncs);
 	g_pCKFClient->GetCKFVars(&gCKFVars);
 }
 

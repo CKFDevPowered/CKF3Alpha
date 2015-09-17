@@ -77,10 +77,10 @@ void HudDeathMsg_Init(void);
 
 int HudFloatText_VidInit(void);
 int HudFloatText_Redraw(float flTime, int iIntermission);
-
-void HudScoreBoard_Init(void);
-int HudScoreBoard_VidInit(void);
-int HudScoreBoard_Redraw(float flTime, int iIntermission);
+//
+//void HudScoreBoard_Init(void);
+//int HudScoreBoard_VidInit(void);
+//int HudScoreBoard_Redraw(float flTime, int iIntermission);
 
 void HudObject_Init(void);
 int HudObject_VidInit(void);
@@ -110,7 +110,7 @@ void HudBase_Init(void)
 	g_bGameUIActivate = true;
 	g_iHudVidInitalized = false;
 	g_hCursorArrow = LoadCursor(NULL, IDC_ARROW);
-	g_RefSupportExt = gpRefExports->R_GetSupportExtension();
+	g_RefSupportExt = gRefExports.R_GetSupportExtension();
 }
 
 //加载地图相关资源在这里
@@ -142,9 +142,9 @@ int HudBase_VidInit(void)
 		HudObject_VidInit();
 	}
 
-	HudIntroMenu_Init();
-	HudTeamMenu_Init();
-	HudClassMenu_Init();
+	//HudIntroMenu_Init();
+	//HudTeamMenu_Init();
+	//HudClassMenu_Init();
 	HudBuild_Init();
 	HudDeathMsg_Init();
 	//HudScoreBoard_Init();
@@ -155,48 +155,27 @@ int HudBase_VidInit(void)
 
 int HudBase_Redraw(float flTime, int iIntermission)
 {
-	if(iIntermission)
+
+	HudOverlay_Redraw(flTime, iIntermission);
+	HudDeathMsg_Redraw(flTime, iIntermission);
+	HudObject_Redraw(flTime, iIntermission);
+	if(!(g_iHideHUD & HIDEHUD_ALL))
 	{
-		g_ScoreBoardEnabled = TRUE;
+		HudBuild_Redraw(flTime, iIntermission);
+		HudAmmo_Redraw(flTime, iIntermission);
 	}
 
-	//if(HudBase_IsFullScreenMenu())
-	//{
-		//HudIntroMenu_Redraw(flTime, iIntermission);
-		//HudTeamMenu_Redraw(flTime, iIntermission);
-		//HudClassMenu_Redraw(flTime, iIntermission);
-	//}
-	//else
-	//{
-		//if(!g_ScoreBoardEnabled)
-		//{
-			HudOverlay_Redraw(flTime, iIntermission);
-			HudDeathMsg_Redraw(flTime, iIntermission);
-			HudObject_Redraw(flTime, iIntermission);
-			if(!(g_iHideHUD & HIDEHUD_ALL))
-			{
-				HudBuild_Redraw(flTime, iIntermission);
-				//HudClass_Redraw(flTime, iIntermission);
-				//HudHealth_Redraw(flTime, iIntermission);
-				HudAmmo_Redraw(flTime, iIntermission);
-			}
+	HudFloatText_Redraw(flTime, iIntermission);
+	HudStatusBar_Redraw(flTime, iIntermission);
 
-			HudFloatText_Redraw(flTime, iIntermission);
-			HudStatusBar_Redraw(flTime, iIntermission);
+	if(g_iHudMenu)
+	{
+		HudBuildMenu_Redraw(flTime, iIntermission);
+		HudDemolishMenu_Redraw(flTime, iIntermission);
+		HudDisguiseMenu_Redraw(flTime, iIntermission);
+	}
+	HudCrosshair_Redraw(flTime, iIntermission);
 
-			if(g_iHudMenu)
-			{
-				HudBuildMenu_Redraw(flTime, iIntermission);
-				HudDemolishMenu_Redraw(flTime, iIntermission);
-				HudDisguiseMenu_Redraw(flTime, iIntermission);
-			}
-			HudCrosshair_Redraw(flTime, iIntermission);
-		//}
-		//else
-		//{
-		//	HudScoreBoard_Redraw(flTime, iIntermission);
-		//}
-	//}
 	return 1;
 }
 
@@ -218,8 +197,8 @@ void HudBase_MouseDown(int mx, int my)
 
 int HudBase_KeyEvent(int eventcode, int keynum, const char *pszCurrentBinding)
 {
-	if(g_bGameUIActivate)
-		return 0;
+	//if(g_bGameUIActivate)
+	//	return 0;
 
 	//if(HudBase_IsFullScreenMenu())
 	//{
@@ -244,52 +223,52 @@ int HudBase_KeyEvent(int eventcode, int keynum, const char *pszCurrentBinding)
 	return 0;
 }
 
-void HudBase_DrawMultilineSetup(int yOffset, int limitWidth)
-{
-	g_DrawMultiLine.yOffset = yOffset;
-	g_DrawMultiLine.limitWidth = limitWidth;
-}
-
-int HudBase_DrawMultiline(const wchar_t *text, int x, int y)
-{
-	static wchar_t buf[1024];
-	wchar_t *p;
-	int w, h, ln;
-	int limitWidth = g_DrawMultiLine.limitWidth;
-	p = (wchar_t *)text;
-	ln = 0;
-	while(*p)
-	{
-		int i = 0;
-		int m = 0;
-		while(1)
-		{
-			buf[i++] = *p++;
-			buf[i] = 0;
-			g_pSurface->GetTextSize(g_hCurrentFont, buf, w, h);
-			if(*p == L'\0' || *p == L'\n' || w > limitWidth)
-			{
-				buf[i] = 0;
-				if(*p == L'\0')
-					break;
-				if(*p != L'\n' && w >= limitWidth)
-					m ++;
-				while(*p == L'\n')
-				{
-					m ++;
-					p ++;
-				}
-				break;
-			}
-		}
-		g_pSurface->DrawSetTextPos(x, y);
-		g_pSurface->DrawPrintText(buf, wcslen(buf));
-		m = max(m, 1);
-		y += (h + g_DrawMultiLine.yOffset)*m;
-		ln += m;
-	}
-	return ln;
-}
+//void HudBase_DrawMultilineSetup(int yOffset, int limitWidth)
+//{
+//	g_DrawMultiLine.yOffset = yOffset;
+//	g_DrawMultiLine.limitWidth = limitWidth;
+//}
+//
+//int HudBase_DrawMultiline(const wchar_t *text, int x, int y)
+//{
+//	static wchar_t buf[1024];
+//	wchar_t *p;
+//	int w, h, ln;
+//	int limitWidth = g_DrawMultiLine.limitWidth;
+//	p = (wchar_t *)text;
+//	ln = 0;
+//	while(*p)
+//	{
+//		int i = 0;
+//		int m = 0;
+//		while(1)
+//		{
+//			buf[i++] = *p++;
+//			buf[i] = 0;
+//			g_pSurface->GetTextSize(g_hCurrentFont, buf, w, h);
+//			if(*p == L'\0' || *p == L'\n' || w > limitWidth)
+//			{
+//				buf[i] = 0;
+//				if(*p == L'\0')
+//					break;
+//				if(*p != L'\n' && w >= limitWidth)
+//					m ++;
+//				while(*p == L'\n')
+//				{
+//					m ++;
+//					p ++;
+//				}
+//				break;
+//			}
+//		}
+//		g_pSurface->DrawSetTextPos(x, y);
+//		g_pSurface->DrawPrintText(buf, wcslen(buf));
+//		m = max(m, 1);
+//		y += (h + g_DrawMultiLine.yOffset)*m;
+//		ln += m;
+//	}
+//	return ln;
+//}
 
 int Surface_LoadTGA(const char *filename)
 {
@@ -300,8 +279,8 @@ int Surface_LoadTGA(const char *filename)
 
 bool HudBase_IsMouseInRect(int mx, int my, int x, int y, int w, int h)
 {
-	if(g_bGameUIActivate)
-		return false;
+	//if(g_bGameUIActivate)
+	//	return false;
 	if( mx > x && mx < x+w && my > y && my < y+h)
 		return true;
 	return false;

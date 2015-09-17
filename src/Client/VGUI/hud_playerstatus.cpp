@@ -2,20 +2,41 @@
 #include "hud.h"
 
 #include "cl_util.h"
+
 #include "parsemsg.h"
 #include "player.h"
 #include "client.h"
 #include <triangleapi.h>
 #include <cl_entity.h>
+#include <event_api.h>
+#include <cdll_dll.h>
+
 #include <ref_params.h>
 
 #include <VGUI/VGUI.h>
 #include <VGUI/ISurface.h>
 #include <VGUI/Vector.h>
+#include <KeyValues.h>
 
 #include "hud_playerstatus.h"
 
 #include "CounterStrikeViewport.h"
+
+static int g_iWeaponBody[] = {0, 9, 3, 6, 66, 57, 27, 3, 0, 48, 0};
+
+static const char *g_sPlayerModel[] = {
+	NULL,
+	"models/player/ckf_scout/ckf_scout.mdl", 
+	"models/player/ckf_heavy/ckf_heavy.mdl",
+	"models/player/ckf_soldier/ckf_soldier.mdl", 
+	"models/player/ckf_pyro/ckf_pyro.mdl",
+	"models/player/ckf_sniper/ckf_sniper.mdl", 
+	"models/player/ckf_medic/ckf_medic.mdl",
+	"models/player/ckf_engineer/ckf_engineer.mdl",
+	"models/player/ckf_demoman/ckf_demoman.mdl", 
+	"models/player/ckf_spy/ckf_spy.mdl",
+	NULL
+};
 
 static const char *g_sClassName[] = {
 	"scout",
@@ -26,11 +47,107 @@ static const char *g_sClassName[] = {
 	"medic",
 	"engineer",
 	"demoman",	
-	"spy"
+	"spy",
+	"random"
 };
 
 namespace vgui
 {
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+
+TFPlayerModelPanel::TFPlayerModelPanel( vgui::Panel *parent, const char *name ) : ModelPanel( parent, name )
+{
+	memset(m_modPlayerModels, 0, sizeof(m_modPlayerModels));
+	memset(m_CustomClassData, 0, sizeof(m_CustomClassData));
+	LoadModel(NULL);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void TFPlayerModelPanel::ApplySettings( KeyValues *inResourceData )
+{
+	BaseClass::ApplySettings( inResourceData );
+
+	KeyValues *kvCustomClassData = inResourceData->FindKey("customclassdata");
+
+	if(kvCustomClassData)
+	{
+		for(int i = 0; i < 9; ++i)
+		{
+			KeyValues *kvClassData = kvCustomClassData->FindKey(g_sClassName[i]);
+			if(kvClassData)
+			{
+				sscanf(kvClassData->GetString("origin", "0 0 0"), "%f %f %f", &m_CustomClassData[i].origin[0], &m_CustomClassData[i].origin[1], &m_CustomClassData[i].origin[2]);
+				sscanf(kvClassData->GetString("angles", "0 0 0"), "%f %f %f", &m_CustomClassData[i].angles[0], &m_CustomClassData[i].angles[1], &m_CustomClassData[i].angles[2]);
+				m_CustomClassData[i].use = true;	
+			}
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void TFPlayerModelPanel::SetClass( int iTeam, int iClass )
+{
+	if ( iTeam >= TEAM_RED && iTeam <= TEAM_BLUE && iClass >= CLASS_SCOUT && iClass <= CLASS_SPY )
+	{
+		SetVisible(true);
+
+		cl_entity_t *ent = GetEntity();
+
+		if(m_modPlayerModels[iClass] == NULL)
+		{
+			SetModel(g_sPlayerModel[iClass]);
+			LoadModel();
+			m_modPlayerModels[iClass] = ent->model;
+		}
+		else
+		{
+			LoadModel(m_modPlayerModels[iClass]);
+		}
+		//as default weapon, even if we don't use this
+		if(iClass == CLASS_HEAVY || iClass == CLASS_DEMOMAN)
+			ent->curstate.weaponmodel = engine->pEventAPI->EV_FindModelIndex("models/CKF_III/wp_group_2bone.mdl");
+		else
+			ent->curstate.weaponmodel = engine->pEventAPI->EV_FindModelIndex("models/CKF_III/wp_group_rf.mdl");
+		ent->curstate.scale = g_iWeaponBody[iClass];
+		ent->curstate.sequence = (iClass == CLASS_MEDIC) ? 19 : 45;
+
+		ent->curstate.skin = (iTeam == TEAM_RED) ? 0 : 1;
+		ent->curstate.colormap = (iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
+
+		cl_entity_t *pLocalPlayer = engine->GetLocalPlayer();
+		ent->index = pLocalPlayer->index;
+		ent->player = 1;
+		ent->curstate.gaitsequence = 1;
+		ent->curstate.iuser1 = 128;
+		ent->curstate.iuser2 = 128;
+
+		if(m_CustomClassData[iClass-1].use)
+		{
+			VectorCopy(m_CustomClassData[iClass-1].origin, m_entity.origin);
+			VectorCopy(m_CustomClassData[iClass-1].angles, m_entity.angles);
+		}
+		else
+		{
+			VectorCopy(m_origin, m_entity.origin);
+			VectorCopy(m_angles, m_entity.angles);
+		}
+	}
+	else
+	{
+		SetVisible(false);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
 
 TFClassImage::TFClassImage( Panel *parent, const char *name ) : ImagePanel( parent, name )
 {
@@ -45,6 +162,7 @@ TFClassImage::TFClassImage( Panel *parent, const char *name ) : ImagePanel( pare
 		}
 	}
 }
+
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -70,7 +188,7 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_pSpyImage = new ImagePanel( this, "PlayerStatusSpyImage" );
 	m_pSpyOutlineImage = new ImagePanel( this, "PlayerStatusSpyOutlineImage" );
 	m_pClassImageBG = new ImagePanel( this, "PlayerStatusClassImageBG" );
-	m_pHealthValue = new Label( this, "PlayerStatusHealthValue", "" );
+	m_pPlayerModel = new TFPlayerModelPanel( this, "PlayerStatusPlayerModel" );
 
 	m_nTeam = TEAM_UNASSIGNED;
 	m_nClass = CLASS_UNASSIGNED;
@@ -101,12 +219,9 @@ void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 	m_nDisguiseTeam = TEAM_UNASSIGNED;
 	m_nDisguiseClass = CLASS_UNASSIGNED;
 	m_flNextThink = 0.0f;
+	m_nShow3DHUD = 0;
 
 	BaseClass::ApplySchemeSettings( pScheme );
-
-	int swide, stall;
-	g_pViewPort->GetSize(swide, stall);
-	SetBounds(0, 0, swide, stall);
 }
 
 //-----------------------------------------------------------------------------
@@ -119,6 +234,7 @@ void CTFHudPlayerClass::OnThink()
 		bool bClassChange = false;
 		bool bTeamChange = false;
 		bool bDisguiseChange = false;
+		bool bShow3dhudChange = false;
 
 		// set our background colors
 		if ( m_nTeam != (*gCKFVars.g_iTeam) )
@@ -131,6 +247,12 @@ void CTFHudPlayerClass::OnThink()
 		{
 			bClassChange = true;
 			m_nClass = (*gCKFVars.g_iClass);
+		}
+
+		if((int)cl_3dhud->value != m_nShow3DHUD)
+		{
+			bShow3dhudChange = true;
+			m_nShow3DHUD = (int)cl_3dhud->value;
 		}
 
 		if( (*gCKFVars.g_iClass) == CLASS_SPY)
@@ -153,7 +275,7 @@ void CTFHudPlayerClass::OnThink()
 		}
 
 		// set our class image
-		if ( bClassChange || bTeamChange || bDisguiseChange )
+		if ( bClassChange || bTeamChange || bDisguiseChange || bShow3dhudChange)
 		{
 			if ( m_nClass == CLASS_SPY && m_nDisguise )
 			{
@@ -172,14 +294,58 @@ void CTFHudPlayerClass::OnThink()
 				{					
 					m_pSpyImage->SetImage((m_nTeam == TEAM_RED) ? "resource/tga/class_spy_red" : "resource/tga/class_spy_blu");
 					m_pSpyImage->SetVisible( true );
-					m_pClassImage->SetClass( m_nDisguiseTeam, m_nDisguiseClass );
+					if(m_nShow3DHUD)
+					{
+						m_pPlayerModel->SetClass( m_nDisguiseTeam, m_nDisguiseClass );
+						m_pClassImage->SetVisible(false);
+					}
+					else
+					{
+						m_pPlayerModel->SetVisible(false);
+						m_pClassImage->SetClass( m_nDisguiseTeam, m_nDisguiseClass );
+					}
 				}
 				else
 				{
 					m_pSpyImage->SetVisible( false );
-					m_pClassImage->SetClass( m_nTeam, m_nClass );
+					if(m_nShow3DHUD)
+					{
+						m_pPlayerModel->SetClass( m_nTeam, m_nClass );
+						m_pClassImage->SetVisible(false);
+					}
+					else
+					{
+						m_pPlayerModel->SetVisible(false);
+						m_pClassImage->SetClass( m_nTeam, m_nClass );
+					}
 				}
 				m_pClassImageBG->SetImage((m_nTeam == TEAM_RED) ? "resource/tga/mask_class_red" : "resource/tga/mask_class_blu");
+			}
+		}
+
+		if(m_pPlayerModel->IsVisible())
+		{
+			cl_entity_t *pPlayer = gEngfuncs.GetLocalPlayer();
+			cl_entity_t *pPlayerEntity = m_pPlayerModel->GetEntity();
+			
+			if(gCKFVars.g_Player->m_iDisguise)
+			{
+				pPlayerEntity->curstate.weaponmodel = gCKFVars.g_Player->m_iDisguiseWeapon;
+				pPlayerEntity->curstate.scale = gCKFVars.g_Player->m_iDisguiseWeaponBody;
+				pPlayerEntity->curstate.sequence = gCKFVars.g_Player->m_iDisguiseSequence;
+			}
+			else if(gCKFVars.g_Player->m_pActiveItem != NULL)
+			{
+			
+				pPlayerEntity->curstate.weaponmodel = gCKFVars.g_Player->pev.weaponmodel;
+				pPlayerEntity->curstate.sequence = gCKFVars.g_Player->pev.sequence;
+				pPlayerEntity->curstate.scale = pPlayer->curstate.scale;
+			}
+			else
+			{
+				pPlayerEntity->curstate.weaponmodel = 0;
+				pPlayerEntity->curstate.scale = 0;
+				pPlayerEntity->curstate.sequence = 45;
 			}
 		}
 
@@ -303,6 +469,10 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_pHealthImage = new TFHealthPanel( this, "PlayerStatusHealthImage" );	
 	m_pHealthImageBG = new ImagePanel( this, "PlayerStatusHealthImageBG" );
 	m_pHealthBonusImage = new ImagePanel( this, "PlayerStatusHealthBonusImage" );
+	m_pHealthValue = new Label( this, "PlayerStatusHealthValue", "" );
+
+	// load control settings...
+	LoadControlSettings( "resource/UI/HudPlayerHealth.res" );
 
 	m_nBonusHealthOrigX = 0;
 	m_nBonusHealthOrigY = 0;
@@ -313,13 +483,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 
 	m_flNextThink = 0.0f;
 
-	// load control settings...
-	LoadControlSettings( "resource/UI/HudPlayerHealth.res" );
-
-	if ( m_pHealthBonusImage )
-	{
-		m_pHealthBonusImage->GetBounds( m_nBonusHealthOrigX, m_nBonusHealthOrigY, m_nBonusHealthOrigW, m_nBonusHealthOrigH );
-	}
 	SetVisible(true);
 }
 
@@ -339,11 +502,12 @@ void CTFHudPlayerHealth::ApplySchemeSettings( IScheme *pScheme )
 {
 	m_flNextThink = 0.0f;
 
-	BaseClass::ApplySchemeSettings( pScheme );
+	if ( m_pHealthBonusImage )
+	{
+		m_pHealthBonusImage->GetBounds( m_nBonusHealthOrigX, m_nBonusHealthOrigY, m_nBonusHealthOrigW, m_nBonusHealthOrigH );
+	}
 
-	int swide, stall;
-	g_pViewPort->GetSize(swide, stall);
-	SetBounds(0, 0, swide, stall);
+	BaseClass::ApplySchemeSettings( pScheme );
 }
 
 int GetBoostMaxHealth( void )
@@ -508,10 +672,14 @@ void CTFHudPlayerHealth::OnThink()
 
 CTFHudPlayerStatus::CTFHudPlayerStatus() : CHudElement(), BaseClass( NULL, "HudPlayerStatus" ) 
 {
+	SetProportional(true);
+
 	SetScheme("ClientScheme");
 
 	m_pHudPlayerClass = new CTFHudPlayerClass( this, "HudPlayerClass" );
 	m_pHudPlayerHealth = new CTFHudPlayerHealth( this, "HudPlayerHealth" );
+
+	LoadControlSettings("Resource/UI/hudplayerstatus.res");
 
 	SetHiddenBits(HIDEHUD_HEALTH);
 }
@@ -531,10 +699,6 @@ void CTFHudPlayerStatus::Reset(void)
 
 void CTFHudPlayerStatus::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
-	int swide, stall;
-	g_pViewPort->GetSize(swide, stall);
-	SetBounds(0, 0, swide, stall);
-
 	BaseClass::ApplySchemeSettings(pScheme);
 }
 
@@ -546,10 +710,6 @@ void CTFHudPlayerStatus::Init(void)
 void CTFHudPlayerStatus::VidInit(void)
 {
 	//m_pHudPlayerClass->VidInit();
-}
-
-void CTFHudPlayerStatus::Think(void)
-{
 }
 
 int CTFHudPlayerStatus::FireMessage(const char *pszName, int iSize, void *pbuf)

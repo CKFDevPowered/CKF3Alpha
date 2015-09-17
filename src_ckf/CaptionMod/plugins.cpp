@@ -3,8 +3,10 @@
 #include "engfuncs.h"
 #include "ref_int.h"
 
+#include <IPlugins.h>
 #include <ICKFClient.h>
 #include <IRenderer.h>
+#include <IBTEClient.h>
 
 cl_exportfuncs_t gExportfuncs;
 mh_interface_t *g_pInterface;
@@ -21,12 +23,18 @@ bool g_bWindowed;
 
 extern ckf_vars_t gCKFVars;
 
-void API_InstallHook(void);
-void BaseUI_InstallHook(void);
 void Engine_InstallHook(void);
 void Client_InstallHook(void);
 
-void ICKFClient::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_enginesave_t *pSave)
+//Renderer.dll
+void Renderer_Init(void);
+
+//CSBTE.dll
+void BTE_Init(void);
+HINTERFACEMODULE g_hBTEClient;
+IBTEClient *g_pBTEClient = NULL;
+
+void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_enginesave_t *pSave)
 {
 	g_pInterface = pInterface;
 	g_pMetaHookAPI = pAPI;
@@ -41,11 +49,11 @@ void ICKFClient::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engin
 	g_pInterface->CommandLine->AppendParm("-forcevalve", NULL);
 }
 
-void ICKFClient::Shutdown(void)
+void IPlugins::Shutdown(void)
 {
 }
 
-void ICKFClient::LoadEngine(void)
+void IPlugins::LoadEngine(void)
 {
 	g_pFileSystem = g_pInterface->FileSystem;
 	g_iVideoMode = g_pMetaHookAPI->GetVideoMode(&g_iVideoWidth, &g_iVideoHeight, &g_iBPP, &g_bWindowed);
@@ -57,12 +65,12 @@ void ICKFClient::LoadEngine(void)
 	g_dwEngineBase = g_pMetaHookAPI->GetEngineBase();
 	g_dwEngineSize = g_pMetaHookAPI->GetEngineSize();
 
-	API_InstallHook();
+	BTE_Init();
+	Renderer_Init();
 	Engine_InstallHook();
-	BaseUI_InstallHook();
 }
 
-void ICKFClient::LoadClient(cl_exportfuncs_t *pExportFunc)
+void IPlugins::LoadClient(cl_exportfuncs_t *pExportFunc)
 {
 	HMODULE hClient = GetModuleHandle("client.dll");
 	if(!hClient)
@@ -80,35 +88,19 @@ void ICKFClient::LoadClient(cl_exportfuncs_t *pExportFunc)
 	Client_InstallHook();
 }
 
-void ICKFClient::ExitGame(int iResult)
+void IPlugins::ExitGame(int iResult)
 {
 }
+
+EXPOSE_SINGLE_INTERFACE(IPlugins, IPlugins, METAHOOK_PLUGIN_API_VERSION);
+
+//CKF Exports
 
 extern cl_exportfuncs_t gClientfuncs;
 
 void ICKFClient::GetClientFuncs(cl_exportfuncs_t *pExportFuncs)
 {
 	memcpy(pExportFuncs, &gClientfuncs, sizeof(cl_exportfuncs_t));
-}
-
-extern float *ev_punchangle;
-
-void ICKFClient::GetBTEFuncs(bte_funcs_t *pBTEFuncs)
-{
-	memcpy(&gBTEFuncs, pBTEFuncs, sizeof(bte_funcs_t));
-	ev_punchangle = gBTEFuncs.GetPunchAngles();
-}
-
-extern int g_ScoreBoardEnabled;
-
-void ICKFClient::ShowScoreBoard(bool state)
-{
-	g_ScoreBoardEnabled = state ? 1 : 0;
-}
-
-bool ICKFClient::IsScoreBoardVisible(void)
-{
-	return g_ScoreBoardEnabled ? true : false;
 }
 
 int HUD_SwitchWeapon(int slot);
@@ -135,6 +127,13 @@ void DrawHudMask(int col, int x, int y, int w, int h);
 void ICKFClient::DrawHudMask(int col, int x, int y, int w, int h)
 {
 	::DrawHudMask(col, x, y, w, h);
+}
+
+void BaseUI_Initalize(CreateInterfaceFn *factories, int count);
+
+void ICKFClient::BaseUI_Initalize(CreateInterfaceFn *factories, int count)
+{
+	::BaseUI_Initalize(factories, count);
 }
 
 EXPOSE_SINGLE_INTERFACE(ICKFClient, ICKFClient, CKFCLIENT_API_VERSION);

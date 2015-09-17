@@ -263,7 +263,7 @@ int R_LightmapAllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-	gEngfuncs.Con_Printf("R_LightmapAllocBlock: full");
+	g_pMetaSave->pEngineFuncs->Con_Printf("R_LightmapAllocBlock: full");
 	return 0;
 }
 

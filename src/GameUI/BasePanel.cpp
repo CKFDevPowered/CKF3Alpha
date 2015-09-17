@@ -489,8 +489,8 @@ void CBasePanel::ApplySchemeSettings(IScheme *pScheme)
 
 	m_ImageID.imageID = surface()->CreateNewTextureID();
 	char filename[MAX_PATH];
-	sprintf(filename, "gfx/vgui/console/background%02d_widescreen", gEngfuncs.pfnRandomLong(1, 2));	
-	surface()->DrawSetTextureFile(m_ImageID.imageID, filename, false, false);
+	sprintf(filename, "gfx/vgui/console/background%02d_widescreen", engine->pfnRandomLong(1, 2));	
+	surface()->DrawSetTextureFile(m_ImageID.imageID, filename, true, false);
 	surface()->DrawGetTextureSize(m_ImageID.imageID, m_ImageID.width, m_ImageID.height);
 
 	if (IsPC())

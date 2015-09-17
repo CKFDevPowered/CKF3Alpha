@@ -40,7 +40,12 @@
 
 #define WEAPONSTATE_CHARGING (1<<3)
 
-class CClientWeapon
+#include "ckfvars.h"
+
+typedef CKFClientWeapon CClientWeapon;
+typedef CKFClientPlayer CClientPlayer;
+
+/*class CClientWeapon
 {
 public:
 	virtual BOOL CanDeploy( void ) { return TRUE; }
@@ -123,6 +128,7 @@ public:
 	int m_iDisguiseTeam;
 	int m_iDisguiseClass;
 	int m_iDisguiseHealth;
+	int m_iDisguiseWeaponBody;
 	int m_iCloak;
 	float m_flCloakEnergy;
 
@@ -136,7 +142,7 @@ public:
 	int m_bAllowAttack;
 
 	char m_szAnimExtention[32];
-};
+};*/
 
 class CClientScattergun : public CClientWeapon
 {

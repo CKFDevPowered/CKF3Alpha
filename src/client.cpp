@@ -56,7 +56,7 @@ struct model_s *CL_GetModelByIndex(int index)
 	if (index >= MAX_MODELS)
 		return IEngineStudio.Mod_ForName(g_szModelPrecache[index - MAX_MODELS], false);
 
-	return g_pfnCL_GetModelByIndex(index);
+	return gHookFuncs.CL_GetModelByIndex(index);
 }
 
 void CL_AddToResourceList(resource_t *pResource, resource_t *pList)
@@ -128,7 +128,7 @@ void CL_AddToResourceList(resource_t *pResource, resource_t *pList)
 		}
 	}
 
-	g_pfnCL_AddToResourceList(pResource, pList);
+	gHookFuncs.CL_AddToResourceList(pResource, pList);
 }
 
 typedef struct event_hook_s
@@ -141,13 +141,13 @@ event_hook_t;
 
 event_hook_t *CL_FindEventHook(char *name)
 {
-	return g_pfnCL_FindEventHook(name);
+	return gHookFuncs.CL_FindEventHook(name);
 }
 
-void CL_FireEvents(void)
-{
-	g_pfnCL_FireEvents();
-}
+//void CL_FireEvents(void)
+//{
+//	g_pfnCL_FireEvents();
+//}
 
 int CL_ConnectionlessPacket(const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size)
 {

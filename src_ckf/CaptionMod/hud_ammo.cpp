@@ -94,7 +94,7 @@ int HudAmmo_Redraw(float flTime, int iIntermission)
 		return 0;
 
 	//draw clip,ammo,basic mask and medic's uber
-	HudAmmo_DrawMask();
+	//HudAmmo_DrawMask();
 
 	DrawStickBomb();
 	DrawSniperCharge();

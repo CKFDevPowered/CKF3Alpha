@@ -166,7 +166,7 @@ public:
 	}
 	virtual void Render(part_t *p, float *org)
 	{
-		if(gpRefExports->R_GetDrawPass() != r_draw_normal)
+		if(gRefExports.R_GetDrawPass() != r_draw_normal)
 			return;
 
 		CALC_FRACTION(p);
@@ -187,11 +187,11 @@ public:
 		VectorCopy(org, ent.origin);
 		ent.angles[2] = 0;
 
-		gpRefExports->R_BeginDrawHUDInWorld(m_sprite.tex, m_sprite.w, m_sprite.h);
+		gRefExports.R_BeginDrawHUDInWorld(m_sprite.tex, m_sprite.w, m_sprite.h);
 
 		R_DrawHitDamageText(m_text, m_sprite.w, m_sprite.h);
 
-		gpRefExports->R_FinishDrawHUDInWorld();
+		gRefExports.R_FinishDrawHUDInWorld();
 
 		R_DrawTGASprite(&ent, &m_sprite);
 	}

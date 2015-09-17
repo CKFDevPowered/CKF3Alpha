@@ -20,7 +20,7 @@ void EmitWaterPolysWireFrame(msurface_t *fa, int direction, qboolean useProgram)
 	float scale;
 	float tempVert[3];
 
-	float clientTime = gEngfuncs.GetClientTime();
+	float clientTime = g_pMetaSave->pEngineFuncs->GetClientTime();
 
 	if (gl_wireframe->value)
 	{
@@ -88,7 +88,7 @@ void EmitWaterPolys(msurface_t *fa, int direction)
 	if (drawreflect || drawrefract)
 		return;
 
-	float clientTime = gEngfuncs.GetClientTime();
+	float clientTime = g_pMetaSave->pEngineFuncs->GetClientTime();
 
 	tempVert[0] = fa->polys->verts[0][0];
 	tempVert[1] = fa->polys->verts[0][1];
@@ -103,7 +103,7 @@ void EmitWaterPolys(msurface_t *fa, int direction)
 
 			qglUniform4fARB(water_uniform.waterfogcolor, water_parm.color[0], water_parm.color[1], water_parm.color[2], water_parm.color[3]);
 			qglUniform3fARB(water_uniform.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
-			qglUniform1fARB(water_uniform.time, gEngfuncs.GetClientTime());
+			qglUniform1fARB(water_uniform.time, g_pMetaSave->pEngineFuncs->GetClientTime());
 			if(r_water_fresnel->value == 0)
 				qglUniform1fARB(water_uniform.fresnel, clamp(water_parm.fresnel, 0.0, 10000.0));
 			else
@@ -360,7 +360,7 @@ void ClipSkyPolygon(int nump, vec3_t vecs, int stage)
 
 	if (nump > MAX_CLIP_VERTS - 2)
 	{
-		gEngfuncs.Con_Printf("ClipSkyPolygon: MAX_CLIP_VERTS");
+		g_pMetaSave->pEngineFuncs->Con_Printf("ClipSkyPolygon: MAX_CLIP_VERTS");
 	}
 
 	if (stage == 6)

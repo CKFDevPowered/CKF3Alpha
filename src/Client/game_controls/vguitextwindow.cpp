@@ -128,7 +128,8 @@ void CTextWindow::ShowIndex(const char *entry)
 	g_pFullFileSystem->Write(data, length, hFile);
 	g_pFullFileSystem->Close(hFile);
 
-	if (g_pFullFileSystem->Size(TEMP_HTML_FILE) == (unsigned int)length)
+	//DWORD lenFile = g_pFullFileSystem->Size(TEMP_HTML_FILE);
+	//if (lenFile == (unsigned int)length)
 		ShowFile(TEMP_HTML_FILE);
 }
 

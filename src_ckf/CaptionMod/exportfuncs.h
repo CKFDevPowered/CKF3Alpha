@@ -40,8 +40,6 @@ extern qboolean g_iHudVidInitalized;
 extern int g_RefSupportExt;
 extern cl_entity_t *cl_viewent;
 
-extern HWND g_hWnd;
-
 void QGL_Init(void);
 void Cvar_Init(void);
 void HudBase_Init(void);

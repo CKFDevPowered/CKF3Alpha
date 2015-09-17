@@ -34,7 +34,7 @@ void R_PushRefDef(void)
 {
 	if(save_refdefstack == MAX_SAVEREFDEF_STACK)
 	{
-		gEngfuncs.Con_Printf("R_PushRefDef: MAX_SAVEREFDEF_STACK exceed\n");
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_PushRefDef: MAX_SAVEREFDEF_STACK exceed\n");
 		return;
 	}
 	VectorCopy(r_refdef->vieworg, save_vieworg[save_refdefstack]);
@@ -57,7 +57,7 @@ void R_PopRefDef(void)
 {
 	if(save_refdefstack == 0)
 	{
-		gEngfuncs.Con_Printf("R_PushRefDef: no refdef is pushed\n");
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_PushRefDef: no refdef is pushed\n");
 		return;
 	}
 	-- save_refdefstack;
@@ -88,7 +88,7 @@ void R_NewMap(void)
 {
 	int i;
 
-	r_worldentity = gEngfuncs.GetEntityByIndex(0);
+	r_worldentity = g_pMetaSave->pEngineFuncs->GetEntityByIndex(0);
 	r_worldmodel = r_worldentity->model;//IEngineStudio.GetModelByIndex(1);
 
 	GL_BuildLightmaps();
@@ -113,10 +113,8 @@ void R_NewMap(void)
 	gRefFuncs.R_NewMap();
 
 	R_VidInitWSurf();
-	R_LoadRendererEntities();
+	//R_LoadRendererEntities();
 }
-
-void Sys_ErrorEx(const char *error);
 
 mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
 {
@@ -150,7 +148,7 @@ float *R_GetAttachmentPoint(int entity, int attachment)
 {
 	cl_entity_t *pEntity;
 
-	pEntity = gEngfuncs.GetEntityByIndex(entity);
+	pEntity = g_pMetaSave->pEngineFuncs->GetEntityByIndex(entity);
 
 	if (attachment)
 		return pEntity->attachment[attachment - 1];

@@ -211,4 +211,9 @@ enum fx_e
 	FX_KILLALLTRAIL
 };
 
+#define EF_3DMENU					(1<<13)
+
+#define UC_INVULNERABLE (1<<0)
+#define UC_KRITKRIEG (1<<1)
+
 #endif

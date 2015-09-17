@@ -91,7 +91,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;..\Test\csbte.exe&quot;"
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;..\..\Test\ckf3.exe&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;..\..\Test\csbte.exe&quot;"
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).exe&quot; &quot;..\..\Test\ckf3.exe&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -221,7 +221,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\cdll_export.h"
+				RelativePath="..\cdll_export.h"
 				>
 			</File>
 			<File
@@ -301,55 +301,27 @@
 			Name="Interface"
 			>
 			<File
-				RelativePath=".\Interface\ICommandLine.h"
+				RelativePath="..\Interface\ICommandLine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Interface\IEngine.h"
+				RelativePath="..\Interface\IEngine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Interface\IFileSystem.h"
+				RelativePath="..\Interface\IFileSystem.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Interface\IPlugins.h"
+				RelativePath="..\Interface\IPlugins.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Interface\IPluginsV1.h"
+				RelativePath="..\Interface\IPluginsV1.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Interface\IRegistry.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Detours"
-			>
-			<File
-				RelativePath="..\Detours\detours.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Detours\detours.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Detours\detver.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Detours\disasm.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Detours\image.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Detours\modules.cpp"
+				RelativePath="..\Interface\IRegistry.h"
 				>
 			</File>
 		</Filter>

@@ -310,27 +310,27 @@ void R_LoadExtraTextureFile(qboolean loadmap)
 	}
 	else
 	{
-		strcpy( szFileName, gEngfuncs.pfnGetLevelName() );
+		strcpy( szFileName, g_pMetaSave->pEngineFuncs->pfnGetLevelName() );
 		if ( !strlen(szFileName) )
 		{
-			gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't GetLevelName.\n");
+			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't GetLevelName.\n");
 			return;
 		}
 		szFileName[strlen(szFileName)-4] = 0;
 		strcat(szFileName, "_extra.txt");
 	}
 
-	pFile = (char *)gEngfuncs.COM_LoadFile(szFileName, 5, NULL);
+	pFile = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile(szFileName, 5, NULL);
 	if (!pFile)
 	{
-		gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't open %s.\n", szFileName);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't open %s.\n", szFileName);
 		return;
 	}
 
 	cJSON *pRoot = cJSON_Parse(pFile);
 	if (!pRoot)
 	{
-		gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't parse %s.\n", szFileName);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't parse %s.\n", szFileName);
 		return;
 	}
 
@@ -422,7 +422,7 @@ void R_LoadExtraTextureFile(qboolean loadmap)
 	}
 
 	cJSON_Delete(pRoot);
-	gEngfuncs.COM_FreeFile( pFile );
+	g_pMetaSave->pEngineFuncs->COM_FreeFile( pFile );
 }
 
 void R_LoadExtraTextures(qboolean loadmap)
@@ -560,9 +560,9 @@ void R_InitWSurf(void)
 	//Clear DecalTextures
 	R_ClearDecalTextures();
 
-	r_wsurf_replace = gEngfuncs.pfnRegisterVariable("r_wsurf_replace", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_wsurf_sky = gEngfuncs.pfnRegisterVariable("r_wsurf_sky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_wsurf_decal = gEngfuncs.pfnRegisterVariable("r_wsurf_decal", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_replace = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_replace", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_sky = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_sky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_decal = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_decal", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 }
 
 void R_VidInitWSurf(void)
@@ -604,7 +604,7 @@ float ScrollOffset(msurface_t *psurface, cl_entity_t *pEntity)
 	if (pEntity->curstate.rendercolor.r == 0)
 		speed = -speed;
 
-	sOffset = (1.0 / psurface->texinfo->texture->width) * speed * gEngfuncs.GetClientTime();
+	sOffset = (1.0 / psurface->texinfo->texture->width) * speed * g_pMetaSave->pEngineFuncs->GetClientTime();
 
 	if (sOffset < 0)
 		sOffset = fmod(sOffset, -1.0f);

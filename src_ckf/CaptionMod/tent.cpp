@@ -380,7 +380,7 @@ void T_SpyWatch_Update(void)
 	}
 }
 
-void SpyWatch_Draw(void)
+void SpyWatch_Draw(int flags)
 {
 	if(!g_SpyWatch.show)
 		return;
@@ -393,7 +393,7 @@ void SpyWatch_Draw(void)
 	qglDepthRange(0, 0.3);
 	
 	*CurrentEntity = &g_SpyWatch.ent;
-	g_StudioRenderer.StudioDrawModel(STUDIO_RENDER|STUDIO_EVENTS);
+	g_StudioRenderer.StudioDrawModel(flags);
 
 	qglDepthRange(0, 1);
 }

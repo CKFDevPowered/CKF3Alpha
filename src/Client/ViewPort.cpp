@@ -33,8 +33,6 @@
 
 #include <ICKFClient.h>
 
-extern ICKFClient *g_pCKFClient;
-
 Panel *g_lastPanel = NULL;
 Button *g_lastButton = NULL;
 
@@ -56,6 +54,7 @@ CViewport::CViewport(void) : Panel(NULL, "NewClientViewport")
 	SetPaintBackgroundEnabled(false);
 	SetMouseInputEnabled(false);
 	SetKeyBoardInputEnabled(false);
+	SetProportional(true);
 
 	m_bInitialied = false;
 	m_bShowBackGround = false;
@@ -83,7 +82,7 @@ CViewport::CViewport(void) : Panel(NULL, "NewClientViewport")
 	if ( LoadHudAnimations() == false )
 	{
 		// Fall back to just the main
-		if ( GetAnimationController()->SetScriptFile( GetVPanel(), "scripts/HudAnimations.txt", true ) == false )
+		if ( GetAnimationController()->SetScriptFile( GetVPanel(), "resource/HudAnimations.txt", true ) == false )
 		{
 			Assert(0);
 		}

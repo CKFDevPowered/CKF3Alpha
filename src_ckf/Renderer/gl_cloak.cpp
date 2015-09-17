@@ -12,8 +12,8 @@ void R_InitCloak(void)
 {
 	if(gl_shader_support)
 	{
-		const char *cloak_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\cloak_shader.vsh", 5, 0);
-		const char *cloak_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\cloak_shader.fsh", 5, 0);
+		const char *cloak_vscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\cloak_shader.vsh", 5, 0);
+		const char *cloak_fscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\cloak_shader.fsh", 5, 0);
 		if(cloak_vscode && cloak_fscode)
 		{
 			cloak_program = R_CompileShader(cloak_vscode, cloak_fscode, "cloak_shader.vsh", "cloak_shader.fsh");
@@ -25,8 +25,8 @@ void R_InitCloak(void)
 				SHADER_UNIFORM_INIT(cloak, refractamount, "refractamount");
 			}
 		}
-		gEngfuncs.COM_FreeFile((void *)cloak_vscode);
-		gEngfuncs.COM_FreeFile((void *)cloak_fscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)cloak_vscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)cloak_fscode);
 	}
 
 	if(!s_CloakFBO.s_hBackBufferFBO)
@@ -44,7 +44,7 @@ void R_InitCloak(void)
 		cloak_texture = s_CloakFBO.s_hBackBufferTex;
 	}
 
-	r_cloak_debug = gEngfuncs.pfnRegisterVariable("r_cloak_debug", "0", FCVAR_CLIENTDLL);
+	r_cloak_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_cloak_debug", "0", FCVAR_CLIENTDLL);
 }
 
 void R_RenderCloakTexture(void)

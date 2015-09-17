@@ -95,13 +95,13 @@ public:
 		qglColor4ub(p->col[0], p->col[1], p->col[2], 255);
 		qglDepthMask(0);
 
-		gpRefFuncs->GL_DisableMultitexture();
+		gRefExports.RefAPI.GL_DisableMultitexture();
 		if(m_team >= 0 && m_team <= 2)
 		{
-			gpRefFuncs->GL_Bind(g_texTracer[m_team].tex);
+			gRefExports.RefAPI.GL_Bind(g_texTracer[m_team].tex);
 		}
 
-		int cullOff = (gpRefExports->R_GetDrawPass() == r_draw_reflect);
+		int cullOff = (gRefExports.R_GetDrawPass() == r_draw_reflect);
 
 		if(cullOff)
 			qglDisable(GL_CULL_FACE);

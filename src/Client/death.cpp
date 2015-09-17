@@ -77,6 +77,8 @@ void CHudDeathNotice::InitHUDData(void)
 
 int CHudDeathNotice::VidInit(void)
 {
+	return 0;
+
 	m_HUD_d_skull = gHUD.GetSpriteIndex("d_skull");
 	m_headSprite = gHUD.GetSpriteIndex("d_headshot");
 	m_headWidth = gHUD.GetSpriteRect(m_headSprite).right - gHUD.GetSpriteRect(m_headSprite).left;
@@ -127,6 +129,8 @@ int CHudDeathNotice::GetDeathNoticeY(void)
 
 int CHudDeathNotice::Draw(float flTime)
 {
+	return 0;
+
 	int x, y, r, g, b;
 	int noticeY = GetDeathNoticeY();
 

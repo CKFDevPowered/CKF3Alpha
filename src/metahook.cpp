@@ -157,105 +157,107 @@ PIMAGE_RESOURCE_DIRECTORY_ENTRY FindResourceInTable(PIMAGE_RESOURCE_DIRECTORY pT
 
 bool ExecuteResourceDLL(char *filename)
 {
-	FILE *fp = fopen(filename, "rb");
-
-	if (!fp)
-		return false;
-
-	fseek(fp, 0, SEEK_END);
-
-	DWORD dwSize = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-
-	BYTE *pBuffer = (BYTE *)malloc(dwSize);
-	fread(pBuffer, dwSize, 1, fp);
-	fclose(fp);
-
-	PIMAGE_DOS_HEADER pDOSHeader = (PIMAGE_DOS_HEADER)pBuffer;
-	PIMAGE_NT_HEADERS pNTHeader = (PIMAGE_NT_HEADERS)(pBuffer + pDOSHeader->e_lfanew);
-
-	DWORD dwResourceTable = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
-
-	if (dwResourceTable > 0)
-	{
-		g_bResourceFinded = false;
-
-		PIMAGE_RESOURCE_DIRECTORY pResourceTable = (PIMAGE_RESOURCE_DIRECTORY)ImageRvaToVa(pNTHeader, pBuffer, dwResourceTable, NULL);
-		PIMAGE_RESOURCE_DIRECTORY_ENTRY pResourceEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((DWORD)pResourceTable + sizeof(IMAGE_RESOURCE_DIRECTORY));
-
-		for (int i = 0; i < pResourceTable->NumberOfNamedEntries + pResourceTable->NumberOfIdEntries; i++, pResourceEntry++)
-		{
-			PIMAGE_RESOURCE_DIRECTORY_ENTRY pEntryResult = FindResourceInTable(pResourceTable, pResourceEntry, IDR_RESOURCEDLL);
-
-			if (pEntryResult)
-			{
-				PIMAGE_RESOURCE_DATA_ENTRY pDataEntry = (PIMAGE_RESOURCE_DATA_ENTRY)((DWORD)pResourceTable + pEntryResult->OffsetToData);
-				BYTE *pResourceData = (BYTE *)ImageRvaToVa(pNTHeader, pBuffer, pDataEntry->OffsetToData, NULL);
-
-				if (pResourceData)
-				{
-					char szTempPath[MAX_PATH];
-					GetTempPath(sizeof(szTempPath), szTempPath);
-					GetLongPathName(szTempPath, szTempPath, sizeof(szTempPath));
-					sprintf(g_szTempFile, "%sCSBTE.dll", szTempPath);
-
-					HINTERFACEMODULE hModule;
-					bool bWriteFile = false;
-
-					fp = fopen(g_szTempFile, "rb");
-
-					if (fp)
-					{
-						PIMAGE_DOS_HEADER pSrcDOSHeader = (PIMAGE_DOS_HEADER)pResourceData;
-						PIMAGE_NT_HEADERS pSrcNTHeader = (PIMAGE_NT_HEADERS)((BYTE *)pResourceData + pSrcDOSHeader->e_lfanew);
-
-						IMAGE_DOS_HEADER DOSHeader;
-						IMAGE_NT_HEADERS NTHeader;
-
-						fread(&DOSHeader, sizeof(DOSHeader), 1, fp);
-						fseek(fp, DOSHeader.e_lfanew, SEEK_SET);
-						fread(&NTHeader, sizeof(NTHeader), 1, fp);
-						fclose(fp);
-
-						if (NTHeader.FileHeader.TimeDateStamp == pSrcNTHeader->FileHeader.TimeDateStamp)
-							hModule = (HINTERFACEMODULE)LoadLibrary(g_szTempFile);
-						else
-							bWriteFile = true;
-					}
-					else
-						bWriteFile = true;
-
-					if (bWriteFile)
-					{
-						fp = fopen(g_szTempFile, "wb");
-
-						if (fp)
-						{
-							fwrite(pResourceData, pDataEntry->Size, 1, fp);
-							fclose(fp);
-
-							hModule = (HINTERFACEMODULE)LoadLibrary(g_szTempFile);
-						}
-						else
-							hModule = (HINTERFACEMODULE)MEM_LoadLibrary((PBYTE)pBuffer, TRUE, NULL);
-					}
-
-					free(pBuffer);
-
-					if (hModule)
-					{
-						if (!HM_LoadPlugins("CSBTE.dll", hModule))
-							return false;
-					}
-
-					return hModule != NULL;
-				}
-			}
-		}
-	}
-
-	free(pBuffer);
 	return false;
+
+	//FILE *fp = fopen(filename, "rb");
+
+	//if (!fp)
+	//	return false;
+
+	//fseek(fp, 0, SEEK_END);
+
+	//DWORD dwSize = ftell(fp);
+	//fseek(fp, 0, SEEK_SET);
+
+	//BYTE *pBuffer = (BYTE *)malloc(dwSize);
+	//fread(pBuffer, dwSize, 1, fp);
+	//fclose(fp);
+
+	//PIMAGE_DOS_HEADER pDOSHeader = (PIMAGE_DOS_HEADER)pBuffer;
+	//PIMAGE_NT_HEADERS pNTHeader = (PIMAGE_NT_HEADERS)(pBuffer + pDOSHeader->e_lfanew);
+
+	//DWORD dwResourceTable = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
+
+	//if (dwResourceTable > 0)
+	//{
+	//	g_bResourceFinded = false;
+
+	//	PIMAGE_RESOURCE_DIRECTORY pResourceTable = (PIMAGE_RESOURCE_DIRECTORY)ImageRvaToVa(pNTHeader, pBuffer, dwResourceTable, NULL);
+	//	PIMAGE_RESOURCE_DIRECTORY_ENTRY pResourceEntry = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)((DWORD)pResourceTable + sizeof(IMAGE_RESOURCE_DIRECTORY));
+
+	//	for (int i = 0; i < pResourceTable->NumberOfNamedEntries + pResourceTable->NumberOfIdEntries; i++, pResourceEntry++)
+	//	{
+	//		PIMAGE_RESOURCE_DIRECTORY_ENTRY pEntryResult = FindResourceInTable(pResourceTable, pResourceEntry, IDR_RESOURCEDLL);
+
+	//		if (pEntryResult)
+	//		{
+	//			PIMAGE_RESOURCE_DATA_ENTRY pDataEntry = (PIMAGE_RESOURCE_DATA_ENTRY)((DWORD)pResourceTable + pEntryResult->OffsetToData);
+	//			BYTE *pResourceData = (BYTE *)ImageRvaToVa(pNTHeader, pBuffer, pDataEntry->OffsetToData, NULL);
+
+	//			if (pResourceData)
+	//			{
+	//				char szTempPath[MAX_PATH];
+	//				GetTempPath(sizeof(szTempPath), szTempPath);
+	//				GetLongPathName(szTempPath, szTempPath, sizeof(szTempPath));
+	//				sprintf(g_szTempFile, "%sCSBTE.dll", szTempPath);
+
+	//				HINTERFACEMODULE hModule;
+	//				bool bWriteFile = false;
+
+	//				fp = fopen(g_szTempFile, "rb");
+
+	//				if (fp)
+	//				{
+	//					PIMAGE_DOS_HEADER pSrcDOSHeader = (PIMAGE_DOS_HEADER)pResourceData;
+	//					PIMAGE_NT_HEADERS pSrcNTHeader = (PIMAGE_NT_HEADERS)((BYTE *)pResourceData + pSrcDOSHeader->e_lfanew);
+
+	//					IMAGE_DOS_HEADER DOSHeader;
+	//					IMAGE_NT_HEADERS NTHeader;
+
+	//					fread(&DOSHeader, sizeof(DOSHeader), 1, fp);
+	//					fseek(fp, DOSHeader.e_lfanew, SEEK_SET);
+	//					fread(&NTHeader, sizeof(NTHeader), 1, fp);
+	//					fclose(fp);
+
+	//					if (NTHeader.FileHeader.TimeDateStamp == pSrcNTHeader->FileHeader.TimeDateStamp)
+	//						hModule = (HINTERFACEMODULE)LoadLibrary(g_szTempFile);
+	//					else
+	//						bWriteFile = true;
+	//				}
+	//				else
+	//					bWriteFile = true;
+
+	//				if (bWriteFile)
+	//				{
+	//					fp = fopen(g_szTempFile, "wb");
+
+	//					if (fp)
+	//					{
+	//						fwrite(pResourceData, pDataEntry->Size, 1, fp);
+	//						fclose(fp);
+
+	//						hModule = (HINTERFACEMODULE)LoadLibrary(g_szTempFile);
+	//					}
+	//					else
+	//						hModule = (HINTERFACEMODULE)MEM_LoadLibrary((PBYTE)pBuffer, TRUE, NULL);
+	//				}
+
+	//				free(pBuffer);
+
+	//				if (hModule)
+	//				{
+	//					if (!HM_LoadPlugins("CSBTE.dll", hModule))
+	//						return false;
+	//				}
+
+	//				return hModule != NULL;
+	//			}
+	//		}
+	//	}
+	//}
+
+	//free(pBuffer);
+	//return false;
 }
 
 void MH_Setup(IFileSystem *pFileSystem, ICommandLine *pCommandLine, IRegistry *pRegistry)
@@ -480,11 +482,11 @@ void MH_ShutdownPlugins(void)
 
 void MH_Shutdown(void)
 {
-	if (g_pHookBase)
-		MH_ShutdownHooks();
+	//if (g_pHookBase)
+	//	MH_ShutdownHooks();
 
-	if (g_pPluginBase)
-		MH_ShutdownPlugins();
+	//if (g_pPluginBase)
+	//	MH_ShutdownPlugins();
 
 	if (gMetaSave.pExportFuncs)
 	{
@@ -605,14 +607,14 @@ BOOL MH_UnHook(hook_t *pHook)
 			{
 				tagVTABLEDATA *info = (tagVTABLEDATA *)h->pInfo;
 
-				if (!IsBadWritePtr(info->pVFTInfoAddr, sizeof(DWORD)))
+				//if (!IsBadWritePtr(info->pVFTInfoAddr, sizeof(DWORD)))
 					MH_WriteMemory(info->pVFTInfoAddr, (BYTE *)h->pOldFuncAddr, sizeof(DWORD));
 			}
 			else if (h->hModule)
 			{
 				tagIATDATA *info = (tagIATDATA *)h->pInfo;
 
-				if (!IsBadWritePtr(info->pAPIInfoAddr, sizeof(DWORD)))
+				//if (!IsBadWritePtr(info->pAPIInfoAddr, sizeof(DWORD)))
 					MH_WriteMemory(info->pAPIInfoAddr, (BYTE *)h->pOldFuncAddr, sizeof(DWORD));
 			}
 			else

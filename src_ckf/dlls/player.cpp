@@ -974,7 +974,7 @@ void CBasePlayer::PackDeadPlayerItems(void)
 			}
 		}
 
-		if (pItem)
+		if (pItem && pItem->m_iId != WEAPON_FIST)//fist don't drop weaponbox
 		{
 			const char *modelname = GetWeaponModelName(pItem->m_iId);
 
@@ -1028,6 +1028,7 @@ const char *GetWeaponModelName(int iWeaponId)
 		case WEAPON_WRENCH:
 		case WEAPON_BOTTLE:
 		case WEAPON_BUTTERFLY: return "models/CKF_III/wp_group_rf.mdl";
+		case WEAPON_FIST: return "models/CKF_III/null.mdl";
 		default: ALERT(at_console, "CBasePlayer::PackDeadPlayerItems(): Unhandled item- not creating weaponbox\n");break;
 	}
 	return NULL;
@@ -1083,6 +1084,7 @@ int GetWeaponModelBody(int iWeaponId)
 		case WEAPON_WRENCH: return 36;
 		case WEAPON_BOTTLE: return 18;
 		case WEAPON_BUTTERFLY: return 42;
+		case WEAPON_FIST: return 0;
 		//2bone
 		case WEAPON_GRENADELAUNCHER: return 0;
 		case WEAPON_MINIGUN: return 3;
@@ -1406,6 +1408,7 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 	}
 
 	int animDesired;
+	int animStandDesired;
 	int animHop = LookupActivity(ACT_HOP);
 	int animLeap = LookupActivity(ACT_LEAP);
 
@@ -1434,6 +1437,8 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 			if (animDesired == -1)
 				animDesired = 0;
 
+			animStandDesired = animDesired;
+
 			if (m_IdealActivity == ACT_LEAP)
 			{
 				m_Activity = m_IdealActivity;
@@ -1459,6 +1464,18 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 			if (animDesired == -1)
 				animDesired = 0;
 
+			animStandDesired = animDesired;
+
+			if(FBitSet(pev->flags, FL_DUCKING))
+			{
+				strcpy(szAnim, "ref_reload_");
+				strcat(szAnim, m_szDisguiseAnimExtention);
+				animStandDesired = LookupSequence(szAnim);
+
+				if (animStandDesired == -1)
+					animStandDesired = 0;
+			}
+
 			if (m_iDisguiseSequence != animDesired || !m_fSequenceLoops)
 				pev->frame = 0;
 
@@ -1482,6 +1499,18 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 			if (animDesired == -1)
 				animDesired = 0;
 
+			animStandDesired = animDesired;
+
+			if(FBitSet(pev->flags, FL_DUCKING))
+			{
+				strcpy(szAnim, "ref_aim_");
+				strcat(szAnim, m_szDisguiseAnimExtention);
+				animStandDesired = LookupSequence(szAnim);
+
+				if (animStandDesired == -1)
+					animStandDesired = 0;
+			}
+
 			m_Activity = m_IdealActivity;
 			break;
 		}
@@ -1503,6 +1532,18 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 					if (animDesired == -1)
 						animDesired = 0;
 
+					animStandDesired = animDesired;
+
+					if(FBitSet(pev->flags, FL_DUCKING))
+					{
+						strcpy(szAnim, "ref_aim_");
+						strcat(szAnim, m_szDisguiseAnimExtention);
+						animStandDesired = LookupSequence(szAnim);
+
+						if (animStandDesired == -1)
+							animStandDesired = 0;
+					}
+
 					m_Activity = ACT_WALK;
 				}
 				else
@@ -1523,6 +1564,18 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 
 						if (animDesired == -1)
 							animDesired = 0;
+
+						animStandDesired = animDesired;
+
+						if(FBitSet(pev->flags, FL_DUCKING))
+						{
+							strcpy(szAnim, "ref_aim_");
+							strcat(szAnim, m_szDisguiseAnimExtention);
+							animStandDesired = LookupSequence(szAnim);
+
+							if (animStandDesired == -1)
+								animStandDesired = 0;
+						}
 
 						m_Activity = ACT_RUN;
 					}
@@ -1565,6 +1618,21 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 						animDesired = LookupSequence(szAnim);
 					}
 
+					if (animDesired == -1)
+						animDesired = 0;
+
+					animStandDesired = animDesired;
+
+					if(strstr(szAnim, "crouch"))
+					{
+						strcpy(szAnim, "ref_aim_");
+						strcat(szAnim, m_szDisguiseAnimExtention);
+						animStandDesired = LookupSequence(szAnim);
+
+						if (animStandDesired == -1)
+							animStandDesired = 0;
+					}
+
 					m_Activity = ACT_RUN;
 				//}
 			}
@@ -1575,6 +1643,8 @@ void CBasePlayer::SetDisguiseAnimation(PLAYER_ANIM playerAnim)
 		return;
 
 	m_iDisguiseSequence = animDesired;
+
+	m_iDisguiseStandSequence = animStandDesired;
 }
 
 void CBasePlayer::SetAnimation(PLAYER_ANIM playerAnim)
@@ -6876,8 +6946,7 @@ void CBasePlayer::Disguise_Weapon(void)
 		return;
 
 	m_iDisguiseWeaponID = iWeaponID;
-	m_iDisguiseWeapon = MAKE_STRING(GetWeaponModelName(iWeaponID));
-	m_iDisguiseWeapon = max(m_iDisguiseWeapon, 0);
+	m_iDisguiseWeapon = MODEL_INDEX(GetWeaponModelName(iWeaponID));
 	m_iDisguiseWeaponBody = GetWeaponModelBody(iWeaponID);
 	if(iSlot == 1)
 		strcpy(m_szDisguiseAnimExtention, "shotgun");

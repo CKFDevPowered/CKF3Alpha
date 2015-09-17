@@ -23,6 +23,7 @@
 #include "Surface.h"
 #include "cvar.h"
 #include "vgui_int.h" 
+#include "qgl.h"
 
 cl_exportfuncs_t gExportfuncs;
 mh_interface_t *g_pInterface;
@@ -65,21 +66,23 @@ void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engines
 
 	gPerformanceCounter.InitializePerformanceCounter();
 
-	if (g_pRenderer)
-		g_pRenderer->Init(pAPI, pInterface, pSave);
+	if (g_pRendererPlugins)
+		g_pRendererPlugins->Init(pAPI, pInterface, pSave);
 
-	if (g_pCKFClient)
-		g_pCKFClient->Init(pAPI, pInterface, pSave);
+	if (g_pCKFClientPlugins)
+		g_pCKFClientPlugins->Init(pAPI, pInterface, pSave);
 }
 
 void IPlugins::Shutdown(void)
 {
-	if (g_pRenderer)
-		g_pRenderer->Shutdown();
+	if (g_pRendererPlugins)
+		g_pRendererPlugins->Shutdown();
+	if (g_pCKFClientPlugins)
+		g_pCKFClientPlugins->Shutdown();
 
-	Module_Shutdown();
-	Renderer_Shutdown();
 	CKF_Shutdown();
+	Renderer_Shutdown();
+	Module_Shutdown();
 }
 
 void IPlugins::LoadEngine(void)
@@ -90,6 +93,16 @@ void IPlugins::LoadEngine(void)
 	g_hEngineModule = g_pMetaHookAPI->GetEngineModule();
 	g_dwEngineBase = g_pMetaHookAPI->GetEngineBase();
 	g_dwEngineSize = g_pMetaHookAPI->GetEngineSize();
+
+	if (g_pRendererPlugins)
+		g_pRendererPlugins->LoadEngine();
+
+	if (g_pCKFClientPlugins)
+		g_pCKFClientPlugins->LoadEngine();
+
+	//QGL_Init is brought forward to called in order to draw loading screen
+	if(g_dwEngineBuildnum >= 5953)
+		QGL_Init();
 
 	InstallHook();
 	GetEngfuncs();
@@ -105,12 +118,6 @@ void IPlugins::LoadEngine(void)
 	Surface_InstallHook();
 	Module_InstallHook();
 	SecureClient_InstallHook();
-
-	if (g_pRenderer)
-		g_pRenderer->LoadEngine();
-
-	if (g_pCKFClient)
-		g_pCKFClient->LoadEngine();
 }
 
 void IPlugins::LoadClient(cl_exportfuncs_t *pExportFunc)
@@ -163,11 +170,11 @@ void IPlugins::LoadClient(cl_exportfuncs_t *pExportFunc)
 
 	MemPatch_Start(MEMPATCH_STEP_LOADCLIENT);
 
-	if (g_pRenderer)
-		g_pRenderer->LoadClient(pExportFunc);
+	if (g_pRendererPlugins)
+		g_pRendererPlugins->LoadClient(pExportFunc);
 
-	if (g_pCKFClient)
-		g_pCKFClient->LoadClient(pExportFunc);
+	if (g_pCKFClientPlugins)
+		g_pCKFClientPlugins->LoadClient(pExportFunc);
 }
 
 void IPlugins::ExitGame(int iResult)
@@ -175,11 +182,11 @@ void IPlugins::ExitGame(int iResult)
 	VID_Shutdown();
 	VGui_Shutdown();
 
-	if (g_pRenderer)
-		g_pRenderer->ExitGame(iResult);
+	if (g_pRendererPlugins)
+		g_pRendererPlugins->ExitGame(iResult);
 
-	if (g_pCKFClient)
-		g_pCKFClient->ExitGame(iResult);
+	if (g_pCKFClientPlugins)
+		g_pCKFClientPlugins->ExitGame(iResult);
 }
 
 EXPOSE_SINGLE_INTERFACE(IPlugins, IPlugins, METAHOOK_PLUGIN_API_VERSION);

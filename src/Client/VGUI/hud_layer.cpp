@@ -16,6 +16,8 @@ using namespace vgui;
 #include "hud_menu.h"
 #include "hud_radar.h"
 #include "hud_playerstatus.h"
+#include "hud_ammostatus.h"
+#include "hud_mediccharge.h"
 
 CHudLayer::CHudLayer(Panel *parent) : Panel(parent, "HudLayer")
 {
@@ -42,6 +44,8 @@ void CHudLayer::Start(void)
 	m_pMenu = (CHudNewMenu *)AddNewPanel(new CHudNewMenu);
 	m_pRadar = (CHudNewRadar *)AddNewPanel(new CHudNewRadar);
 	m_pTFPlayerStatus = (CTFHudPlayerStatus *)AddNewPanel(new CTFHudPlayerStatus);
+	m_pTFWeaponAmmo = (CTFHudWeaponAmmo *)AddNewPanel(new CTFHudWeaponAmmo);
+	m_pMedicChargeMeter = (CTFHudMedicChargeMeter *)AddNewPanel(new CTFHudMedicChargeMeter);
 
 	SetVisible(false);
 }
@@ -83,9 +87,7 @@ void CHudLayer::Reset(void)
 void CHudLayer::Think(void)
 {
 	for (int i = 0; i < m_Panels.Count(); i++)
-	{
-		//if (!m_Panels[i]->IsVisible())
-		//	m_Panels[i]->Think();
+	{		
 		bool visible = m_Panels[i]->ShouldDraw();
 
 		// If it's a vgui panel, hide/show as appropriate

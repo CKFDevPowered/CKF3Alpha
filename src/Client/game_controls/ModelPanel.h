@@ -27,13 +27,13 @@ public:
 	void SetModel(const char *szModel);
 	void SetAnimation(const char *szAnim);
 	void InitEntity(void);
-	cl_entity_t *GetEntity(void){return &_entity;};
+	cl_entity_t *GetEntity(void){return &m_entity;};
 
-private:
+protected:
 	char m_szModel[64];
-	cl_entity_t _entity;
-	vec3_t _origin;
-	vec3_t _angles;
+	cl_entity_t m_entity;
+	vec3_t m_origin;
+	vec3_t m_angles;
 };
 
 }

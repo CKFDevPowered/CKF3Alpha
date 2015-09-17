@@ -720,6 +720,7 @@ public:
 	float m_flDisguiseHealthReduce;
 	char m_szDisguiseAnimExtention[32];
 	int m_iDisguiseSequence;
+	int m_iDisguiseStandSequence;
 	int m_iDisguiseMaxSpeed;
 	CBasePlayer *m_pDisguiseTarget;
 	int m_iDisguiseTarget;
