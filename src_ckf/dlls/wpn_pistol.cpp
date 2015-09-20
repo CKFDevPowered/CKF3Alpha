@@ -69,6 +69,11 @@ void CPistol::PrimaryAttack(void)
 	PistolFire();
 }
 
+void CPistol::SecondaryAttack(void)
+{
+	m_pPlayer->Build_Undeploy();
+}
+
 void CPistol::PistolFire()
 {
 	float flSpread = 0.05;

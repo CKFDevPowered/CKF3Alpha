@@ -56,19 +56,23 @@ void CBaseBuildable::Killed(entvars_t *pevAttacker, int iGib)
 
 	if(iGib != -1)
 	{
-		switch(RANDOM_LONG(0,2))
+		//Carrying building don't explode
+		if(m_pPlayer->m_pCarryBuild != this)
 		{
-		case 0:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode1.wav", 1.0, 0.80);break;
-		case 1:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode2.wav", 1.0, 0.80);break;
-		case 2:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode3.wav", 1.0, 0.80);break;
-		}
+			switch(RANDOM_LONG(0,2))
+			{
+			case 0:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode1.wav", 1.0, 0.80);break;
+			case 1:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode2.wav", 1.0, 0.80);break;
+			case 2:EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/explode3.wav", 1.0, 0.80);break;
+			}
 
-		MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
-		WRITE_BYTE(FX_EXPLOSION_MIDAIR);
-		WRITE_COORD(pev->origin.x);
-		WRITE_COORD(pev->origin.y);
-		WRITE_COORD(pev->origin.z);
-		MESSAGE_END();
+			MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
+			WRITE_BYTE(FX_EXPLOSION_MIDAIR);
+			WRITE_COORD(pev->origin.x);
+			WRITE_COORD(pev->origin.y);
+			WRITE_COORD(pev->origin.z);
+			MESSAGE_END();
+		}
 
 		UpdateHUD();
 
@@ -110,7 +114,8 @@ BOOL CBaseBuildable::Repair(CBasePlayer *pPlayer)
 {
 	BOOL bUpdate = FALSE;
 	BOOL bSuccess = FALSE;
-	if(m_iFlags & BUILD_BUILDING)
+	//rebuilt building can't be accelerated
+	if((m_iFlags & BUILD_BUILDING) && !m_bIsRebuilt)
 	{
 		UpgradeProgress(5.0);
 		bUpdate = TRUE;
@@ -150,7 +155,51 @@ BOOL CBaseBuildable::Repair(CBasePlayer *pPlayer)
 	return FALSE;
 }
 
-//Sentry
+void CBaseBuildable::Undeploy(void)
+{
+	//it a rebuilt one
+	m_bIsRebuilt = true;
+	//save current level
+	m_iDesiredLevel = m_iLevel;
+	m_iDesiredHealth = pev->health;
+	m_iDesiredUpgrade = m_iUpgrade;
+	//hide away and make it invulnerable
+	pev->movetype = MOVETYPE_NONE;
+	pev->solid = SOLID_NOT;
+	pev->takedamage = DAMAGE_NO;
+	pev->effects |= EF_NODRAW;
+	//make it out of the world just in case
+	pev->origin.z -= 8192;
+	UTIL_SetOrigin(pev, pev->origin);
+}
+
+void CBaseBuildable::Rebuild(Vector vecOrigin, Vector vecAngles)
+{
+	pev->origin = vecOrigin;
+
+	vecAngles.x *= -1;
+	vecAngles.z = 0;
+	pev->angles = vecAngles;
+
+	Spawn();
+}
+
+void CBaseBuildable::Spawn(void)
+{
+	Precache();
+	pev->movetype = MOVETYPE_TOSS;
+	pev->solid = SOLID_SLIDEBOX;
+	pev->effects = 0;
+	pev->flags |= FL_MONSTER;
+	pev->takedamage = DAMAGE_AIM;
+	pev->deadflag = DEAD_NO;
+	pev->gravity = 1;
+
+	pev->colormap = (m_iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
+	pev->skin = (m_iTeam == TEAM_RED) ? 0: 1;
+}
+
+//Sentry Gun
 
 void CBuildSentry::Precache( void )
 {
@@ -172,7 +221,7 @@ CBaseBuildable *CBuildSentry::CreateBuildable(Vector vecOrigin, Vector vecAngles
 	pSentry->pev->angles = vecAngles;
 
 	pSentry->m_pPlayer = pOwner;
-	pSentry->pev->team = pSentry->m_iTeam = pOwner->m_iTeam;		
+	pSentry->pev->team = pSentry->m_iTeam = pOwner->m_iTeam;
 	pSentry->Spawn();
 
 	pOwner->m_pBuildable[BUILDABLE_SENTRY-1] = (CBaseBuildable *)pSentry;
@@ -182,18 +231,11 @@ CBaseBuildable *CBuildSentry::CreateBuildable(Vector vecOrigin, Vector vecAngles
 
 void CBuildSentry::Spawn(void)
 {
-	//These follow the steps of turrent
-	Precache();
-	pev->classname = MAKE_STRING("buildable_sentry");
-	pev->movetype = MOVETYPE_TOSS;
-	pev->solid = SOLID_SLIDEBOX;
-	pev->effects = 0;
-	pev->flags |= FL_MONSTER;
-	pev->takedamage = DAMAGE_AIM;
-	pev->view_ofs.z = 18;
+	CBaseBuildable::Spawn();
 
-	pev->deadflag = DEAD_NO;
-	pev->gravity = 1;
+	//These follow the steps of turrent
+	pev->classname = MAKE_STRING("buildable_sentry");
+	pev->view_ofs.z = 18;
 
 	//Model
 	SET_MODEL(ENT(pev), "models/CKF_III/w_sentry_lv1.mdl");
@@ -214,14 +256,15 @@ void CBuildSentry::Spawn(void)
 	pev->max_health = 1;
 	pev->health = 1;
 
-	pev->colormap = (m_iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
-
 	m_iLevel = 1;
 	m_flProgress = 0;
 	m_iUpgrade = 0;
 	m_iFlags |= BUILD_BUILDING;
-	m_iAmmo = m_iMaxAmmo = 100;
-	m_iRocket = m_iMaxRocket = 20;
+	if(!m_bIsRebuilt)
+	{
+		m_iAmmo = m_iMaxAmmo = 100;
+		m_iRocket = m_iMaxRocket = 20;
+	}
 	m_flROF = 0.2;
 	m_vecCurAngles.y = m_vecGoalAngles.y = UTIL_AngleMod(pev->angles.y);
 	m_vecCurAngles.x = m_vecGoalAngles.x = 0;
@@ -231,7 +274,7 @@ void CBuildSentry::Spawn(void)
 	pev->frags = 0;
 	m_iPredictRocket = 0;
 
-	SetThink(&CBuildSentry::UpgradeThink);//WTF!!!!!
+	SetThink(&CBuildSentry::UpgradeThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 
 	EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/build_deploy.wav", VOL_NORM, ATTN_NORM);
@@ -337,11 +380,14 @@ void CBuildSentry::UpgradeMe(void)
 	m_flProgress = 0;
 	m_iUpgrade = 0;
 
-	int iOldMaxAmmo = m_iMaxAmmo;
+	if(!m_bIsRebuilt)
+	{
+		int iOldMaxAmmo = m_iMaxAmmo;
 
-	m_iMaxAmmo = (m_iLevel == 2) ? 120 : 144;
+		m_iMaxAmmo = (m_iLevel == 2) ? 120 : 144;
 
-	m_iAmmo = m_iAmmo * m_iMaxAmmo / iOldMaxAmmo;
+		m_iAmmo = m_iAmmo * m_iMaxAmmo / iOldMaxAmmo;
+	}
 
 	SET_MODEL(ENT(pev), (m_iLevel == 2) ? "models/CKF_III/w_sentry_lv2.mdl" : "models/CKF_III/w_sentry_lv3.mdl");
 	UTIL_SetSize(pev, Vector(-16,-16,0), Vector(16,16,48));
@@ -366,7 +412,7 @@ void CBuildSentry::UpgradeThink(void)
 
 	if(m_iLevel == 1)
 	{
-		UpgradeProgress(1);
+		UpgradeProgress((m_bIsRebuilt) ? 2.0f : 1.0f);
 		pev->frame = m_flProgress*2.55;
 	}
 	else
@@ -407,6 +453,9 @@ void CBuildSentry::UpgradeProgress(float flProgressIncrease)
 	}
 	pev->health = min(pev->health + flProgressIncrease * (flNextMaxHealth-flCurMaxHealth)/100.0, flNextMaxHealth);
 
+	if(m_bIsRebuilt && pev->health > m_iDesiredHealth)
+		pev->health = m_iDesiredHealth;
+
 	if(pev->health > pev->max_health)
 		pev->max_health = pev->health;
 
@@ -440,6 +489,24 @@ void CBuildSentry::Upgraded(void)
 	}
 
 	UpdateHUD();
+
+	if(m_bIsRebuilt)
+	{
+		if(m_iDesiredLevel > m_iLevel)
+		{
+			m_iUpgrade = 200;
+			UpgradeMe();
+		}
+		else
+		{
+			m_iUpgrade = m_iDesiredUpgrade;
+			UpdateHUD();
+		}
+	}
+	else
+	{
+		UpdateHUD();
+	}
 }
 
 void CBuildSentry::Shoot(Vector &vecSrc, Vector &vecDirToEnemy)
@@ -827,8 +894,6 @@ void CBuildSentry::RotateMe(void)
 			m_vecCurAngles.y = m_vecGoalAngles.y;
 
 		SetBoneController(0, m_vecCurAngles.y - pev->angles.y);
-		//g_engfuncs.pfnClientPrintf(m_pPlayer->edict(), print_console, UTIL_VarArgs("view %f\n", UTIL_AngleMod(m_pPlayer->pev->v_angle.y)));
-		//g_engfuncs.pfnClientPrintf(m_pPlayer->edict(), print_center, UTIL_VarArgs("cur %f goal %f\n", m_vecCurAngles.y, m_vecGoalAngles.y));
 	}
 }
 
@@ -896,17 +961,9 @@ CBaseBuildable *CBuildDispenser::CreateBuildable(Vector vecOrigin, Vector vecAng
 
 void CBuildDispenser::Spawn(void)
 {
-	//These follow the steps of turrent
-	Precache();
-	pev->classname = MAKE_STRING("buildable_dispenser");
-	pev->movetype = MOVETYPE_TOSS;
-	pev->solid = SOLID_SLIDEBOX;
-	pev->effects = 0;
-	pev->flags |= FL_MONSTER;
-	pev->takedamage = DAMAGE_AIM;
+	CBaseBuildable::Spawn();
 
-	pev->deadflag = DEAD_NO;
-	pev->gravity = 1;
+	pev->classname = MAKE_STRING("buildable_dispenser");
 
 	//Model
 	SET_MODEL(ENT(pev), "models/CKF_III/w_dispenser.mdl");
@@ -927,15 +984,16 @@ void CBuildDispenser::Spawn(void)
 	pev->max_health = 1;
 	pev->health = 1;
 
-	pev->colormap = (m_iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
-
 	m_iLevel = 1;
 	m_flProgress = 0;
 	m_iUpgrade = 0;
 	m_iFlags |= BUILD_BUILDING;
-	m_iMetal = 25;
-	m_iMaxMetal = 400;
-	m_flRadius = 120;
+	if(!m_bIsRebuilt)
+	{
+		m_iMetal = 25;
+		m_iMaxMetal = 400;
+		m_flRadius = 120;
+	}
 	m_bShouldUpdateHUD = false;
 
 	SetThink(&CBuildDispenser::UpgradeThink);//WTF!!!!!
@@ -1024,7 +1082,7 @@ void CBuildDispenser::UpgradeThink(void)
 
 	if(m_iLevel == 1)
 	{
-		UpgradeProgress(0.5);
+		UpgradeProgress((m_bIsRebuilt) ? 1.0f : 0.5f);
 		pev->frame = m_flProgress*2.55;
 	}
 	else
@@ -1065,6 +1123,9 @@ void CBuildDispenser::UpgradeProgress(float flProgressIncrease)
 	}
 	pev->health = min(pev->health + flProgressIncrease * (flNextMaxHealth-flCurMaxHealth)/100.0, flNextMaxHealth);
 
+	if(m_bIsRebuilt && pev->health > m_iDesiredHealth)
+		pev->health = m_iDesiredHealth;
+
 	if(pev->health > pev->max_health)
 		pev->max_health = pev->health;
 
@@ -1094,7 +1155,23 @@ void CBuildDispenser::Upgraded(void)
 		pev->sequence = (m_iLevel == 2) ? 2 : 4;
 	}
 
-	UpdateHUD();	
+	if(m_bIsRebuilt)
+	{
+		if(m_iDesiredLevel > m_iLevel)
+		{
+			m_iUpgrade = 200;
+			UpgradeMe();
+		}
+		else
+		{
+			m_iUpgrade = m_iDesiredUpgrade;
+			UpdateHUD();
+		}
+	}
+	else
+	{
+		UpdateHUD();
+	}
 }
 
 void CBuildDispenser::UpdateHUD(void)
@@ -1396,6 +1473,7 @@ void CBuildDispenser::CheckQueue(void)
 			WRITE_SHORT(ENTINDEX( pPlayer->edict() ));
 			MESSAGE_END();
 
+			//send a message to tell client to call EV_StopAllSounds is a way much better than this
 			EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "CKF_III/null.wav", VOL_NORM, ATTN_NORM);//Check before Play
 		}
 	}
@@ -1478,16 +1556,9 @@ CBaseBuildable *CBuildTeleporter::CreateBuildable(BOOL bIsEntrance, Vector vecOr
 void CBuildTeleporter::Spawn(void)
 {
 	//These follow the steps of turrent
-	Precache();
-	pev->classname = MAKE_STRING("buildable_teleporter");
-	pev->movetype = MOVETYPE_TOSS;
-	pev->solid = SOLID_SLIDEBOX;
-	pev->effects = 0;
-	pev->flags |= FL_MONSTER;
-	pev->takedamage = DAMAGE_AIM;
+	CBaseBuildable::Spawn();
 
-	pev->deadflag = DEAD_NO;
-	pev->gravity = 1;
+	pev->classname = MAKE_STRING("buildable_teleporter");
 
 	//Model
 	SET_MODEL(ENT(pev), "models/CKF_III/w_teleporter.mdl");
@@ -1507,8 +1578,6 @@ void CBuildTeleporter::Spawn(void)
 
 	pev->max_health = 1;
 	pev->health = 1;
-
-	pev->colormap = (m_iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
 
 	m_iLevel = 1;
 	m_flProgress = 0;
@@ -1616,7 +1685,7 @@ void CBuildTeleporter::BuildThink(void)
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	UpgradeProgress(0.5);
+	UpgradeProgress((m_bIsRebuilt) ? 1.0f : 0.5f);
 
 	if(m_flProgress >= 100)
 	{
@@ -1658,7 +1727,23 @@ void CBuildTeleporter::BuildFinish(void)
 	m_iFlags &= ~BUILD_BUILDING;
 	pev->max_health = 150;
 
-	UpdateHUD();
+	if(m_bIsRebuilt)
+	{
+		if(m_iDesiredLevel > m_iLevel)
+		{
+			m_iUpgrade = 200;
+			UpgradeMe();
+		}
+		else
+		{
+			m_iUpgrade = m_iDesiredUpgrade;
+			UpdateHUD();
+		}
+	}
+	else
+	{
+		UpdateHUD();
+	}
 }
 
 void CBuildTeleporter::UpgradeProgress(float flProgressIncrease)
@@ -1685,6 +1770,9 @@ void CBuildTeleporter::UpgradeProgress(float flProgressIncrease)
 		flCurMaxHealth = 180;
 	}
 	pev->health = min(pev->health + flProgressIncrease * (flNextMaxHealth-flCurMaxHealth)/100.0, flNextMaxHealth);
+
+	if(m_bIsRebuilt && pev->health > m_iDesiredHealth)
+		pev->health = m_iDesiredHealth;
 
 	if(pev->health > pev->max_health)
 		pev->max_health = pev->health;

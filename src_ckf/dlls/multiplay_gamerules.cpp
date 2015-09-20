@@ -645,6 +645,15 @@ void CHalfLifeMultiplay::TerminateRound(float tmDelay, int iWinStatus)
 			pPlayer->RemoveAllItems(FALSE);
 			pPlayer->ResetMaxSpeed();
 			pPlayer->m_iFOV = pPlayer->m_iDefaultFOV;
+
+			if(pPlayer->m_iCarryBluePrint)
+			{
+				//tell client to hide the blueprint model
+				MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pPlayer->pev);
+				WRITE_BYTE(FX_BLUEPRINT);
+				WRITE_BYTE(0);
+				MESSAGE_END();
+			}
 		}
 	}
 }

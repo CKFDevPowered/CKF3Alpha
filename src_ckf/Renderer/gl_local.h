@@ -224,14 +224,6 @@ void R_SpriteColor(mcolor24_t *col, cl_entity_t *entity, int renderamt);
 float GlowBlend(cl_entity_t *entity);
 int CL_FxBlend(cl_entity_t *entity);
 
-int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadPNG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadDDS(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int SaveBMP(const char *file_name, int width, int height, byte *data);
-int SaveTGA(const char *file_name, int width, int height, byte *data);
-int SavePNG(const char *file_name, int width, int height, byte *data);
-
 void R_DrawTEntitiesOnList(int onlyClientDraw);
 void R_AllocObjects(int nMax);
 void R_AddTEntity(cl_entity_t *pEnt);
@@ -273,6 +265,18 @@ byte *R_GetTexLoaderBuffer(int *bufsize);
 gltexture_t *R_GetCurrentGLTexture(void);
 int GL_LoadTextureEx(const char *identifier, GL_TEXTURETYPE textureType, int width, int height, byte *data, qboolean mipmap, qboolean ansio);
 int R_LoadTextureEx(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio);
+
+void GL_UploadDXT(byte *data, int width, int height, qboolean mipmap, qboolean ansio);
+int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadPNG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadDDS(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int LoadJPEG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+int SaveBMP(const char *file_name, int width, int height, byte *data);
+int SaveTGA(const char *file_name, int width, int height, byte *data);
+int SavePNG(const char *file_name, int width, int height, byte *data);
+int SaveJPEG(const char *file_name, int width, int height, byte *data);
+
 void R_PushRefDef(void);
 void R_UpdateRefDef(void);
 void R_PopRefDef(void);

@@ -4,8 +4,6 @@
 byte *scrcapture_buffer = NULL;
 int scrcapture_bufsize = 0;
 
-char scrcapture_ext[32];
-
 void R_CaptureScreen(const char *szExt)
 {
 	int iFileIndex = 0;
@@ -13,9 +11,6 @@ void R_CaptureScreen(const char *szExt)
 	char szLevelName[64];
 	char szFileName[260];
 	typeSaveImage pfnSaveImage;
-
-	if(scrcapture_ext[0] != '\0')
-		szExt = scrcapture_ext;
 
 	if(s_BackBufferFBO.s_hBackBufferFBO)
 	{
@@ -51,7 +46,12 @@ void R_CaptureScreen(const char *szExt)
 		szLevelName[strlen(szLevelName)-4] = 0;
 	}
 
-	if(!stricmp(szExt, "png"))
+	if(!stricmp(szExt, "jpg") || !stricmp(szExt, "jpeg"))
+	{	
+		pfnSaveImage = (typeSaveImage)SaveJPEG;
+		szExt = "jpg";
+	}
+	else if(!stricmp(szExt, "png"))
 	{
 		pfnSaveImage = (typeSaveImage)SavePNG;
 	}
@@ -91,7 +91,7 @@ void CL_ScreenShot_f(void)
 		scrcapture_buffer = new byte[scrcapture_bufsize];
 	}
 
-	char *szExt = "png";
+	char *szExt = "jpg";
 	if(g_pMetaSave->pEngineFuncs->Cmd_Argc() > 1)
 	{
 		szExt = g_pMetaSave->pEngineFuncs->Cmd_Argv(1);

@@ -1250,6 +1250,16 @@ int MsgFunc_SpawnInit(const char *pszName, int iSize, void *pbuf)
 	g_iMaxHealth = READ_SHORT();
 	g_iClass = READ_BYTE();
 
+	//clear all sounds
+	gEngfuncs.pEventAPI->EV_StopAllSounds(gEngfuncs.GetLocalPlayer()->index, CHAN_WEAPON);
+	gEngfuncs.pEventAPI->EV_StopAllSounds(gEngfuncs.GetLocalPlayer()->index, CHAN_ITEM);
+
+	//uncloak me instantly
+	CL_SpyWatch(CLOAK_NO);
+
+	//remove the blueprint
+	CL_BluePrint(0);
+	
 	return 1;
 }
 

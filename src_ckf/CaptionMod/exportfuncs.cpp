@@ -102,6 +102,7 @@ ckf_vars_t gCKFVars =
 	&g_iLimitTeams,
 	&g_iMaxRoundTime,
 	&g_flRoundEndTime,
+	&g_pTraceEntity,
 	(CKFPlayerInfo *)g_PlayerInfo,
 	(CKFPlayerStats *)&g_PlayerStats,
 	(CKFClientPlayer *)&g_Player
@@ -245,6 +246,32 @@ r_studio_interface_t studio_interface =
 	R_StudioDrawPlayer,
 };
 
+//void Sys_Error(const char *fmt, ...)
+//{
+//	if(strstr(fmt, "Mod_Extradata"))
+//	{
+//		return;
+//	}
+//
+//	return gHookFuncs.Sys_Error(fmt);
+//}
+
+model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
+{
+	int needload = mod->needload;
+
+	model_t *result = gHookFuncs.Mod_LoadModel(mod, crash, trackCRC);
+
+	if(result)
+	{
+		if(result->type == mod_studio && needload == 3 && result->needload == 0)
+		{
+			result->needload = needload;
+		}
+	}
+	return result;
+}
+
 int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppinterface, struct engine_studio_api_s *pstudio )
 {
 	memcpy(&IEngineStudio, pstudio, sizeof(engine_studio_api_t));
@@ -259,7 +286,7 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->StudioSetHeader, 0x10, "\xA3", 1);
 	if(!addr)
 		SIG_NOT_FOUND("pstudiohdr");
-	StudioHeader = *(studiohdr_t ***)(addr + 1);
+	StudioHeader = *(studiohdr_t ***)(addr + 0x1);
 
 	pstudio->StudioEntityLight = StudioEntityLight;
 	pstudio->StudioSetupModel = StudioSetupModel;
@@ -271,6 +298,15 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 	R_StudioInit();
 
 	g_bRenderPlayerWeapon = 0;
+
+	//Fatal bug fix: CL_PrecacheResourses will overwrite model's needload flag to 0 even if it's never unloaded
+#define MOD_LOADMODEL_SIG "\x6A\x01\x57\xE8"
+	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->Mod_Extradata, 0x100, MOD_LOADMODEL_SIG, sizeof(MOD_LOADMODEL_SIG)-1);
+	if(!addr)
+		SIG_NOT_FOUND("Mod_LoadModel");
+	addr = GetCallAddress(addr+3);
+	g_pMetaHookAPI->InlineHook((void *)addr, Mod_LoadModel,(void *&)gHookFuncs.Mod_LoadModel);
+
 	return 1;
 }
 

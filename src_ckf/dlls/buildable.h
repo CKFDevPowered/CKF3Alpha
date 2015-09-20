@@ -25,6 +25,12 @@ public:
 		m_pSapper = NULL;
 		m_iLevel = 0;
 		m_iFlags = 0;
+		m_iUpgrade = 0;
+		m_flProgress = 0;
+		m_bIsRebuilt = false;
+		m_iDesiredLevel = 0;
+		m_iDesiredHealth = 0;
+		m_iDesiredUpgrade = 0;
 	}
 public:
 	void Restart(void){};
@@ -34,8 +40,8 @@ public:
 	int Classify(void) { return CLASS_BUILDABLE; }
 	int BloodColor( void ) { return DONT_BLEED; }
 	void GibMonster( void ) {}
+	void Spawn(void);
 public:
-	size_t Build_GetVectorIndex(void);
 	virtual int GetBuildClass(void) { return -1; }
 	virtual int GetBuildLevel(void) { return m_iLevel; }
 	virtual int GetBuildUpgrade(void) { return m_iUpgrade; }
@@ -44,6 +50,8 @@ public:
 	virtual void UpgradeProgress(float ProgressIncrease){};
 	virtual int GetSapperSequence(void){return 0;}
 	virtual void Sapped(void){};
+	virtual void Undeploy(void);
+	virtual void Rebuild(Vector vecOrigin, Vector vecAngles);
 public:
 	int m_iTeam;
 	CBasePlayer *m_pPlayer;
@@ -52,6 +60,11 @@ public:
 	int m_iFlags;
 	float m_flProgress;
 	int m_iUpgrade;
+protected:
+	bool m_bIsRebuilt;
+	int m_iDesiredLevel;
+	int m_iDesiredHealth;
+	int m_iDesiredUpgrade;
 };
 
 #define SENTRY_RANGE 1100

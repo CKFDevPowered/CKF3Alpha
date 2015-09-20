@@ -1380,8 +1380,8 @@ void GL_EndRendering(void)
 
 void GL_SwapBuffer(void)
 {
-	if(gRefFuncs.GL_SwapBuffer && *gRefFuncs.GL_SwapBuffer)
-		(*gRefFuncs.GL_SwapBuffer)();
+	if(gRefFuncs.GL_SwapBuffer)
+		gRefFuncs.GL_SwapBuffer();
 }
 
 void R_InitCvars(void)

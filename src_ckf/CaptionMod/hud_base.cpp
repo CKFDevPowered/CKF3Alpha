@@ -155,7 +155,6 @@ int HudBase_VidInit(void)
 
 int HudBase_Redraw(float flTime, int iIntermission)
 {
-
 	HudOverlay_Redraw(flTime, iIntermission);
 	HudDeathMsg_Redraw(flTime, iIntermission);
 	HudObject_Redraw(flTime, iIntermission);

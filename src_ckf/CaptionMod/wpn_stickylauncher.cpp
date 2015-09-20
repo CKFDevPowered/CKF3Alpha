@@ -94,7 +94,7 @@ void CClientStickyLauncher::StickyLauncherFire(void)
 	}
 	else
 	{
-		m_iStickyNum ++;
+		//m_iStickyNum ++;
 	}
 
 	HUD_PlaybackEvent(FEV_NOTHOST, NULL, m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iId, 0, (iCrit >= 2) ? TRUE : FALSE, 0);

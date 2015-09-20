@@ -2456,12 +2456,58 @@ int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *ho
 				CBaseBuildable *pBuild = (CBaseBuildable *)pEntity;
 				state->team = pBuild->m_iTeam;
 				state->playerclass = CLASS_BUILDABLE;
-				state->iuser4 = (pBuild->m_pSapper != NULL) ? 1 : 0;
+				if((pBuild->m_iFlags & BUILD_UPGRADING) || (pBuild->m_iFlags & BUILD_BUILDING) || pBuild->m_pSapper != NULL)
+					state->startpos.z = 1;
+				state->iuser2 = pBuild->GetBuildLevel();
+				state->iuser3 = pBuild->GetBuildClass();
+				state->endpos.x = pBuild->pev->max_health;
+				state->startpos.x = pBuild->pev->health;
+
+				if(pBuild->m_iTeam != 3 - pHost->m_iTeam)
+				{
+					state->endpos.z = pBuild->GetBuildUpgrade();
+					switch(pBuild->GetBuildClass())
+					{
+					case BUILDABLE_SENTRY:
+						{
+						CBuildSentry *pSentry = dynamic_cast<CBuildSentry *>(pBuild);
+						if(pSentry)
+						{
+							state->endpos.y = pSentry->m_iMaxAmmo;
+							state->startpos.y = pSentry->m_iAmmo;
+						}
+						break;
+						}
+					case BUILDABLE_DISPENSER:
+						{
+						CBuildDispenser *pDispenser = dynamic_cast<CBuildDispenser *>(pBuild);
+						if(pDispenser)
+						{
+							state->endpos.y = pDispenser->m_iMaxMetal;
+							state->startpos.y = pDispenser->m_iMetal;
+						}
+						break;
+						}
+					case BUILDABLE_ENTRANCE:case BUILDABLE_EXIT:
+						{
+						CBuildTeleporter *pTele = dynamic_cast<CBuildTeleporter *>(pBuild);
+						if(pTele)
+						{
+							if(!pTele->m_bIsEntrance && pTele->m_pLinkTele)
+								pTele = pTele->m_pLinkTele;
+							state->endpos.y = pTele->m_flChargeRate;
+							state->startpos.y = pTele->m_flCharge;
+						}
+						break;
+						}
+					}
+				}
+				
 				if(pBuild->m_pPlayer)
 				{
-					state->iuser1 = pBuild->m_pPlayer->entindex();
-					state->iuser2 = pBuild->GetBuildLevel();
-					state->iuser3 = pBuild->GetBuildClass();
+					int buildowner = pBuild->m_pPlayer->entindex();
+					if (buildowner >= 1 && buildowner <= gpGlobals->maxClients)
+						state->iuser1 = buildowner;
 				}
 			}
 			else if(classify == CLASS_PROJECTILE)
@@ -2855,7 +2901,11 @@ int GetWeaponData(struct edict_s *player, struct weapon_data_s *info)
 					{
 						if(gun->m_iId == WEAPON_BOTTLE)
 						{
-							item->iuser1 = (((CBottle *)gun)->m_bBroken & 1) | (gun->m_bMeleeAttack & 2) | (gun->m_iMeleeCrit << 2);
+							if(((CBottle *)gun)->m_bBroken)
+								item->iuser1 |= 1;
+							if(gun->m_bMeleeAttack)
+								item->iuser1 |= 2;
+							item->iuser1 |= (gun->m_iMeleeCrit << 2);
 						}
 						else
 						{
@@ -2976,7 +3026,21 @@ void UpdateClientData(const struct edict_s *ent, int sendweapons, struct clientd
 		int iCritBoost = pl->m_Cond.CritBoost.m_iStatus ? 1 : 0;
 		cd->ammo_cells = iCritBuff | (iCritBoost << 1);
 		cd->ammo_nails = pl->m_iDmgDone_Recent;
+		cd->ammo_shells = 0;
+		cd->ammo_rockets = 0;
 		cd->fuser1 = pl->m_fCritChance;
+		cd->vuser2.x = 0;
+		cd->vuser2.y = 0;
+		cd->vuser2.z = 0;
+		cd->vuser3.x = 0;
+		cd->vuser3.y = 0;
+		cd->vuser3.z = 0;
+		cd->vuser4.x = 0;
+
+		if(pl->m_pHealer)
+		{
+			cd->ammo_rockets = pl->m_pHealer->entindex();
+		}
 
 		if(pl->m_iClass == CLASS_SPY)
 		{
@@ -3015,7 +3079,16 @@ void UpdateClientData(const struct edict_s *ent, int sendweapons, struct clientd
 				cd->ammo_shells = pStickyLauncher->m_iStickyNum;
 			}
 		}
-
+		//we use this 'cause we have no enough slot in weapondata_t
+		if(pl->m_rgpPlayerItems[WEAPON_SLOT_SECONDARY])
+		{
+			if(pl->m_rgpPlayerItems[WEAPON_SLOT_SECONDARY]->m_iId == WEAPON_MEDIGUN)
+			{
+				CMedigun *pMedigun = (CMedigun *)pl->m_rgpPlayerItems[WEAPON_SLOT_SECONDARY];
+				if(pMedigun->m_pTarget)
+					cd->ammo_shells = pMedigun->m_pTarget->entindex();
+			}
+		}
 		int cdflag = 0;
 
 		if (pl->m_bAllowAttack == false)

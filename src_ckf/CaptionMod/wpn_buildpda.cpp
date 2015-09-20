@@ -52,7 +52,7 @@ void CClientBuildPDA::Holster(void)
 	//	ShowHudMenu(MENU_CLOSE, 0);
 	//}
 
-	g_Player.m_iCarryBluePrint = 0;
+	//g_Player.m_iCarryBluePrint = 0;
 }
 
 BOOL CClientBuildPDA::CanHolster(void)

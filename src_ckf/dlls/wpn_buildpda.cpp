@@ -27,6 +27,7 @@ void CBuildPDA::Spawn(void)
 void CBuildPDA::Precache(void)
 {
 	PRECACHE_MODEL("models/CKF_III/v_buildpda.mdl");
+	PRECACHE_MODEL("models/CKF_III/v_toolbox.mdl");
 }
 
 int CBuildPDA::GetItemInfo(ItemInfo *p)
@@ -72,7 +73,11 @@ void CBuildPDA::SecondaryAttack(void)
 
 BOOL CBuildPDA::Deploy(void)
 {
-	ShowHudMenu(m_pPlayer, HUDMENU_BUILD, 0, FALSE);
+	if(!m_pPlayer->m_pCarryBuild)
+		ShowHudMenu(m_pPlayer, HUDMENU_BUILD, 0, FALSE);
+
+	if(m_pPlayer->m_pCarryBuild)
+		return GroupDeploy("models/CKF_III/v_toolbox.mdl", "models/CKF_III/wp_group_rf.mdl", BUILDPDA_IDLE1, 0, 0, "c4", 39);
 
 	return GroupDeploy("models/CKF_III/v_buildpda.mdl", "models/CKF_III/wp_group_rf.mdl", BUILDPDA_DRAW, 0, 0, "c4", 39);
 }
@@ -86,8 +91,11 @@ void CBuildPDA::Holster(int skiplocal)
 
 BOOL CBuildPDA::CanDeploy(void)
 {
-	if(m_pPlayer->m_iHudMenu == HUDMENU_DEMOLISH || m_pPlayer->m_iCarryBluePrint)
-		return FALSE;
+	if(!m_pPlayer->m_pCarryBuild)
+	{
+		if(m_pPlayer->m_iHudMenu == HUDMENU_DEMOLISH || m_pPlayer->m_iCarryBluePrint)
+			return FALSE;
+	}
 
 	return TRUE;
 }

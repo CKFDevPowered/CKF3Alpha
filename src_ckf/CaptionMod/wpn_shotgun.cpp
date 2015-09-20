@@ -64,6 +64,11 @@ void CClientShotgun::PrimaryAttack(void)
 	SendWeaponAnim(SHOTGUN_SHOOT);
 }
 
+void CClientShotgun::SecondaryAttack(void)
+{
+	g_Player.PickupBuilding();
+}
+
 void CClientShotgun::Reload(void)
 {
 	if (m_iAmmo <= 0 || m_iClip == SHOTGUN_MAX_CLIP)

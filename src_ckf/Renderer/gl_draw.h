@@ -40,38 +40,20 @@ extern gltexture_t *currentglt;
 extern float gl_max_ansio;
 extern float gl_force_ansio;
 
-//For PNG Load Support
+//PNG
 typedef struct
 {
-	byte *data;
+	FileHandle_t fp;
 	size_t size;
 	size_t offset;
 }png_source;
 
-//For PNG Write Support
 typedef struct
 {
 	FileHandle_t fp;
 }png_dest;
 
-//For DDS Support
-typedef struct
-{
-	byte bMagic[4];
-	byte bSize[4];
-	byte bFlags[4];
-	byte bHeight[4];
-	byte bWidth[4];
-	byte bPitchOrLinearSize[4];
-
-	byte bPad1[52];
-
-	byte bPFSize[4];
-	byte bPFFlags[4];
-	byte bPFFourCC[4];
-}dds_header_t;
-
-//for TGA support
+//TGA
 typedef struct tgaheader_s
 {
 	byte bIDLength;        /* 00h  Size of Image ID field */
@@ -88,6 +70,10 @@ typedef struct tgaheader_s
 	byte bImageDescriptor; /* 11h  Image descriptor byte */
 }tgaheader_t;
 
+//JPEG
+
+//DXT
+
 #define DDS_MAGIC 0x20534444
 
 #define DDSD_CAPS                   0x00000001
@@ -99,3 +85,19 @@ typedef struct tgaheader_s
 #define D3DFMT_DXT5     '5TXD'    //  DXT5 compression texture format 
 
 #define DIB_HEADER_MARKER ((WORD)('M' << 8) | 'B')
+
+typedef struct
+{
+	byte bMagic[4];
+	byte bSize[4];
+	byte bFlags[4];
+	byte bHeight[4];
+	byte bWidth[4];
+	byte bPitchOrLinearSize[4];
+
+	byte bPad1[52];
+
+	byte bPFSize[4];
+	byte bPFFlags[4];
+	byte bPFFourCC[4];
+}dds_header_t;

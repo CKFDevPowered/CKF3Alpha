@@ -84,6 +84,11 @@ void CWrench::PrimaryAttack(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.8;
 }
 
+void CWrench::SecondaryAttack(void)
+{
+	m_pPlayer->Build_Undeploy();
+}
+
 void CWrench::Swing(void)
 {
 	UTIL_MakeVectors(m_pPlayer->pev->v_angle);

@@ -167,6 +167,11 @@ void CShotgun::PrimaryAttack(void)
 	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
 }
 
+void CShotgun::SecondaryAttack(void)
+{
+	m_pPlayer->Build_Undeploy();
+}
+
 void CShotgun::Reload(void)
 {
 	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == SHOTGUN_MAX_CLIP)

@@ -20,7 +20,7 @@ void Sys_ErrorEx(const char *fmt, ...)
 	if(g_pMetaSave->pEngineFuncs)
 		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
 	if(g_pBTEClient)
-		MessageBox(g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
+		MessageBox((g_dwEngineBuildnum >= 5953) ? NULL : g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
 	else
 		MessageBox(NULL, msg, "Error", MB_ICONERROR);
 	exit(0);
@@ -202,13 +202,16 @@ ref_export_t gRefExports =
 	R_LoadTextureEx,
 	GL_LoadTextureEx,
 	R_GetCurrentGLTexture,
+	GL_UploadDXT,
 	LoadBMP,
 	LoadTGA,
 	LoadPNG,
 	LoadDDS,
+	LoadJPEG,
 	SaveBMP,
 	SaveTGA,
 	SavePNG,
+	SaveJPEG,
 	//capture screen
 	R_GetSCRCaptureBuffer,
 	//3dsky

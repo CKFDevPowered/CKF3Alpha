@@ -19,13 +19,6 @@ enum
 	kRenderTransAlphaNoDepth
 };
 
-enum
-{
-	kRenderFxCloak = 22,
-	kRenderFxShadow,
-	kRenderFxFireLayer
-};
-
 #define SPR_VP_PARALLEL_UPRIGHT 0
 #define SPR_FACING_UPRIGHT 1
 #define SPR_VP_PARALLEL 2

@@ -159,6 +159,7 @@ class CClientPistol : public CClientWeapon
 public:
 	void Precache(void);
 	void PrimaryAttack( void );
+	void SecondaryAttack( void );
 	BOOL Deploy(void);
 	void Reload(void);
 	void WeaponIdle(void);
@@ -192,6 +193,7 @@ class CClientShotgun : public CClientWeapon
 public:
 	void Precache(void);
 	void PrimaryAttack( void );
+	void SecondaryAttack( void );
 	BOOL Deploy(void);
 	void Reload(void);
 	void WeaponIdle(void);
@@ -366,6 +368,7 @@ public:
 	BOOL Deploy(void);
 	void WeaponIdle(void);
 public:
+	int m_iHealTarget;
 };
 
 class CClientBonesaw : public CClientWeapon
@@ -384,6 +387,7 @@ class CClientWrench : public CClientWeapon
 public:
 	void Precache(void);
 	void PrimaryAttack( void );
+	void SecondaryAttack( void );
 	BOOL Deploy(void);
 	void Holster(void);
 	void Swing(void);

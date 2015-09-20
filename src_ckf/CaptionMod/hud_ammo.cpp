@@ -96,14 +96,14 @@ int HudAmmo_Redraw(float flTime, int iIntermission)
 	//draw clip,ammo,basic mask and medic's uber
 	//HudAmmo_DrawMask();
 
-	DrawStickBomb();
+	//DrawStickBomb();
 	DrawSniperCharge();
 
-	if(g_iClass == CLASS_ENGINEER)
-		DrawMetal();
+	//if(g_iClass == CLASS_ENGINEER)
+		//DrawMetal();
 
-	else if(g_iClass == CLASS_SPY)
-		DrawSpy();
+	//else if(g_iClass == CLASS_SPY)
+	//	DrawSpy();
 
 	return 1;
 }

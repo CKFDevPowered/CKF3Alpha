@@ -32,6 +32,11 @@ void CClientWrench::PrimaryAttack(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.8;
 }
 
+void CClientWrench::SecondaryAttack(void)
+{
+	g_Player.PickupBuilding();
+}
+
 void CClientWrench::Swing(void)
 {
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, NULL, m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iId, 0, (m_iMeleeCrit >= 2) ? TRUE : FALSE, 0);

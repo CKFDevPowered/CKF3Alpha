@@ -228,7 +228,8 @@ void LinkUserMessages(void)
 	gmsgCPInit = REG_USER_MSG("CPInit", -1);
 	gmsgBuildDeath = REG_USER_MSG("BuildDeath", -1);
 	gmsgDisguise = REG_USER_MSG("Disguise", -1);
-	gmsgHUDStatus = REG_USER_MSG("HUDStatus", -1);
+	//We have client-side hudstatus now
+	//gmsgHUDStatus = REG_USER_MSG("HUDStatus", -1);
 	gmsgHUDBuild = REG_USER_MSG("HUDBuild", -1);
 	gmsgStatsInfo = REG_USER_MSG("StatsInfo", 3);
 	gmsgTimeLimit = REG_USER_MSG("TimeLimit", 2);
@@ -1236,17 +1237,35 @@ void CBasePlayer::Killed(entvars_t *pevAttacker, int iGib)
 
 	//清理粘弹
 	ClearSticky();
+
 	//解除隐身
 	m_iCloak = CLOAK_NO;
 	pev->renderamt = 255;
 	pev->rendermode = kRenderNormal;
+
 	//解除伪装
 	Disguise_Stop();
+
 	//开始重生
 	Respawn_Start();
-	//清理HUD
+
+	//清理HUD (this is discarded)
 	pev->armorvalue = 0;
 	pev->armortype = 0;
+
+	//Clear carrying building
+	if(m_pCarryBuild)
+	{
+		m_pCarryBuild->Killed(pevAttacker, 0);
+		m_pCarryBuild = NULL;
+	}
+
+	//Clear carrying blueprint
+	m_iCarryBluePrint = 0;
+
+	//Clear healer
+	m_pHealer = NULL;
+	m_iHealerCount = 0;
 
 	if (m_pTank)
 	{
@@ -2864,223 +2883,223 @@ void CBasePlayer::AddPointsToTeam(int score, BOOL bAllowNegativeScore)
 #define HUDSTATUS_TEAMMATE (1<<1)
 #define HUDSTATUS_PLAYER (1<<2)
 #define HUDSTATUS_BUILDABLE (1<<3)//max == (1<<7)
-void CBasePlayer::UpdateStatusBar(void)
-{
-	BOOL bSeePlayer = FALSE;
-	BOOL bSeeBuildable = FALSE;
-	BOOL bSeeTeammate = FALSE;
-	CBasePlayer *pPlayer = NULL;
-	CBaseEntity *pEntity = NULL;
-	CBaseBuildable *pBuild = NULL;
-	edict_t *peMe = edict();
-	if (m_hObserverTarget)
-	{
-		//数据显示为观察目标的
-		//return;
-	}
-	else
-	{
-		int iPenetration = 5;
-		float range = (pev->flags & FL_SPECTATOR) ? MAX_SPECTATOR_ID_RANGE : MAX_ID_RANGE;
-		TraceResult tr;
-		UTIL_MakeVectors(pev->v_angle);
-		Vector vecStart = EyePosition();
-		Vector vecEnd = vecStart + (gpGlobals->v_forward * range);
-		edict_t *pEnt = peMe;
-		while(iPenetration)
-		{
-			iPenetration --;
-			UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, pEnt, &tr);
-			if(tr.flFraction != 1)
-			{
-				if(!FNullEnt(tr.pHit) && tr.pHit != peMe)
-				{
-					pEnt = tr.pHit;
-					pEntity = Instance(tr.pHit);
 
-					if (pEntity->Classify() == CLASS_PLAYER)
-					{
-						pPlayer = (CBasePlayer *)pEntity;
-						if(pPlayer->m_iCloak == CLOAK_YES)
-							continue;
-						bSeePlayer = TRUE;
-
-						if(m_iTeam == pPlayer->m_iTeam)
-							bSeeTeammate = TRUE;
-						if(m_iClass == CLASS_SPY)
-							bSeeTeammate = TRUE;
-						if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam)
-							bSeeTeammate = TRUE;
-						if(IsObserver())
-							bSeeTeammate = TRUE;
-						break;
-					}
-					else if (pEntity->Classify() == CLASS_BUILDABLE)
-					{
-						pBuild = (CBaseBuildable *)pEntity;
-						pPlayer = pBuild->m_pPlayer;
-						if(!pPlayer)
-							continue;
-						bSeeBuildable = TRUE;
-
-						if(m_iTeam == pBuild->m_iTeam)
-							bSeeTeammate = TRUE;
-						if(m_iClass == CLASS_SPY)
-							bSeeTeammate = TRUE;
-						if(IsObserver())
-							bSeeTeammate = TRUE;
-						break;
-					}
-					else
-						iPenetration = 0;
-				}
-				vecStart = vecStart + 32*gpGlobals->v_forward;
-			}
-			else
-				iPenetration = 0;
-		}
-	}
-
-	int iWriteFlags = 0;
-	int iWriteEntIndex = 0;
-	int iWriteEntData = 0;
-
-	int iBuildClass = 0;
-	int iBuildLevel = 1;
-	int iBuildUpgrade = 0;
-
-	if(bSeePlayer)
-	{
-		iWriteFlags = HUDSTATUS_PLAYER;
-		iWriteEntIndex = pPlayer->entindex();
-		if(bSeeTeammate)
-		{
-			iWriteFlags |= HUDSTATUS_TEAMMATE;
-			if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam && pPlayer->m_iTeam != m_iTeam)
-			{
-				if(pPlayer->m_iDisguiseWeaponID)
-					iWriteEntData = pPlayer->m_iDisguiseHealth * pPlayer->m_iDisguiseMaxHealth * pPlayer->m_iDisguiseWeaponID;
-				else
-					iWriteEntData = pPlayer->m_iDisguiseHealth * pPlayer->m_iDisguiseMaxHealth;
-			}
-			else
-			{
-				if(pPlayer->m_pActiveItem)
-					iWriteEntData = pPlayer->pev->health * pPlayer->pev->max_health * pPlayer->m_pActiveItem->m_iId;
-				else
-					iWriteEntData = pPlayer->pev->health * pPlayer->pev->max_health;
-			}
-		}
-	}
-	else if(bSeeBuildable)
-	{
-		iWriteFlags = HUDSTATUS_BUILDABLE;
-		iWriteEntIndex = pPlayer->entindex();
-		iBuildClass = pBuild->GetBuildClass();
-		iBuildLevel = pBuild->GetBuildLevel();
-		if(bSeeTeammate)
-		{
-			iWriteFlags |= HUDSTATUS_TEAMMATE;			
-			iBuildUpgrade = pBuild->GetBuildUpgrade();
-			if(iBuildLevel < 3)
-				iWriteEntData = (pBuild->pev->health + pBuild->pev->max_health) * (iBuildUpgrade + iBuildClass);
-			else
-				iWriteEntData = (pBuild->pev->health + pBuild->pev->max_health) * iBuildClass;
-
-			if(iBuildClass == BUILDABLE_ENTRANCE)
-			{
-				CBuildTeleporter *pTele = (CBuildTeleporter *)pBuild;
-				float flChargeRate = pTele->GetChargeRate();
-				iWriteEntData *= max(flChargeRate, 1);
-			}
-		}
-		else
-			iWriteEntData = iBuildClass;
-	}
-	else
-	{
-		iWriteFlags = HUDSTATUS_DISABLE;
-	}
-
-	if(iWriteFlags != m_iClientSBarFlags || iWriteEntIndex != m_iClientSBarEntIndex || iWriteEntData != m_iClientSBarEntData)
-	{
-		m_iClientSBarFlags = iWriteFlags;
-		m_iClientSBarEntIndex = iWriteEntIndex;
-		m_iClientSBarEntData = iWriteEntData;
-	}
-	else
-	{
-		return;
-	}
-
-	if(bSeePlayer && bSeeTeammate)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
-		WRITE_BYTE(iWriteFlags);
-		WRITE_BYTE(iWriteEntIndex);
-		if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam && pPlayer->m_iTeam != m_iTeam)
-		{
-			WRITE_SHORT(pPlayer->m_iDisguiseHealth);
-			WRITE_SHORT(pPlayer->m_iDisguiseMaxHealth);
-			if(pPlayer->m_iDisguiseWeaponID)
-				WRITE_BYTE(pPlayer->m_iDisguiseWeaponID);
-			else
-				WRITE_BYTE(0);
-		}
-		else
-		{
-			WRITE_SHORT(pPlayer->pev->health);
-			WRITE_SHORT(pPlayer->pev->max_health);
-			if(pPlayer->m_pActiveItem)
-				WRITE_BYTE(pPlayer->m_pActiveItem->m_iId);
-			else
-				WRITE_BYTE(0);
-		}
-		MESSAGE_END();
-	}
-	else if(bSeePlayer && !bSeeTeammate)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
-		WRITE_BYTE(iWriteFlags);
-		WRITE_BYTE(iWriteEntIndex);
-		MESSAGE_END();
-	}
-	else if(bSeeBuildable && bSeeTeammate)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
-		WRITE_BYTE(iWriteFlags);
-		WRITE_BYTE(iWriteEntIndex);
-		WRITE_BYTE(iBuildClass);
-		WRITE_BYTE(iBuildLevel);
-		WRITE_SHORT(pBuild->pev->health);
-		WRITE_SHORT(pBuild->pev->max_health);		
-		if(iBuildLevel < 3)
-			WRITE_BYTE(iBuildUpgrade);
-		if(iBuildClass == BUILDABLE_ENTRANCE)
-		{
-			CBuildTeleporter *pTele = (CBuildTeleporter *)pBuild;
-			WRITE_COORD(pTele->m_flCharge);
-			WRITE_COORD(pTele->GetChargeRate());
-		}
-		MESSAGE_END();
-	}
-	else if(bSeeBuildable && !bSeeTeammate)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
-		WRITE_BYTE(iWriteFlags);
-		WRITE_BYTE(iWriteEntIndex);
-		WRITE_BYTE(iBuildClass);
-		WRITE_BYTE(iBuildLevel);
-		MESSAGE_END();
-	}
-	else if(iWriteFlags & HUDSTATUS_DISABLE)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
-		WRITE_BYTE(iWriteFlags);
-		MESSAGE_END();
-	}
-
-}
+//void CBasePlayer::UpdateStatusBar(void)
+//{
+//	BOOL bSeePlayer = FALSE;
+//	BOOL bSeeBuildable = FALSE;
+//	BOOL bSeeTeammate = FALSE;
+//	CBasePlayer *pPlayer = NULL;
+//	CBaseEntity *pEntity = NULL;
+//	CBaseBuildable *pBuild = NULL;
+//	edict_t *peMe = edict();
+//	if (m_hObserverTarget)
+//	{
+//		//数据显示为观察目标的
+//		//return;
+//	}
+//	else
+//	{
+//		int iPenetration = 5;
+//		float range = (pev->flags & FL_SPECTATOR) ? MAX_SPECTATOR_ID_RANGE : MAX_ID_RANGE;
+//		TraceResult tr;
+//		UTIL_MakeVectors(pev->v_angle);
+//		Vector vecStart = EyePosition();
+//		Vector vecEnd = vecStart + (gpGlobals->v_forward * range);
+//		edict_t *pEnt = peMe;
+//		while(iPenetration)
+//		{
+//			iPenetration --;
+//			UTIL_TraceLine(vecStart, vecEnd, dont_ignore_monsters, pEnt, &tr);
+//			if(tr.flFraction != 1)
+//			{
+//				if(!FNullEnt(tr.pHit) && tr.pHit != peMe)
+//				{
+//					pEnt = tr.pHit;
+//					pEntity = Instance(tr.pHit);
+//
+//					if (pEntity->Classify() == CLASS_PLAYER)
+//					{
+//						pPlayer = (CBasePlayer *)pEntity;
+//						if(pPlayer->m_iCloak == CLOAK_YES)
+//							continue;
+//						bSeePlayer = TRUE;
+//
+//						if(m_iTeam == pPlayer->m_iTeam)
+//							bSeeTeammate = TRUE;
+//						if(m_iClass == CLASS_SPY)
+//							bSeeTeammate = TRUE;
+//						if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam)
+//							bSeeTeammate = TRUE;
+//						if(IsObserver())
+//							bSeeTeammate = TRUE;
+//						break;
+//					}
+//					else if (pEntity->Classify() == CLASS_BUILDABLE)
+//					{
+//						pBuild = (CBaseBuildable *)pEntity;
+//						pPlayer = pBuild->m_pPlayer;
+//						if(!pPlayer)
+//							continue;
+//						bSeeBuildable = TRUE;
+//
+//						if(m_iTeam == pBuild->m_iTeam)
+//							bSeeTeammate = TRUE;
+//						if(m_iClass == CLASS_SPY)
+//							bSeeTeammate = TRUE;
+//						if(IsObserver())
+//							bSeeTeammate = TRUE;
+//						break;
+//					}
+//					else
+//						iPenetration = 0;
+//				}
+//				vecStart = vecStart + 32*gpGlobals->v_forward;
+//			}
+//			else
+//				iPenetration = 0;
+//		}
+//	}
+//
+//	int iWriteFlags = 0;
+//	int iWriteEntIndex = 0;
+//	int iWriteEntData = 0;
+//
+//	int iBuildClass = 0;
+//	int iBuildLevel = 1;
+//	int iBuildUpgrade = 0;
+//
+//	if(bSeePlayer)
+//	{
+//		iWriteFlags = HUDSTATUS_PLAYER;
+//		iWriteEntIndex = pPlayer->entindex();
+//		if(bSeeTeammate)
+//		{
+//			iWriteFlags |= HUDSTATUS_TEAMMATE;
+//			if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam && pPlayer->m_iTeam != m_iTeam)
+//			{
+//				if(pPlayer->m_iDisguiseWeaponID)
+//					iWriteEntData = pPlayer->m_iDisguiseHealth * pPlayer->m_iDisguiseMaxHealth * pPlayer->m_iDisguiseWeaponID;
+//				else
+//					iWriteEntData = pPlayer->m_iDisguiseHealth * pPlayer->m_iDisguiseMaxHealth;
+//			}
+//			else
+//			{
+//				if(pPlayer->m_pActiveItem)
+//					iWriteEntData = pPlayer->pev->health * pPlayer->pev->max_health * pPlayer->m_pActiveItem->m_iId;
+//				else
+//					iWriteEntData = pPlayer->pev->health * pPlayer->pev->max_health;
+//			}
+//		}
+//	}
+//	else if(bSeeBuildable)
+//	{
+//		iWriteFlags = HUDSTATUS_BUILDABLE;
+//		iWriteEntIndex = pPlayer->entindex();
+//		iBuildClass = pBuild->GetBuildClass();
+//		iBuildLevel = pBuild->GetBuildLevel();
+//		if(bSeeTeammate)
+//		{
+//			iWriteFlags |= HUDSTATUS_TEAMMATE;			
+//			iBuildUpgrade = pBuild->GetBuildUpgrade();
+//			if(iBuildLevel < 3)
+//				iWriteEntData = (pBuild->pev->health + pBuild->pev->max_health) * (iBuildUpgrade + iBuildClass);
+//			else
+//				iWriteEntData = (pBuild->pev->health + pBuild->pev->max_health) * iBuildClass;
+//
+//			if(iBuildClass == BUILDABLE_ENTRANCE)
+//			{
+//				CBuildTeleporter *pTele = (CBuildTeleporter *)pBuild;
+//				float flChargeRate = pTele->GetChargeRate();
+//				iWriteEntData *= max(flChargeRate, 1);
+//			}
+//		}
+//		else
+//			iWriteEntData = iBuildClass;
+//	}
+//	else
+//	{
+//		iWriteFlags = HUDSTATUS_DISABLE;
+//	}
+//
+//	if(iWriteFlags != m_iClientSBarFlags || iWriteEntIndex != m_iClientSBarEntIndex || iWriteEntData != m_iClientSBarEntData)
+//	{
+//		m_iClientSBarFlags = iWriteFlags;
+//		m_iClientSBarEntIndex = iWriteEntIndex;
+//		m_iClientSBarEntData = iWriteEntData;
+//	}
+//	else
+//	{
+//		return;
+//	}
+//
+//	if(bSeePlayer && bSeeTeammate)
+//	{
+//		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
+//		WRITE_BYTE(iWriteFlags);
+//		WRITE_BYTE(iWriteEntIndex);
+//		if(pPlayer->m_iDisguise == DISGUISE_YES && pPlayer->m_iDisguiseTeam == m_iTeam && pPlayer->m_iTeam != m_iTeam)
+//		{
+//			WRITE_SHORT(pPlayer->m_iDisguiseHealth);
+//			WRITE_SHORT(pPlayer->m_iDisguiseMaxHealth);
+//			if(pPlayer->m_iDisguiseWeaponID)
+//				WRITE_BYTE(pPlayer->m_iDisguiseWeaponID);
+//			else
+//				WRITE_BYTE(0);
+//		}
+//		else
+//		{
+//			WRITE_SHORT(pPlayer->pev->health);
+//			WRITE_SHORT(pPlayer->pev->max_health);
+//			if(pPlayer->m_pActiveItem)
+//				WRITE_BYTE(pPlayer->m_pActiveItem->m_iId);
+//			else
+//				WRITE_BYTE(0);
+//		}
+//		MESSAGE_END();
+//	}
+//	else if(bSeePlayer && !bSeeTeammate)
+//	{
+//		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
+//		WRITE_BYTE(iWriteFlags);
+//		WRITE_BYTE(iWriteEntIndex);
+//		MESSAGE_END();
+//	}
+//	else if(bSeeBuildable && bSeeTeammate)
+//	{
+//		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
+//		WRITE_BYTE(iWriteFlags);
+//		WRITE_BYTE(iWriteEntIndex);
+//		WRITE_BYTE(iBuildClass);
+//		WRITE_BYTE(iBuildLevel);
+//		WRITE_SHORT(pBuild->pev->health);
+//		WRITE_SHORT(pBuild->pev->max_health);		
+//		if(iBuildLevel < 3)
+//			WRITE_BYTE(iBuildUpgrade);
+//		if(iBuildClass == BUILDABLE_ENTRANCE)
+//		{
+//			CBuildTeleporter *pTele = (CBuildTeleporter *)pBuild;
+//			WRITE_COORD(pTele->m_flCharge);
+//			WRITE_COORD(pTele->GetChargeRate());
+//		}
+//		MESSAGE_END();
+//	}
+//	else if(bSeeBuildable && !bSeeTeammate)
+//	{
+//		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
+//		WRITE_BYTE(iWriteFlags);
+//		WRITE_BYTE(iWriteEntIndex);
+//		WRITE_BYTE(iBuildClass);
+//		WRITE_BYTE(iBuildLevel);
+//		MESSAGE_END();
+//	}
+//	else if(iWriteFlags & HUDSTATUS_DISABLE)
+//	{
+//		MESSAGE_BEGIN(MSG_ONE, gmsgHUDStatus, NULL, pev);
+//		WRITE_BYTE(iWriteFlags);
+//		MESSAGE_END();
+//	}
+//}
 
 void CBasePlayer::PreThink(void)
 {
@@ -3151,7 +3170,7 @@ void CBasePlayer::PreThink(void)
 	if(IsAlive())
 	{
 		Cloak_Think();
-		Disguise_Think();		
+		Disguise_Think();
 		Health_Think();
 		Uber_Think();
 	}
@@ -3448,10 +3467,12 @@ void CBasePlayer::SetSuitUpdate(char *name, int fgroup, int iNoRepeatTime)
 
 void CBasePlayer::CheckPowerups()
 {
-	if (pev->health > 0)
+	//2015-9-20 this might be a potential bug
+
+	/*if (pev->health > 0)
 	{
 		pev->modelindex = m_ulModelIndexPlayer;
-	}
+	}*/
 }
 
 void CBasePlayer::UpdatePlayerSound(void)
@@ -3838,17 +3859,25 @@ void CBasePlayer::Spawn(void)
 	//清理HUD
 	pev->armorvalue = 0;
 	pev->armortype = 0;
-	pev->iuser4 = 1;
+	//pev->iuser4 = 1;
 
 	//skin
 	pev->skin = (m_iTeam == 1) ? 0 : 1;
 
+	//become my desired class!
 	m_iClass = m_iNewClass;
 	m_iMultiJump = 0;
 	m_bMultiJump = 0;
 
+	m_pHealer = NULL;
+	m_iHealerCount = 0;
+
+	m_iCarryBluePrint = 0;
+	m_pCarryBuild = NULL;
+
 	pev->max_health = pev->health = GetClassMaxHealth(m_iClass);
 
+	//tell the client we are spawned
 	MESSAGE_BEGIN(MSG_ONE, gmsgSpawnInit, NULL, pev);
 	WRITE_SHORT(pev->max_health);
 	WRITE_BYTE(m_iClass);
@@ -3857,31 +3886,50 @@ void CBasePlayer::Spawn(void)
 	switch(m_iClass)
 	{
 	default:
-	case CLASS_SCOUT:pev->view_ofs = VEC_VIEW_SCOUT;m_iMultiJump=1;break;
-	case CLASS_HEAVY:pev->view_ofs = VEC_VIEW_HEAVY;break;
-	case CLASS_SOLDIER:pev->view_ofs = VEC_VIEW_SOLDIER;break;
-	case CLASS_PYRO:pev->view_ofs = VEC_VIEW_PYRO;break;
-	case CLASS_SNIPER:pev->view_ofs = VEC_VIEW_SNIPER;break;
-	case CLASS_MEDIC:pev->view_ofs = VEC_VIEW_MEDIC;m_fUbercharge = 0;break;
+	case CLASS_SCOUT:
+		pev->view_ofs = VEC_VIEW_SCOUT;
+		m_iMultiJump=1;
+		break;
+	case CLASS_HEAVY:
+		pev->view_ofs = VEC_VIEW_HEAVY;
+		break;
+	case CLASS_SOLDIER:
+		pev->view_ofs = VEC_VIEW_SOLDIER;
+		break;
+	case CLASS_PYRO:
+		pev->view_ofs = VEC_VIEW_PYRO;
+		break;
+	case CLASS_SNIPER:
+		pev->view_ofs = VEC_VIEW_SNIPER;
+		break;
+	case CLASS_MEDIC:
+		pev->view_ofs = VEC_VIEW_MEDIC;
+		m_fUbercharge = 0;
+		break;
 	case CLASS_ENGINEER:
 		pev->view_ofs = VEC_VIEW_ENGINEER;
-		m_iCarryBluePrint = 0;
 		m_iMetal = 200;
 		break;
-	case CLASS_DEMOMAN:pev->view_ofs = VEC_VIEW_DEMOMAN;break;
-	case CLASS_SPY:pev->view_ofs = VEC_VIEW_SPY;m_flCloakEnergy = 100;break;
+	case CLASS_DEMOMAN:
+		pev->view_ofs = VEC_VIEW_DEMOMAN;
+		break;
+	case CLASS_SPY:
+		pev->view_ofs = VEC_VIEW_SPY;
+		m_flCloakEnergy = 100;
+		break;
 	}
 
-	//清理建筑
+	//is it time to clear all buildings?
 	if(m_bShouldClearBuild)
 	{
 		Build_DestroyAll();
 		m_bShouldClearBuild = false;
 	}
-	else if(m_iClass != CLASS_ENGINEER)
+	else if(m_iClass != CLASS_ENGINEER)//or are we no longer an engineer?
 	{
 		Build_DestroyAll();
 	}
+
 	pev->fuser4 = pev->view_ofs.z;
 
 	pev->maxspeed = 1000;
@@ -4273,7 +4321,7 @@ const char *CBasePlayer::TeamID(void)
 	if (!pev)
 		return "";
 
-	return m_szTeamName;
+	return GetTeam(m_iTeam);
 }
 
 class CSprayCan : public CBaseEntity
@@ -5164,11 +5212,12 @@ void CBasePlayer::UpdateClientData(void)
 	m_pClientActiveItem = m_pActiveItem;
 	m_iClientFOV = m_iFOV;
 
-	if (m_flNextSBarUpdateTime < gpGlobals->time)
+	//We use client-side statusbar now
+	/*if (m_flNextSBarUpdateTime < gpGlobals->time)
 	{
 		UpdateStatusBar();
 		m_flNextSBarUpdateTime = gpGlobals->time + 0.2;
-	}
+	}*/
 
 	if (!(m_flDisplayHistory & DHF_AMMO_NOTENOUGH))
 	{
@@ -5573,7 +5622,7 @@ void CBasePlayer::ThrowWeapon(char *pszWeaponName)
 
 void CBasePlayer::SwitchSlotWeapon(int iSlot)
 {
-	if(1 > iSlot || iSlot > 5) return;
+	if(iSlot < 1 || iSlot > 5) return;
 	CBasePlayerItem *pWeapon = m_rgpPlayerItems[iSlot];
 	if(m_pActiveItem == pWeapon) return;
 	if(!m_pActiveItem->CanHolster()) return;
@@ -6506,18 +6555,34 @@ void CBasePlayer::ClearProjectile(void)
 void CBasePlayer::Health_Think(void)
 {
 	int iHealerCount = 0;
+	float flHealAmount = 0;
 	CBasePlayer *pPlayer;
-	for(int i = 1; i < gpGlobals->time; ++i)
+
+	m_pHealer = NULL;
+	m_iHealerCount = 0;
+
+	for(int i = 1; i < gpGlobals->maxClients; ++i)
 	{
 		pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
 		if (!pPlayer || !FNullEnt(pPlayer->pev)) continue;
-		if(pPlayer->m_iClass != CLASS_MEDIC) continue;
-		if(!pPlayer->m_pActiveItem) continue;
-		if(pPlayer->m_pActiveItem->iItemSlot() != WEAPON_SLOT_SECONDARY) continue;
-		CMedigun *gun = (CMedigun *)pPlayer->m_pActiveItem;
-		if(gun->m_bHealing && gun->m_pTarget == this)
+		if(pPlayer->IsAlive() && pPlayer->m_iClass == CLASS_MEDIC)
 		{
-			iHealerCount ++;
+			if(pPlayer->m_pActiveItem && pPlayer->m_pActiveItem->iItemSlot() == WEAPON_SLOT_SECONDARY) 
+			{
+				CMedigun *gun = dynamic_cast<CMedigun *>(pPlayer->m_pActiveItem);
+				if(gun)
+				{
+					if(gun->m_bHealing && gun->m_pTarget == this)
+					{
+						iHealerCount ++;
+						if(pPlayer->m_flHealAmount > flHealAmount)
+						{
+							flHealAmount = pPlayer->m_flHealAmount;
+							m_pHealer = pPlayer;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -7014,10 +7079,14 @@ void CBasePlayer::Disguise_Stop(void)
 	if(m_iDisguise != DISGUISE_YES)
 		return;
 
-	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
-	WRITE_BYTE(FX_DISGUISEHINT);
-	WRITE_BYTE(0);//fadeout
-	MESSAGE_END();
+	//don't send msg to dead player 'cause we don't have player status hud
+	if(IsAlive())
+	{
+		MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
+		WRITE_BYTE(FX_DISGUISEHINT);
+		WRITE_BYTE(0);//fadeout
+		MESSAGE_END();
+	}
 
 	m_iDisguise = DISGUISE_NO;
 	m_bDisguiseStart = FALSE;
@@ -7097,48 +7166,6 @@ int CBasePlayer::AddPlayerMetal(int iMetalAdd)
 	SendAddMetal(m_iMetal - iOldMetal);
 
 	return m_iMetal - iOldMetal;
-}
-
-void CBasePlayer::Build_Deploy(void)
-{
-	if(m_iCarryBluePrint < BUILDABLE_SENTRY || m_iCarryBluePrint > BUILDABLE_EXIT)
-		return;
-
-	Vector vecAngles = pev->v_angle + pev->punchangle;
-	vecAngles.x = 0;
-
-	UTIL_MakeVectors(vecAngles);
-	Vector vecSrc = GetGunPosition() + gpGlobals->v_forward * 60;
-
-	if(!Build_PreDeploy(vecSrc))
-		return;
-
-	int iBuildClass = m_iCarryBluePrint;
-
-	CBaseBuildable *pBuild = NULL;
-
-	vecAngles.y -= 90*m_iBluePrintYaw;
-
-	if(iBuildClass == BUILDABLE_SENTRY)
-		pBuild = CBuildSentry::CreateBuildable( vecSrc, vecAngles, this );
-
-	if(iBuildClass == BUILDABLE_DISPENSER)
-		pBuild = CBuildDispenser::CreateBuildable( vecSrc, vecAngles, this );
-
-	if(iBuildClass == BUILDABLE_ENTRANCE)
-		pBuild = CBuildTeleporter::CreateBuildable(TRUE, vecSrc, vecAngles, this );
-
-	if(iBuildClass == BUILDABLE_EXIT)
-		pBuild = CBuildTeleporter::CreateBuildable(FALSE, vecSrc, vecAngles, this );
-
-	if(pBuild)
-	{
-		AddPlayerMetal(-GetBuildMetal(iBuildClass));
-	}
-
-	m_iCarryBluePrint = 0;
-
-	SelectLastItem();
 }
 
 BOOL UTIL_IsHullDefaultEx(Vector vecOrigin, float size, float height, edict_t *pEnt);
@@ -7249,6 +7276,139 @@ BOOL CBasePlayer::Build_PreDeploy(Vector &vecSrc)
 			return FALSE;
 	}
 	return TRUE;
+}
+
+BOOL CBasePlayer::Build_PreUndeploy(void)
+{
+	if(m_iClass != CLASS_ENGINEER || m_iCarryBluePrint)
+		return FALSE;
+
+	if(!(pev->flags & FL_ONGROUND))
+		return FALSE;
+
+	TraceResult tr;
+	Vector vecSrc, vecDst;
+
+	UTIL_MakeVectors(pev->v_angle + pev->punchangle);
+
+	vecSrc = GetGunPosition();
+
+	vecDst = vecSrc + gpGlobals->v_forward * 128;
+
+	UTIL_TraceLine(vecSrc, vecDst, dont_ignore_monsters, edict(), &tr);
+
+	if(tr.flFraction == 1 || !tr.pHit)
+		return FALSE;
+
+	CBaseEntity *pEnt = CBaseEntity::Instance(tr.pHit);
+
+	if(pEnt->Classify() != CLASS_BUILDABLE)
+		return FALSE;
+
+	Vector vecLength = (pEnt->Center() - vecSrc);
+	if( vecLength.Length() > 64 )
+		return FALSE;
+
+	//is it my building? and it's not sapped?
+	for(int i = 0; i < 4; ++i)
+	{
+		if(m_pBuildable[i])
+		{
+			if(pEnt->pev == m_pBuildable[i]->pev)
+			{
+				if(m_pBuildable[i]->m_pSapper)
+					return FALSE;
+				if((m_pBuildable[i]->m_iFlags & BUILD_UPGRADING) || (m_pBuildable[i]->m_iFlags & BUILD_BUILDING))
+					return FALSE;
+
+				m_pCarryBuild = (CBaseBuildable *)pEnt;
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
+}
+
+void CBasePlayer::Build_Deploy(void)
+{
+	if(m_iCarryBluePrint < BUILDABLE_SENTRY || m_iCarryBluePrint > BUILDABLE_EXIT)
+		return;
+
+	Vector vecAngles = pev->v_angle + pev->punchangle;
+	vecAngles.x = 0;
+
+	UTIL_MakeVectors(vecAngles);
+	Vector vecSrc = GetGunPosition() + gpGlobals->v_forward * 60;
+
+	if(!Build_PreDeploy(vecSrc))
+		return;
+
+	int iBuildClass = m_iCarryBluePrint;
+
+	CBaseBuildable *pBuild = NULL;
+
+	vecAngles.y -= 90*m_iBluePrintYaw;
+
+	if(m_pCarryBuild)
+	{
+		pBuild = m_pCarryBuild;
+		pBuild->Rebuild( vecSrc, vecAngles );
+		m_pCarryBuild = NULL;
+	}
+	else
+	{
+		if(iBuildClass == BUILDABLE_SENTRY)
+			pBuild = CBuildSentry::CreateBuildable( vecSrc, vecAngles, this );
+
+		else if(iBuildClass == BUILDABLE_DISPENSER)
+			pBuild = CBuildDispenser::CreateBuildable( vecSrc, vecAngles, this );
+
+		else if(iBuildClass == BUILDABLE_ENTRANCE)
+			pBuild = CBuildTeleporter::CreateBuildable(TRUE, vecSrc, vecAngles, this );
+
+		else if(iBuildClass == BUILDABLE_EXIT)
+			pBuild = CBuildTeleporter::CreateBuildable(FALSE, vecSrc, vecAngles, this );
+
+		if(pBuild)
+		{
+			AddPlayerMetal(-GetBuildMetal(iBuildClass));
+		}
+	}
+
+	m_iCarryBluePrint = 0;
+	m_iBluePrintYaw = 0;
+
+	//tell client to hide the blueprint model
+	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
+	WRITE_BYTE(FX_BLUEPRINT);
+	WRITE_BYTE(0);
+	MESSAGE_END();
+
+	SelectLastItem();
+}
+
+void CBasePlayer::Build_Undeploy(void)
+{
+	if(!Build_PreUndeploy())
+		return;
+
+	if(!m_pCarryBuild)
+		return;
+
+	int iBuildClass = m_pCarryBuild->GetBuildClass();
+
+	m_iCarryBluePrint = iBuildClass;
+	m_iBluePrintYaw = 0;
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
+	WRITE_BYTE(FX_BLUEPRINT);
+	WRITE_BYTE(iBuildClass);
+	MESSAGE_END();
+
+	m_pCarryBuild->Undeploy();
+	//switch to build pda
+	SwitchSlotWeapon(WEAPON_SLOT_PDA);	
 }
 
 void CBasePlayer::Build_UpdateHUD(void)

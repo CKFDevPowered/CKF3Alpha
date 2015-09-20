@@ -56,6 +56,9 @@ void CL_BluePrint(int bp)
 		g_BluePrint.anim = 0;
 		g_BluePrint.ent.curstate.frame = 0;
 		g_BluePrint.ent.curstate.animtime = gEngfuncs.GetClientTime();
+
+		g_BluePrint.ent.curstate.skin = (g_iTeam == 1) ? 0 : 1;
+		g_BluePrint.ent.curstate.colormap = (g_iTeam == 1) ? (1 | (1<<8)) : (140 | (140<<8));
 		g_BluePrint.build = bp;
 	}
 	else if(bp >= 10)
@@ -64,6 +67,10 @@ void CL_BluePrint(int bp)
 		g_BluePrint.ent.curstate.animtime = gEngfuncs.GetClientTime();
 		g_BluePrint.animtime = gEngfuncs.GetClientTime();
 		g_BluePrint.anim = (bp - 10) * 2 + 1;
+	}
+	else if(bp == 0)
+	{
+		g_BluePrint.show = 0;
 	}
 }
 
@@ -135,7 +142,7 @@ void T_BluePrint_Update(void)
 	{
 		hullok = 0;
 	}
-	if(g_iUser3 && (g_iUser3 & CDFLAG_NOBUILD))
+	if(g_iUser3 & CDFLAG_NOBUILD)
 	{
 		hullok = 0;
 	}
@@ -276,10 +283,6 @@ void T_BluePrint_Update(void)
 				g_BluePrint.ent.curstate.sequence = g_BluePrint.anim;
 		}
 	}
-	if(g_iWeaponID != WEAPON_BUILDPDA)
-	{
-		g_BluePrint.show = 0;
-	}
 }
 
 void T_BluePrint_Draw(void)
@@ -293,6 +296,11 @@ void T_BluePrint_Draw(void)
 		g_BluePrint.show = 0;
 		return;
 	}
+	//if(g_iWeaponID != WEAPON_BUILDPDA)
+	//{
+	//	g_BluePrint.show = 0;
+	//	return;
+	//}
 	*CurrentEntity = &g_BluePrint.ent;
 	g_StudioRenderer.StudioDrawModel(STUDIO_RENDER);
 }
@@ -303,9 +311,10 @@ void CL_SpyWatch(int action)
 {
 	if(action == CLOAK_BEGIN)
 	{
+		g_SpyWatch.show = 1;
+
 		g_SpyWatch.ent.model = g_SpyWatch.mdl;
 		g_SpyWatch.ent.curstate.skin = (g_iTeam == 1) ? 0 : 1;
-		g_SpyWatch.show = 1;
 		
 		g_SpyWatch.anim = 0;
 		g_SpyWatch.animtime = g_flClientTime + CloakBegin_Duration;
@@ -317,7 +326,7 @@ void CL_SpyWatch(int action)
 	else if(action == CLOAK_STOP)
 	{
 		g_SpyWatch.show = 1;
-		
+
 		g_SpyWatch.ent.curstate.framerate = -1;
 		g_SpyWatch.ent.curstate.sequence = 0;
 		if(g_SpyWatch.anim == 1)
@@ -333,6 +342,10 @@ void CL_SpyWatch(int action)
 			g_SpyWatch.animtime = g_flClientTime + CloakStop_Duration;
 		}
 		g_SpyWatch.anim = 2;
+	}
+	else if(action == CLOAK_NO)//stop cloak instantly
+	{
+		g_SpyWatch.show = 0;
 	}
 }
 

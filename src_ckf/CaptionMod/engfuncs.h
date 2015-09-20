@@ -22,6 +22,8 @@ typedef struct
 {	
 	void (*SV_StudioSetupBones)(model_t *pModel, float frame, int sequence, vec_t *angles, vec_t *origin, const byte *pcontroller, const byte *pblending, int iBone, const edict_t *edict);
 	void (*R_DrawViewModel)(void);
+	void (*Sys_Error)(const char *fmt, ...);
+	model_t *(*Mod_LoadModel)(model_t *mod, qboolean crash, qboolean trackCRC);
 }hook_funcs_t;
 
 extern hook_funcs_t gHookFuncs;

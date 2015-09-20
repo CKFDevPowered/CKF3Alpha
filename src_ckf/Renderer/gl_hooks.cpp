@@ -353,9 +353,8 @@ void R_FillAddress(void)
 
 		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, g_dwEngineSize - ((DWORD)gRefFuncs.GL_EndRendering-g_dwEngineBase), GL_SWAPBUFFER_SIG_NEW, sizeof(GL_SWAPBUFFER_SIG_NEW)-1);
 		if(!addr)
-			SIG_NOT_FOUND("GL_SwapBuffer");
-		addr = *(DWORD *)(addr+2);
-		gRefFuncs.GL_SwapBuffer = (void (**)(void))addr;
+			SIG_NOT_FOUND("pfnGL_SwapBuffer");
+		gRefFuncs.pfnGL_SwapBuffer = (void (**)(void))*(DWORD *)(addr+2);
 
 		//Studio Funcs
 
@@ -592,9 +591,8 @@ void R_FillAddress(void)
 
 		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gRefFuncs.GL_EndRendering, g_dwEngineSize - ((DWORD)gRefFuncs.GL_EndRendering-g_dwEngineBase), GL_SWAPBUFFER_SIG, sizeof(GL_SWAPBUFFER_SIG)-1);
 		if(!addr)
-			SIG_NOT_FOUND("GL_SwapBuffer");
-		addr = *(DWORD *)(addr+2);
-		gRefFuncs.GL_SwapBuffer = (void (**)(void))addr;
+			SIG_NOT_FOUND("pfnGL_SwapBuffer");
+		gRefFuncs.pfnGL_SwapBuffer = (void (**)(void))*(DWORD *)(addr+2);
 
 		//Studio Funcs
 		gStudioFuncs.R_GLStudioDrawPoints = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, R_GLSTUDIODRAWPOINTS_SIG, sizeof(R_GLSTUDIODRAWPOINTS_SIG)-1);
@@ -662,6 +660,14 @@ void R_FillAddress(void)
 	}
 
 	//Common Vars
+
+	//GL_SwapBuffer
+	char SIG_GL_SwapBuffer[] = "\xC7\x05\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xC7\x05\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xC7\x05\x2A\x2A\x2A\x2A\x2A\x2A\x2A\x2A\xC3";
+	*(DWORD *)(SIG_GL_SwapBuffer+2) = (DWORD)gRefFuncs.pfnGL_SwapBuffer;
+	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, SIG_GL_SwapBuffer, sizeof(SIG_GL_SwapBuffer)-1);
+	if(!addr)
+		SIG_NOT_FOUND("GL_SwapBuffer");
+	gRefFuncs.GL_SwapBuffer = (void (*)(void))*(DWORD *)(addr + 6);
 
 	//R_DrawSkyBox
 	//mov     eax, skytexorder[esi*4]

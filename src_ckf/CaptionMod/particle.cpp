@@ -92,7 +92,7 @@ void R_Particles_VidInit(void)
 		R_LoadTGASprite(&g_texBrightGlowY, "resource/tga/brightglow_y.tga", 1, 1, 0, 1);
 
 		for(i = 0, j = 0; i < 5; ++i, j += (i == 1) ? 21 : 19)
-			R_LoadTGASprite(&g_texFlamethrowerFire[i], "resource/tga/flamethrowerfire102.tga", 10, 10, j, (i == 1) ? 21 : 19);
+			R_LoadTGASprite(&g_texFlamethrowerFire[i], "resource/tga/flamethrowerfire102.dds", 10, 10, j, (i == 1) ? 21 : 19);
 
 		R_LoadTGASprite(&g_texMediBeam, "resource/tga/medicbeam_curl.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texSoftGlow, "resource/tga/softglow.tga", 1, 1, 0, 1);

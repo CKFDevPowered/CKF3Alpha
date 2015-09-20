@@ -459,7 +459,7 @@ public:
 	void CalculateYawBlend(void);
 	void StudioProcessGait(void);
 	void HandleSignals(void);
-	void UpdateStatusBar(void);
+	//void UpdateStatusBar(void);
 	void CheckPowerups(void);
 
 	int GetBoostMaxHealth(void);
@@ -512,6 +512,8 @@ public:
 	BOOL Build_PreDeploy(Vector &vecSrc);
 	void Build_UpdateHUD(void);
 	void Build_DestroyAll(void);
+	BOOL Build_PreUndeploy(void);
+	void Build_Undeploy(void);
 	BOOL EatAmmoBox(float flGivePercent);
 	BOOL EatAmmoBox(float flAmmoPercent, float flMetalPercent, float flCloakPercent);
 	void PlayerDisconnect(void);
@@ -653,7 +655,7 @@ public:
 	int m_lastx, m_lasty;
 	int m_nCustomSprayFrames;
 	float m_flNextDecalTime;
-	char m_szTeamName[TEAM_NAME_LENGTH];
+	//char m_szTeamName[TEAM_NAME_LENGTH];
 	char m_szAnimExtention[32];
 	int m_iGaitSequence;
 	float m_flGaitFrame;
@@ -731,14 +733,19 @@ public:
 	int m_iClientSBarEntData;
 	bool m_bShouldClearBuild;
 	int m_iDefaultFOV;
-	int m_iMetal;
-	int m_iCarryBluePrint;
-	int m_iBluePrintYaw;
-	CBaseBuildable *m_pBuildable[4];
-	float m_flHealAmount;
 	stats_t m_Stats;
 	int m_iDominates;
 	int m_Dominate[33];
+	//For Medic
+	float m_flHealAmount;
+	CBasePlayer *m_pHealer;
+	int m_iHealerCount;
+	//For Engineer
+	int m_iMetal;
+	int m_iCarryBluePrint;
+	int m_iBluePrintYaw;
+	CBaseBuildable *m_pCarryBuild;
+	CBaseBuildable *m_pBuildable[4];
 };
 
 #define UC_INVULNERABLE (1<<0)

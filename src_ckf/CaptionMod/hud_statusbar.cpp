@@ -38,6 +38,8 @@ static int CanSeeHealth(cl_entity_t *pEntity)
 
 int HudStatusBar_Redraw(float flTime, int iIntermission)
 {
+	return 0;
+
 	if(iIntermission)
 		return 0;
 

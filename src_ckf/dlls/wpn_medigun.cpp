@@ -140,8 +140,8 @@ void CMedigun::MedigunHeal(void)
 		m_pTarget->Invulnerable_Add(1.0f, (m_pPlayer->m_fUbercharge < 25) ? true : false);
 	}
 
-	int iHealerCount = 0;
-	for(int i = 1; i <= gpGlobals->maxClients; ++i)
+	int iHealerCount = m_pTarget->m_iHealerCount;
+	/*for(int i = 1; i <= gpGlobals->maxClients; ++i)
 	{
 		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
 		if (!pPlayer || !FNullEnt(pPlayer->pev))
@@ -157,7 +157,7 @@ void CMedigun::MedigunHeal(void)
 		{
 			iHealerCount ++;
 		}
-	}
+	}*/
 
 	float flHeal = 0;
 	float flCharge = 0;

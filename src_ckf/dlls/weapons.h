@@ -629,6 +629,7 @@ public:
 	float GetMaxSpeed(void) { return 1; }
 	int iItemSlot(void) { return (!m_bIsPrimary) ? WEAPON_SLOT_SECONDARY : WEAPON_SLOT_PRIMARY; }
 	void PrimaryAttack(void);
+	void SecondaryAttack(void);
 	void Reload(void);
 	void WeaponIdle(void);
 	void PreAttachPlayer(CBasePlayer *pPlayer);
@@ -855,6 +856,7 @@ public:
 	float GetMaxSpeed(void) { return 1; }
 	int iItemSlot(void) { return WEAPON_SLOT_SECONDARY; }
 	void PrimaryAttack(void);
+	void SecondaryAttack(void);
 	void Reload(void);
 	void WeaponIdle(void);
 	void PreAttachPlayer(CBasePlayer *pPlayer);
@@ -1257,6 +1259,7 @@ public:
 	float GetMaxSpeed(void) { return 1; }
 	int iItemSlot(void) { return WEAPON_SLOT_KNIFE; }
 	void PrimaryAttack(void);
+	void SecondaryAttack(void);
 
 	BOOL UseDecrement(void)
 	{

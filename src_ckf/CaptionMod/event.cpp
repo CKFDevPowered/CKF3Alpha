@@ -193,7 +193,7 @@ void EV_HLDM_GunshotDecalTrace( int idx, pmtrace_t *pTrace, int iBulletType, cha
 	iChance = (iBulletType == BULLET_PLAYER_SHOTGUN || iBulletType == BULLET_PLAYER_MINIGUN) ? 0x7FFF/4 : 0x7FFF/2;
 	if ( iRand < iChance )// not every bullet makes a sound.
 	{
-		switch( iRand % 5)
+		switch( iRand % 5 )
 		{
 		case 0:	gEngfuncs.pEventAPI->EV_PlaySound( -1, pTrace->endpos, CHAN_STATIC, "weapons/ric1.wav", vol, ATTN_NORM, 0, PITCH_NORM ); break;
 		case 1:	gEngfuncs.pEventAPI->EV_PlaySound( -1, pTrace->endpos, CHAN_STATIC, "weapons/ric2.wav", vol, ATTN_NORM, 0, PITCH_NORM ); break;

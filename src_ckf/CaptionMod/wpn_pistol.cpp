@@ -51,6 +51,11 @@ void CClientPistol::PrimaryAttack(void)
 	SendWeaponAnim(PISTOL_FIRE);
 }
 
+void CClientPistol::SecondaryAttack(void)
+{
+	g_Player.PickupBuilding();
+}
+
 void CClientPistol::Reload(void)
 {
 	if (m_iAmmo <= 0)

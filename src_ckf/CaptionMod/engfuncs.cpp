@@ -61,7 +61,7 @@ void Sys_ErrorEx(const char *fmt, ...)
 	{
 		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
 	}
-	MessageBox(g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
+	MessageBox((g_dwEngineBuildnum >= 5953) ? NULL : g_pBTEClient->GetMainHWND(), msg, "Error", MB_ICONERROR);
 	exit(0);
 }
 

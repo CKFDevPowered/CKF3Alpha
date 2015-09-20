@@ -229,10 +229,8 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	g_Player.m_pLastItem = g_Player.m_pActiveItem;
 	g_Player.m_pActiveItem = pCurWeapon;
 
-	if( !pCurWeapon )
-		return;
+	//Even if we don't have a weapon, we still receive these data
 
-	//store player states
 	g_Player.random_seed = random_seed;
 	g_Player.m_afButtonLast = from->playerstate.oldbuttons;
 	int buttonsChanged = (g_Player.m_afButtonLast ^ cmd->buttons);
@@ -257,6 +255,7 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	g_Player.m_iCritBoost = (from->client.ammo_cells >> 1) & 1;
 	g_Player.m_iDmgDone_Recent = from->client.ammo_nails;
 	g_Player.m_fCritChance = from->client.fuser1;
+	g_Player.m_iHealer = from->client.ammo_rockets;
 
 	if(g_iClass == CLASS_SPY)
 	{
@@ -292,6 +291,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		g_Player.m_iCarryBluePrint = (int)(from->client.vuser2[0]);
 		g_Player.m_iMetal = (int)from->client.vuser3[0];
 	}
+
+	if( !pCurWeapon )
+		return;
 
 	//store weapon states
 	for (i = 0; i < MAX_WEAPON_SLOTS; i++ )
@@ -334,13 +336,13 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		{
 			if(g_pClientWeapon[i]->m_iId == WEAPON_BOTTLE)
 			{
-				g_Bottle.m_bBroken = (pweapon->iuser1 & 1);
-				g_pClientWeapon[i]->m_bMeleeAttack = (pweapon->iuser1 & 2);
+				g_Bottle.m_bBroken = (pweapon->iuser1 & 1) ? TRUE : FALSE;
+				g_pClientWeapon[i]->m_bMeleeAttack = (pweapon->iuser1 & 2) ? TRUE : FALSE;
 				g_pClientWeapon[i]->m_iMeleeCrit = (pweapon->iuser1 >> 2);
 			}
 			else
 			{
-				g_pClientWeapon[i]->m_bMeleeAttack = (pweapon->iuser1 & 1);
+				g_pClientWeapon[i]->m_bMeleeAttack = (pweapon->iuser1 & 1) ? TRUE : FALSE;
 				g_pClientWeapon[i]->m_iMeleeCrit = (pweapon->iuser1 >> 1);
 			}
 			g_pClientWeapon[i]->m_flMeleeAttack = pweapon->m_fNextAimBonus;
@@ -372,11 +374,15 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		}
 	}
 
-	if(g_pClientWeapon[WEAPON_SLOT_SECONDARY])
+	if(g_pClientWeapon[WEAPON_SLOT_SECONDARY-1])
 	{
-		if(g_pClientWeapon[WEAPON_SLOT_SECONDARY]->m_iId == WEAPON_STICKYLAUNCHER)
+		if(g_pClientWeapon[WEAPON_SLOT_SECONDARY-1]->m_iId == WEAPON_STICKYLAUNCHER)
 		{
 			g_StickyLauncher.m_iStickyNum = from->client.ammo_shells;
+		}
+		if(g_pClientWeapon[WEAPON_SLOT_SECONDARY-1]->m_iId == WEAPON_MEDIGUN)
+		{
+			g_Medigun.m_iHealTarget = from->client.ammo_shells;
 		}
 	}
 
@@ -439,9 +445,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	to->client.maxspeed					= g_Player.pev.maxspeed;
 	to->client.flags					= g_Player.pev.flags;
 
-	if(g_pClientWeapon[WEAPON_SLOT_SECONDARY])
+	if(g_pClientWeapon[WEAPON_SLOT_SECONDARY-1])
 	{
-		if(g_pClientWeapon[WEAPON_SLOT_SECONDARY]->m_iId == WEAPON_STICKYLAUNCHER)
+		if(g_pClientWeapon[WEAPON_SLOT_SECONDARY-1]->m_iId == WEAPON_STICKYLAUNCHER)
 		{
 			to->client.ammo_shells = g_StickyLauncher.m_iStickyNum;
 		}
@@ -897,10 +903,15 @@ void CClientPlayer::Spawn(void)
 		m_pActiveItem->Deploy( );
 }
 
+void CL_BluePrint(int bp);
+
 void CClientPlayer::Killed(void)
 {
 	if ( m_pActiveItem )
 		 m_pActiveItem->Holster( );
+
+	//Clear these client-side effect here
+	CL_BluePrint(0);
 }
 
 float GetClassMaxSpeed(void)
@@ -945,6 +956,60 @@ BOOL CClientPlayer::PlayerCanAttack(void)
 	if(g_iUser3 & CDFLAG_FREEZE)
 		return FALSE;
 	return TRUE;
+}
+
+int CClientPlayer::GetNumActivePipebombs(void)
+{
+	return g_StickyLauncher.m_iStickyNum;
+}
+
+int CClientPlayer::GetMedigunHealingTarget(void)
+{
+	return g_Medigun.m_iHealTarget;
+}
+
+bool CClientPlayer::CanPickupBuilding(cl_entity_t *pEntity)
+{
+	if(g_iClass != CLASS_ENGINEER || m_iCarryBluePrint)
+		return false;
+
+	int iOwner = pEntity->curstate.iuser1;
+
+	if(iOwner != gEngfuncs.GetLocalPlayer()->index)
+		return false;
+
+	if(!(pev.flags & FL_ONGROUND))
+		return false;
+
+	vec3_t vecOrigin, vecLength;
+	VectorAdd( pEntity->curstate.mins, pEntity->curstate.maxs, vecOrigin);
+	VectorMultiply(vecOrigin, 0.5, vecOrigin);
+	VectorAdd(vecOrigin, pEntity->curstate.origin, vecOrigin);
+	VectorSubtract( vecOrigin, refparams.vieworg, vecLength );
+
+	float flDistance = VectorLength(vecLength);
+
+	if(flDistance > 64)
+		return false;
+
+	int bCanPickup = pEntity->curstate.startpos[2];
+	if(bCanPickup)
+		return false;
+
+	return true;
+}
+
+bool CClientPlayer::PickupBuilding(void)
+{
+	cl_entity_t *pEnt = g_pTraceEntity;
+
+	if(!pEnt)
+		return false;
+
+	if(!CanPickupBuilding(pEnt))
+		return false;
+
+	return true;
 }
 
 pmtrace_t *FindHullIntersection(float *vecSrc, float *vecEnd, pmtrace_t *tr, float *pflMins, float *pfkMaxs)
