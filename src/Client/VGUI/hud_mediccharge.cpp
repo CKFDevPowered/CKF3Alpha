@@ -45,22 +45,21 @@ CTFHudMedicChargeMeter::CTFHudMedicChargeMeter() : CHudElement(), BaseClass( NUL
 
 	// load control settings...
 	LoadControlSettings( "resource/UI/HudMedicCharge.res" );
-
-	m_bCharged = false;
-	//set -1 to force meter to update
-	m_flLastChargeValue = -1;
-	m_nTeam = 0;
 }
 
 void CTFHudMedicChargeMeter::Reset(void)
 {
+	//force meter to update
+	m_flLastChargeValue = -1;
+	m_nTeam = 0;
+	m_bCharged = false;
+
+	m_pIndividualChargesLabel->SetVisible(false);
 }
 
 void CTFHudMedicChargeMeter::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-
-	m_pIndividualChargesLabel->SetVisible(false);
 }
 
 

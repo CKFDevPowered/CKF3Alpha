@@ -30,6 +30,8 @@ typedef int (*pfnUserMsgHook)(const char *pszName, int iSize, void *pbuf);
 
 using namespace vgui;
 
+DECLARE_BUILD_FACTORY( TFHudPanel );
+
 TFHudPanel::TFHudPanel( Panel *parent, const char *name ) : BaseClass( parent, name )
 {
 	m_iColorIndex = 0;

@@ -14,12 +14,16 @@ using namespace vgui;
 
 #include "hud_layer.h"
 #include "hud_menu.h"
-#include "hud_radar.h"
+//#include "hud_radar.h"
 #include "hud_playerstatus.h"
 #include "hud_ammostatus.h"
 #include "hud_mediccharge.h"
+#include "hud_demopipes.h"
+#include "hud_cloakmeter.h"
+#include "hud_metalmeter.h"
+#include "hud_targetid.h"
 
-CHudLayer::CHudLayer(Panel *parent) : Panel(parent, "HudLayer")
+CHudLayer::CHudLayer(Panel *parent) : EditablePanel(parent, "HudLayer")
 {
 	int swide, stall;
 	surface()->GetScreenSize(swide, stall);
@@ -42,10 +46,20 @@ CHudLayer::~CHudLayer(void)
 void CHudLayer::Start(void)
 {
 	m_pMenu = (CHudNewMenu *)AddNewPanel(new CHudNewMenu);
-	m_pRadar = (CHudNewRadar *)AddNewPanel(new CHudNewRadar);
-	m_pTFPlayerStatus = (CTFHudPlayerStatus *)AddNewPanel(new CTFHudPlayerStatus);
-	m_pTFWeaponAmmo = (CTFHudWeaponAmmo *)AddNewPanel(new CTFHudWeaponAmmo);
+	//m_pRadar = (CHudNewRadar *)AddNewPanel(new CHudNewRadar);
+	m_pPlayerStatus = (CTFHudPlayerStatus *)AddNewPanel(new CTFHudPlayerStatus);
+	m_pWeaponAmmo = (CTFHudWeaponAmmo *)AddNewPanel(new CTFHudWeaponAmmo);
 	m_pMedicChargeMeter = (CTFHudMedicChargeMeter *)AddNewPanel(new CTFHudMedicChargeMeter);
+	m_pDemomanPipes = (CTFHudDemomanPipes *)AddNewPanel(new CTFHudDemomanPipes);
+	m_pCloakMeter = (CTFHudCloakMeter *)AddNewPanel(new CTFHudCloakMeter);
+	m_pMetalMeter = (CTFHudMetalMeter *)AddNewPanel(new CTFHudMetalMeter);
+
+	m_pMainTargetID = (CMainTargetID *)AddNewPanel(new CMainTargetID);
+	m_pSpectatorTargetID = (CSpectatorTargetID *)AddNewPanel(new CSpectatorTargetID);
+	m_pSedondaryTargetID = (CSecondaryTargetID *)AddNewPanel(new CSecondaryTargetID);
+
+	// reload the .res file from disk
+	LoadControlSettings( "resource/UI/HudLayout.res" );
 
 	SetVisible(false);
 }
@@ -137,17 +151,17 @@ bool CHudLayer::SelectMenuItem(int menu_item)
 
 void CHudLayer::UpdateMapSprite(void)
 {
-	m_pRadar->UpdateMapSprite();
+	//m_pRadar->UpdateMapSprite();
 }
 
 void CHudLayer::RenderMapSprite(void)
 {
-	m_pRadar->RenderMapSprite();
+	//m_pRadar->RenderMapSprite();
 }
 
 void CHudLayer::CalcRefdef(struct ref_params_s *pparams)
 {
-	m_pRadar->CalcRefdef(pparams);
+	//m_pRadar->CalcRefdef(pparams);
 }
 
 int CHudLayer::FireMessage(const char *pszName, int iSize, void *pbuf)

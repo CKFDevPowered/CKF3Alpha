@@ -5,14 +5,21 @@
 
 namespace vgui
 {
-	class CHudNewRadar;
+	//class CHudNewRadar;
 	class CHudNewMenu;
 	class CTFHudPlayerStatus;
 	class CTFHudWeaponAmmo;
 	class CTFHudMedicChargeMeter;
+	class CTFHudDemomanPipes;
+	class CTFHudCloakMeter;
+	class CTFHudMetalMeter;
+	class CTFHudTargetID;
+	class CMainTargetID;
+	class CSpectatorTargetID;
+	class CSecondaryTargetID;
 };
 
-class CHudLayer : public vgui::Panel
+class CHudLayer : public vgui::EditablePanel
 {
 	DECLARE_CLASS_SIMPLE(CHudLayer, vgui::Panel);
 
@@ -47,10 +54,16 @@ private:
 
 private:
 	vgui::CHudNewMenu *m_pMenu;
-	vgui::CHudNewRadar *m_pRadar;
-	vgui::CTFHudPlayerStatus *m_pTFPlayerStatus;
-	vgui::CTFHudWeaponAmmo *m_pTFWeaponAmmo;
+	//vgui::CHudNewRadar *m_pRadar;
+	vgui::CTFHudPlayerStatus *m_pPlayerStatus;
+	vgui::CTFHudWeaponAmmo *m_pWeaponAmmo;
 	vgui::CTFHudMedicChargeMeter *m_pMedicChargeMeter;
+	vgui::CTFHudDemomanPipes *m_pDemomanPipes;
+	vgui::CTFHudCloakMeter *m_pCloakMeter;
+	vgui::CTFHudMetalMeter *m_pMetalMeter;
+	vgui::CMainTargetID *m_pMainTargetID;
+	vgui::CSpectatorTargetID *m_pSpectatorTargetID;
+	vgui::CSecondaryTargetID *m_pSedondaryTargetID;
 };
 
 #endif

@@ -153,13 +153,16 @@ typedef struct
 	int (*R_LoadTextureEx)(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio);
 	int (*GL_LoadTextureEx)(const char *identifier, GL_TEXTURETYPE textureType, int width, int height, byte *data, qboolean mipmap, qboolean ansio);
 	gltexture_t *(*R_GetCurrentGLTexture)(void);
+	void (*GL_UploadDXT)(byte *data, int width, int height, qboolean mipmap, qboolean ansio);
 	int (*LoadBMP)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
 	int (*LoadTGA)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
 	int (*LoadPNG)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
 	int (*LoadDDS)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
+	int (*LoadJPEG)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
 	int (*SaveBMP)(const char *file_name, int width, int height, byte *data);
 	int (*SaveTGA)(const char *file_name, int width, int height, byte *data);
 	int (*SavePNG)(const char *file_name, int width, int height, byte *data);
+	int (*SaveJPEG)(const char *file_name, int width, int height, byte *data);
 	//capture screen
 	byte *(*R_GetSCRCaptureBuffer)(int *bufsize);
 	//3dsky

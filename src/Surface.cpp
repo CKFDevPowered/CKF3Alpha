@@ -297,6 +297,7 @@ public:
 
 CSurface g_Surface;
 static bool g_bInDrawing;
+static bool g_bIsLoadingDXT;
 
 bool TextureLessFunc(const Texture &lhs, const Texture &rhs);
 
@@ -1620,6 +1621,9 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 		char name[MAX_PATH];
 		Q_snprintf(name, sizeof(name), "%s.tga", filename);
 
+		g_bIsLoadingDXT = false;
+
+		bool isRGB = false;
 		int width, height;
 		bool success = LoadTGA(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 
@@ -1629,6 +1633,26 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 
 			if (psz)
 				success = LoadTGA(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+		}
+
+		if (!success)
+		{
+			Q_snprintf(name, sizeof(name), "%s.dds", filename);
+
+			if (!LoadDDS(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+			{
+				const char *psz = Q_stristr(name, "vgui/");
+
+				if (psz)
+					success = LoadDDS(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+			}
+			else
+			{
+				success = true;
+			}
+
+			if(success)
+				g_bIsLoadingDXT = true;
 		}
 
 		if (!success)
@@ -1664,6 +1688,28 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 				success = true;
 			}
 		}
+
+		//if (!success)
+		//{
+		//	Q_snprintf(name, sizeof(name), "%s.jpg", filename);
+
+		//	if (!LoadJPEG(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+		//	{
+		//		const char *psz = Q_stristr(name, "vgui/");
+
+		//		if (psz)
+		//		{
+		//			success = LoadPNG(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+		//			if(success)
+		//				isRGB = true;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		isRGB = true;
+		//		success = true;
+		//	}
+		//}
 
 		if (success)
 		{
@@ -1777,7 +1823,14 @@ void CSurface::DrawSetTextureRGBA(int id, const unsigned char *rgba, int wide, i
 		texture->_s1 = 1;
 		texture->_t1 = 1;
 
-		if (g_iVideoMode == VIDEOMODE_SOFTWARE)
+		if (g_bIsLoadingDXT)
+		{
+			//it's a DXT texture, use MetaRenderer to upload it
+			qglBindTexture(GL_TEXTURE_2D, id);
+
+			GL_UploadDXT((byte *)rgba, wide, tall, false, false);
+		}
+		else if (g_iVideoMode == VIDEOMODE_SOFTWARE)
 		{
 			m_pfnSurface_DrawSetTextureRGBA(this, 0, id, rgba, wide, tall, hardwareFilter, forceReload);
 		}
@@ -1798,6 +1851,7 @@ void CSurface::DrawSetTextureRGBA(int id, const unsigned char *rgba, int wide, i
 
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
 			qglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 			if (g_iBPP == 32)

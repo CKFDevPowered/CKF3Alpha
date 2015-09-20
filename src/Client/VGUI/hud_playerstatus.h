@@ -21,8 +21,6 @@ class ImagePanel;
 class Label;
 class ModelPanel;
 
-
-
 class TFPlayerModelPanel : public ModelPanel
 {
 public:
@@ -129,6 +127,7 @@ public:
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
 	virtual void Reset();
+	virtual const char *GetResFileName(void){return "resource/UI/HudPlayerHealth.res";}
 
 	void	SetHealth( int iNewHealth, int iMaxHealth, int iMaxBuffedHealth );
 	void	HideHealthBonusImage( void );

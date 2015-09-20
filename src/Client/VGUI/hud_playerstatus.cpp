@@ -51,6 +51,16 @@ static const char *g_sClassName[] = {
 	"random"
 };
 
+int GetBuffedMaxHealth( int iMaxHealth )
+{
+	float flBoostMax = iMaxHealth * 1.5f;
+
+	int iRoundDown = floor( flBoostMax / 5 );
+	iRoundDown = iRoundDown * 5;
+
+	return iRoundDown;
+}
+
 namespace vgui
 {
 
@@ -196,22 +206,12 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_nDisguiseTeam = TEAM_UNASSIGNED;
 	m_nDisguiseClass = CLASS_UNASSIGNED;
 	m_flNextThink = 0.0f;
-
-	// load control settings...
-	LoadControlSettings( "resource/UI/HudPlayerClass.res" );
+	m_nShow3DHUD = 0;
 
 	SetVisible(true);
 }
 
 void CTFHudPlayerClass::Reset()
-{
-	m_flNextThink = engine->GetClientTime() + 0.05f;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 {
 	m_nTeam = TEAM_UNASSIGNED;
 	m_nClass = CLASS_UNASSIGNED;
@@ -220,6 +220,17 @@ void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 	m_nDisguiseClass = CLASS_UNASSIGNED;
 	m_flNextThink = 0.0f;
 	m_nShow3DHUD = 0;
+
+	m_flNextThink = engine->GetClientTime() + 0.05f;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
+{
+	// load control settings...
+	LoadControlSettings( "resource/UI/HudPlayerClass.res" );
 
 	BaseClass::ApplySchemeSettings( pScheme );
 }
@@ -471,9 +482,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_pHealthBonusImage = new ImagePanel( this, "PlayerStatusHealthBonusImage" );
 	m_pHealthValue = new Label( this, "PlayerStatusHealthValue", "" );
 
-	// load control settings...
-	LoadControlSettings( "resource/UI/HudPlayerHealth.res" );
-
 	m_nBonusHealthOrigX = 0;
 	m_nBonusHealthOrigY = 0;
 	m_nBonusHealthOrigW = 0;
@@ -500,6 +508,9 @@ void CTFHudPlayerHealth::Reset()
 //-----------------------------------------------------------------------------
 void CTFHudPlayerHealth::ApplySchemeSettings( IScheme *pScheme )
 {
+	// load control settings...
+	LoadControlSettings( GetResFileName() );
+
 	m_flNextThink = 0.0f;
 
 	if ( m_pHealthBonusImage )
@@ -508,16 +519,6 @@ void CTFHudPlayerHealth::ApplySchemeSettings( IScheme *pScheme )
 	}
 
 	BaseClass::ApplySchemeSettings( pScheme );
-}
-
-int GetBoostMaxHealth( void )
-{
-	float flBoostMax = (*gCKFVars.g_iMaxHealth) * 1.5f;
-
-	int iRoundDown = floor( flBoostMax / 5 );
-	iRoundDown = iRoundDown * 5;
-
-	return iRoundDown;
 }
 
 //-----------------------------------------------------------------------------
@@ -660,7 +661,7 @@ void CTFHudPlayerHealth::OnThink()
 {
 	if ( m_flNextThink < engine->GetClientTime() )
 	{
-		SetHealth( (*gCKFVars.g_iHealth), (*gCKFVars.g_iMaxHealth), GetBoostMaxHealth() );
+		SetHealth( (*gCKFVars.g_iHealth), (*gCKFVars.g_iMaxHealth), GetBuffedMaxHealth( (*gCKFVars.g_iMaxHealth) ) );
 
 		m_flNextThink = engine->GetClientTime() + 0.05f;
 	}
@@ -678,8 +679,6 @@ CTFHudPlayerStatus::CTFHudPlayerStatus() : CHudElement(), BaseClass( NULL, "HudP
 
 	m_pHudPlayerClass = new CTFHudPlayerClass( this, "HudPlayerClass" );
 	m_pHudPlayerHealth = new CTFHudPlayerHealth( this, "HudPlayerHealth" );
-
-	LoadControlSettings("Resource/UI/hudplayerstatus.res");
 
 	SetHiddenBits(HIDEHUD_HEALTH);
 }
@@ -709,7 +708,6 @@ void CTFHudPlayerStatus::Init(void)
 
 void CTFHudPlayerStatus::VidInit(void)
 {
-	//m_pHudPlayerClass->VidInit();
 }
 
 int CTFHudPlayerStatus::FireMessage(const char *pszName, int iSize, void *pbuf)

@@ -60,7 +60,7 @@ void Sys_ErrorEx(const char *fmt, ...)
 	{
 		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
 	}
-	MessageBox(g_hMainWnd, msg, "Error", MB_ICONERROR);
+	MessageBox((g_dwEngineBuildnum >= 5953) ? NULL :  g_hMainWnd, msg, "Error", MB_ICONERROR);
 	exit(0);
 }
 
@@ -150,16 +150,20 @@ void InstallHook(void)
 	#define GetCallAddress(addr) (addr + (*(DWORD *)(addr+1)) + 5)
 	#define SDL_GETWINDOWSIZE_SIG "\x50\x51\x52\xE8"
 		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.DrawStartupGraphic, 0x50, SDL_GETWINDOWSIZE_SIG, sizeof(SDL_GETWINDOWSIZE_SIG)-1);
+		if(!addr)
+			SIG_NOT_FOUND("SDL_GetWindowSize");
 		gHookFuncs.SDL_GetWindowSize = (void (*)(HWND, int *, int *))GetCallAddress(addr+3);
+#define SDL_SWAPBUFFER_SIG "\x8B\x45\x08\x50\xE8"
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.DrawStartupGraphic, 0x600, SDL_SWAPBUFFER_SIG, sizeof(SDL_SWAPBUFFER_SIG)-1);
+		if(!addr)
+			SIG_NOT_FOUND("SDL_SwapBuffer");
+		gHookFuncs.SDL_SwapBuffer = (void (*)(HWND))GetCallAddress(addr+4);
 	}
-
-	if(gHookFuncs.LoadStartupGraphic)
-		g_pMetaHookAPI->InlineHook((void *)gHookFuncs.LoadStartupGraphic, LoadStartupGraphic, (void *&)gHookFuncs.LoadStartupGraphic);
-	if(gHookFuncs.DrawStartupGraphic)
-		g_pMetaHookAPI->InlineHook((void *)gHookFuncs.DrawStartupGraphic, DrawStartupGraphic, (void *&)gHookFuncs.DrawStartupGraphic);
 
 	if(*g_pVideoMode == NULL)
 	{
+		g_pMetaHookAPI->InlineHook((void *)gHookFuncs.LoadStartupGraphic, LoadStartupGraphic, (void *&)gHookFuncs.LoadStartupGraphic);
+		g_pMetaHookAPI->InlineHook((void *)gHookFuncs.DrawStartupGraphic, DrawStartupGraphic, (void *&)gHookFuncs.DrawStartupGraphic);
 		g_pMetaHookAPI->InlineHook(gHookFuncs.VideoMode_Create, VideoMode_Create, (void *&)gHookFuncs.VideoMode_Create);
 	}
 	else

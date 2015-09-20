@@ -51,22 +51,24 @@ CTFHudWeaponAmmo::CTFHudWeaponAmmo() : CHudElement(), BaseClass( NULL, "HudWeapo
 	// load control settings...
 	LoadControlSettings( "resource/UI/HudAmmoWeapons.res" );
 
-	m_nAmmo	= 0;
-	m_nAmmo2 = 0;
-	m_hCurrentWeapon = NULL;
 	m_flNextThink = 0.0f;
 }
 
 void CTFHudWeaponAmmo::Reset(void)
 {
 	m_flNextThink = engine->GetAbsoluteTime() + 0.05f;
+
+	//force to update
+	m_nAmmo	= 0;
+	m_nAmmo2 = 0;
+	m_hCurrentWeapon = NULL;
+
+	UpdateAmmoLabels( false, false, false );
 }
 
 void CTFHudWeaponAmmo::ApplySchemeSettings(vgui::IScheme *pScheme)
 {
 	BaseClass::ApplySchemeSettings(pScheme);
-
-	UpdateAmmoLabels( false, false, false );
 }
 
 //-----------------------------------------------------------------------------

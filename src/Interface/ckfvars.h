@@ -93,6 +93,10 @@ public:
 	virtual void ResetMaxSpeed(void);
 	virtual void Spawn(void);
 	virtual void Killed(void);
+	virtual int GetNumActivePipebombs(void);
+	virtual int GetMedigunHealingTarget(void);
+	virtual bool CanPickupBuilding(cl_entity_t *pEntity);
+	virtual bool PickupBuilding(void);
 public:
 	int random_seed;
 	entvars_t pev;
@@ -123,6 +127,7 @@ public:
 
 	int m_iUbercharge;
 	float m_fUbercharge;
+	int m_iHealer;
 
 	int m_iBluePrintYaw;
 	int m_iCarryBluePrint;
@@ -144,10 +149,18 @@ typedef struct
 	int *g_iLimitTeams;
 	int *g_iMaxRoundTime;
 	float *g_flRoundEndTime;
+	cl_entity_t **g_pTraceEntity;
 	CKFPlayerInfo *g_PlayerInfo;
 	CKFPlayerStats *g_PlayerStats;
 	CKFClientPlayer *g_Player;
 }ckf_vars_t;
+
+enum
+{
+	kRenderFxCloak = 22,
+	kRenderFxShadow,
+	kRenderFxFireLayer
+};
 
 extern ckf_vars_t gCKFVars;
 

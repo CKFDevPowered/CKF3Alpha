@@ -130,6 +130,7 @@ void ModelPanel::SetAnimation(const char *szAnim)
 {
 	if(!m_entity.model || !IEngineStudio.Mod_Extradata)
 		return;
+
 	m_entity.curstate.frame = 0;
 	m_entity.curstate.animtime = gEngfuncs.GetClientTime();
 	m_entity.curstate.framerate = 1;

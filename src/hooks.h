@@ -11,6 +11,7 @@ typedef struct
 	void (__fastcall *LoadStartupGraphic)(void *, int);
 	void (__fastcall *DrawStartupGraphic)(void *, int, HWND);
 	void (*SDL_GetWindowSize)(HWND, int *, int *);
+	void (*SDL_SwapBuffer)(HWND);
 }HookFuncs_t;
 
 extern HookFuncs_t gHookFuncs;

@@ -6,6 +6,17 @@
 #define MAX_ITEM_TYPES 6
 #define MAX_ITEMS 4
 
+// Spectator Movement modes (stored in pev->iuser1, so the physics code can get at them)
+#if !defined( PM_SHAREDH )
+#define OBS_NONE				0
+#define OBS_CHASE_LOCKED		1
+#define OBS_CHASE_FREE			2
+#define OBS_ROAMING				3		
+#define OBS_IN_EYE				4
+#define OBS_MAP_FREE			5
+#define OBS_MAP_CHASE			6
+#endif
+
 #define HIDEHUD_WEAPONS (1<<0)
 #define HIDEHUD_CHARGE (1<<1)
 #define HIDEHUD_ALL (1<<2)
@@ -65,6 +76,11 @@
 #define CLASS_VIP 9
 #define CLASS_MILITIA 10
 #define CLASS_SPETSNAZ 11
+
+#define CLASS_WEAPONBOX 20
+#define CLASS_PROJECTILE 21
+#define CLASS_BUILDABLE 22
+#define CLASS_CONTROLPOINT 23
 
 #define MENU_KEY_1 (1<<0)
 #define MENU_KEY_2 (1<<1)

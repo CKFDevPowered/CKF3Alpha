@@ -974,10 +974,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ref_int.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Client\roundtimer.cpp"
 				>
 			</File>
@@ -1160,6 +1156,22 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Client\VGUI\hud_cloakmeter.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_cloakmeter.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_demopipes.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_demopipes.h"
+						>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\hud_element.h"
 						>
 					</File>
@@ -1188,6 +1200,14 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Client\VGUI\hud_metalmeter.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_metalmeter.h"
+						>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\hud_playerstatus.cpp"
 						>
 					</File>
@@ -1201,6 +1221,14 @@
 					</File>
 					<File
 						RelativePath=".\Client\VGUI\hud_radar.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_targetid.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_targetid.h"
 						>
 					</File>
 				</Filter>
@@ -2149,6 +2177,10 @@
 			</File>
 			<File
 				RelativePath=".\Interface\IServerRefreshResponse.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Interface\ref_int.h"
 				>
 			</File>
 		</Filter>

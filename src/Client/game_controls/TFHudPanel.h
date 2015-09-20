@@ -7,7 +7,6 @@
 
 #include <vgui_controls/Panel.h>
 
-
 namespace vgui
 {
 
@@ -20,7 +19,6 @@ public:
 
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void Paint(void);
-	//virtual void PaintTraverse(bool Repaint, bool allowForce = true);
 
 	void SetColorIndex( int iColorIndex );
 	void SetColorAlpha( int iColorAlpha );

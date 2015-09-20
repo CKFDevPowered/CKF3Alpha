@@ -80,6 +80,8 @@ void __fastcall LoadStartupGraphic(void *pthis, int)
 			pfnLoadImage = LoadPNG;
 		else if(!Q_stricmp(fileExtension, "bmp"))
 			pfnLoadImage = LoadBMP;
+		else if(!Q_stricmp(fileExtension, "jpg") || !Q_stricmp(fileExtension, "jpeg"))
+			pfnLoadImage = LoadJPEG;
 		else//unsupported image format
 			break;
 
@@ -216,6 +218,9 @@ void __fastcall DrawStartupGraphic_GDI(void *pthis, int, HWND hWnd)
 {
 	int x, y, winW, winH;
 
+	if( !g_ImageLayers.Count() )
+		return;
+
 	(*g_pGame)->GetWindowRect(&x, &y, &winW, &winH);
 
 	int videoW = g_iVideoWidth;
@@ -281,6 +286,9 @@ void __fastcall DrawStartupGraphic_GL(void *pthis, int, HWND hWnd)
 {
 	int winW, winH;
 	int x, y;
+
+	if( !g_ImageLayers.Count() )
+		return;
 
 	if(g_dwEngineBuildnum >= 5953)
 		gHookFuncs.SDL_GetWindowSize(hWnd, &winW, &winH);
@@ -378,7 +386,7 @@ void __fastcall DrawStartupGraphic_GL(void *pthis, int, HWND hWnd)
 	qglBindTexture(GL_TEXTURE_2D, 0);
 	qglDisable(GL_TEXTURE_2D);
 
-	gRefExports.RefAPI.GL_SwapBuffer();
+	gHookFuncs.SDL_SwapBuffer(hWnd);
 
 	for ( int i = 0; i < g_ImageLayers.Size(); i++ )
 	{

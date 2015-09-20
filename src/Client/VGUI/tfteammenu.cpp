@@ -312,6 +312,8 @@ void CTFTeamMenu::ShowPanel(bool bShow)
 		m_pModelPanel[3]->LoadModel();
 
 		m_iTeamMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeteam");
+		if(m_iTeamMenuKey)
+			m_iTeamMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("chooseteam");
 	}
 
 	BaseClass::ShowPanel(bShow);
