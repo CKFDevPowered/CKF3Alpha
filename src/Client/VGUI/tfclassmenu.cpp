@@ -10,13 +10,11 @@
 #include <FileSystem.h>
 
 #include <cl_entity.h>
-#include <event_api.h>
 #include <cdll_dll.h>
 
 #include <vgui_controls/Button.h>
 #include <vgui_controls/Panel.h>
 #include <vgui_controls/ImagePanel.h>
-#include <game_controls/ModelPanel.h>
 #include <game_controls/TFClassTips.h>
 #include <vgui_controls/ScalableImagePanel.h>
 
@@ -134,22 +132,6 @@ static char *g_sClassTips[][4] =
 	{"#CKF3_ClassTips_Random_1",NULL,NULL,NULL}
 };
 
-static int g_iWeaponBody[] = {0, 9, 3, 6, 66, 57, 27, 3, 0, 48, 0};
-
-static const char *g_sPlayerModel[] = {
-	NULL,
-	"models/player/ckf_scout/ckf_scout.mdl", 
-	"models/player/ckf_heavy/ckf_heavy.mdl",
-	"models/player/ckf_soldier/ckf_soldier.mdl", 
-	"models/player/ckf_pyro/ckf_pyro.mdl",
-	"models/player/ckf_sniper/ckf_sniper.mdl", 
-	"models/player/ckf_medic/ckf_medic.mdl",
-	"models/player/ckf_engineer/ckf_engineer.mdl",
-	"models/player/ckf_demoman/ckf_demoman.mdl", 
-	"models/player/ckf_spy/ckf_spy.mdl",
-	NULL
-};
-
 static model_t *g_modPlayerModel[11];
 
 bool TFClassMenuButton::LoadClassPage(void)
@@ -196,9 +178,7 @@ CTFClassMenu::CTFClassMenu( ) : CClassMenu( )
 	m_pClassMenuSelectLabel = new Label( this, "ClassMenuSelect", "#CKF3_SelectAClass" );
 	m_pLocalPlayerImage = new ImagePanel( this, "LocalPlayerImage" );
 	m_pLocalPlayerBG = new ScalableImagePanel( this, "LocalPlayerBG" );
-	m_pModelPanel = new ModelPanel( this, "TFPlayerModel" );
-
-	memset(g_modPlayerModel, 0, sizeof(g_modPlayerModel));
+	m_pPlayerModel = new TFPlayerModelPanel( this, "PlayerModel" );
 
 	char tempName[64];
 
@@ -314,7 +294,9 @@ void CTFClassMenu::ShowPanel( bool bShow )
 		}
 
 		m_iScoreBoardKey = gameuifuncs->GetVGUI2KeyCodeForBind("showscores");
-		m_iClassMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeclass");
+		m_iClassMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("changeclass"); 
+		if(!m_iClassMenuKey)
+			m_iClassMenuKey = gameuifuncs->GetVGUI2KeyCodeForBind("chooseclass"); 
 	}
 	else
 	{
@@ -420,52 +402,14 @@ void CTFClassMenu::OnTick( void )
 		return;
 
 	// Force them to pick a class if they haven't picked one yet.
-	/*if ( (*gCKFVars.g_iDesiredClass) == 0 )
+	if ( (*gCKFVars.g_iDesiredClass) == 0 )
 	{
 		SetVisibleButton( "CancelButton", false );
 		m_pClassMenuSelectLabel->SetVisible( true );
-	}*/
-
-	cl_entity_t *pLocalPlayer = engine->GetLocalPlayer();
-	if(pLocalPlayer != NULL)
-	{
-		int iClassIndex = GetSelectedClass();
-
-		if(g_sPlayerModel[iClassIndex] == NULL)
-		{
-			m_pModelPanel->LoadModel(NULL);
-		}
-		else
-		{
-			cl_entity_t *ent = m_pModelPanel->GetEntity();
-
-			if(g_modPlayerModel[iClassIndex] == NULL)
-			{
-				m_pModelPanel->SetModel(g_sPlayerModel[iClassIndex]);
-				m_pModelPanel->LoadModel();
-				g_modPlayerModel[iClassIndex] = ent->model;
-			}
-			else
-			{
-				m_pModelPanel->LoadModel(g_modPlayerModel[iClassIndex]);
-			}
-			
-			if(iClassIndex == CLASS_HEAVY || iClassIndex == CLASS_DEMOMAN)
-				ent->curstate.weaponmodel = engine->pEventAPI->EV_FindModelIndex("models/CKF_III/wp_group_2bone.mdl");
-			else
-				ent->curstate.weaponmodel = engine->pEventAPI->EV_FindModelIndex("models/CKF_III/wp_group_rf.mdl");
-			ent->curstate.scale = g_iWeaponBody[iClassIndex];
-			ent->curstate.sequence = (iClassIndex == CLASS_MEDIC) ? 19 : 45;
-			ent->curstate.skin = (m_iTeam == TEAM_RED) ? 0 : 1;
-			ent->curstate.colormap = (m_iTeam == TEAM_RED) ? (1 | (1<<8)) : (140 | (140<<8));
-
-			ent->index = pLocalPlayer->index;
-			ent->player = 1;
-			ent->curstate.gaitsequence = 1;
-			ent->curstate.iuser1 = 128;
-			ent->curstate.iuser2 = 128;
-		}
 	}
+
+	int iClassIndex = GetSelectedClass();
+	m_pPlayerModel->SetClass(m_iTeam, iClassIndex);
 
 	UpdateNumClassLabels( m_iTeam );
 
