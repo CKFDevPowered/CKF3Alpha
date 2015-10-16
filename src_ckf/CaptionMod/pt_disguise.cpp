@@ -6,16 +6,18 @@
 #include "util.h"
 #include "studio_util.h"
 #include "particle.h"
+#include "StudioModelRenderer.h"
+#include "GameStudioModelRenderer.h"
 
 extern cl_entity_t ent;
 
-class CPSDisguiseSmoke : public CPartSystemBones
+class CPSDisguiseSmoke : public CPartSystemEntity
 {
 public:
 	CPSDisguiseSmoke(){}
 	void Init(int parts, int childs, cl_entity_t *entity, int team)
 	{
-		CPartSystemBones::Init(PS_DisguiseSmoke, parts, childs, entity);
+		CPartSystemEntity::Init(PS_DisguiseSmoke, parts, childs, entity);
 		Reset(team);
 	}
 	void Reset(int team)
@@ -26,14 +28,17 @@ public:
 	virtual void Movement(part_t *p, float *org)
 	{
 		CALC_FRACTION(p);
-		VectorTransform(p->org, m_lighttransform[p->bone], org);
-		VectorMA(org, frac2, p->vel, org);
+
+		g_StudioRenderer.m_pCurrentEntity = m_entity;
+		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
+		if(bones)
+		{
+			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+			VectorMA(org, frac2, p->vel, org);
+		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
-		if(!m_bonesaved)
-			return;
-
 		CALC_FRACTION(p);
 
 		ent.curstate.rendermode = kRenderTransAlpha;
@@ -66,7 +71,7 @@ public:
 	}
 	virtual void Update(void)
 	{
-		if(!m_dead)
+		if(!m_dead && m_entity->model)
 		{
 			AddParticle();
 		}
@@ -91,7 +96,6 @@ public:
 		}
 		p->col[3] = RANDOM_LONG(128, 200);
 
-		if(m_entity->model)
 		{
 			studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
 			if(pstudiohdr && pstudiohdr->numhitboxes > 0)
@@ -152,7 +156,7 @@ public:
 	}
 	virtual void Update(void)
 	{
-		if(!m_dead && m_parent->m_die - g_flClientTime < 1.0 && m_part.size() < 35)
+		if(!m_dead && m_parent->m_die - g_flClientTime < 1.0 && GetActivePartCount() < 35)
 		{
 			AddParticle();
 		}

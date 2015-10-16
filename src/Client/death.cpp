@@ -2,6 +2,7 @@
 #include "parsemsg.h"
 #include "cl_util.h"
 #include "client.h"
+#include "Configs.h"
 #include <triangleapi.h>
 
 #include "CounterStrikeViewport.h"
@@ -9,6 +10,10 @@
 extern int g_iUser1;
 
 DECLARE_MESSAGE(m_DeathNotice, DeathMsg);
+DECLARE_MESSAGE(m_DeathNotice, BuildDeath);
+DECLARE_MESSAGE(m_DeathNotice, ObjectMsg);
+DECLARE_MESSAGE(m_DeathNotice, Dominate);
+DECLARE_MESSAGE(m_DeathNotice, Revenge);
 
 struct DeathNoticeItem
 {
@@ -52,7 +57,7 @@ int CHudDeathNotice::Init(void)
 {
 	gHUD.AddHudElem(this);
 
-	//HOOK_MESSAGE(DeathMsg);
+	HOOK_MESSAGE(DeathMsg);
 
 	return 1;
 }
@@ -375,6 +380,11 @@ int CHudDeathNotice::Draw(float flTime)
 
 int CHudDeathNotice::MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 {
+	if(gConfigs.bEnableClientUI)
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+
+	return 0;
+
 	m_iFlags |= HUD_ACTIVE;
 
 	BEGIN_READ(pbuf, iSize);
@@ -644,4 +654,36 @@ int CHudDeathNotice::MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf
 	m_lastKillTime = gHUD.m_flTime;
 	m_lastMultiKills = multiKills;
 	return 1;
+}
+
+int CHudDeathNotice::MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
+{
+	if(gConfigs.bEnableClientUI)
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+
+	return 0;
+}
+
+int CHudDeathNotice::MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf)
+{
+	if(gConfigs.bEnableClientUI)
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+
+	return 0;
+}
+
+int CHudDeathNotice::MsgFunc_Dominate(const char *pszName, int iSize, void *pbuf)
+{
+	if(gConfigs.bEnableClientUI)
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+
+	return 0;
+}
+
+int CHudDeathNotice::MsgFunc_Revenge(const char *pszName, int iSize, void *pbuf)
+{
+	if(gConfigs.bEnableClientUI)
+		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
+
+	return 0;
 }

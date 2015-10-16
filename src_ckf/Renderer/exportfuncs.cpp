@@ -194,6 +194,10 @@ ref_export_t gRefExports =
 	R_PopRefDef,
 	R_GetSavedViewOrg,
 	R_GetRefDef,
+	//framebuffer
+	R_PushFrameBuffer,
+	R_PopFrameBuffer,
+	R_GLBindFrameBuffer,
 	//shadow
 	R_CreateShadowLight,
 	//texture
@@ -203,15 +207,9 @@ ref_export_t gRefExports =
 	GL_LoadTextureEx,
 	R_GetCurrentGLTexture,
 	GL_UploadDXT,
-	LoadBMP,
-	LoadTGA,
-	LoadPNG,
 	LoadDDS,
-	LoadJPEG,
-	SaveBMP,
-	SaveTGA,
-	SavePNG,
-	SaveJPEG,
+	LoadImageGeneric,
+	SaveImageGeneric,
 	//capture screen
 	R_GetSCRCaptureBuffer,
 	//3dsky

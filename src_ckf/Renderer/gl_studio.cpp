@@ -50,6 +50,11 @@ int Q_stricmp_slash(const char *s1, const char *s2);
 void VectorIRotate(const vec3_t in1, const float in2[3][4], vec3_t out);
 void VectorRotate(const vec3_t in1, const float in2[3][4], vec3_t out);
 
+int invuln_program;
+invuln_uniform_t invuln_uniform;
+
+extern int water_normalmap;
+
 void R_UnloadTextureArray(studio_texarray_t *texarray)
 {
 	int i;
@@ -251,6 +256,22 @@ void R_InitStudio(void)
 		}
 		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) studio_vscode);
 		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) studio_fscode);
+
+		char *invuln_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\invuln_shader.vsh", 5, 0);
+		char *invuln_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\invuln_shader.fsh", 5, 0);
+
+		if(invuln_vscode && invuln_fscode)
+		{
+			invuln_program = R_CompileShader(invuln_vscode, invuln_fscode, "invuln_shader.vsh", "invuln_shader.fsh");
+			if(invuln_program)
+			{
+				SHADER_UNIFORM_INIT(invuln, basemap, "basemap");
+				SHADER_UNIFORM_INIT(invuln, normalmap, "normalmap");
+				SHADER_UNIFORM_INIT(invuln, time, "time");
+			}
+		}
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) invuln_vscode);
+		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) invuln_fscode);
 	}
 
 	gl_studionormal = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("gl_studionormal", "0", FCVAR_CLIENTDLL);
@@ -271,7 +292,11 @@ void R_StudioLighting(float *lv, int bone, int flags, vec3_t normal)
 
 	illum = r_ambientlight;
 
-	if (flags & STUDIO_NF_FLATSHADE)
+	if (flags & STUDIO_NF_FULLBRIGHT)
+	{
+		illum = 255;
+	}
+	else if (flags & STUDIO_NF_FLATSHADE)
 	{
 		illum += r_shadelight * 0.8;
 	}
@@ -353,6 +378,7 @@ void R_GLStudioDrawPointsEx(void)
 	qboolean use_extra_texture;
 	int replace_texture;
 	int normal_texture;
+	qboolean iNoBaseTexture;
 	studio_texarray_t *pTexArray;
 
 	pvertbone = ((byte *)(*pstudiohdr) + (*psubmodel)->vertinfoindex);
@@ -368,6 +394,7 @@ void R_GLStudioDrawPointsEx(void)
 	pskinref = (short *)((byte *)ptexturehdr + ptexturehdr->skinindex);
 
 	iFlippedVModel = false;
+	iNoBaseTexture = false;
 
 	if ((*currententity)->curstate.skin != 0 && (*currententity)->curstate.skin < ptexturehdr->numskinfamilies)
 		pskinref += ((*currententity)->curstate.skin * ptexturehdr->numskinref);
@@ -400,7 +427,20 @@ void R_GLStudioDrawPointsEx(void)
 		flags = ptexture[pskinref[pmesh[j].skinref]].flags | (*g_ForcedFaceFlags);
 
 		if (r_fullbright->value >= 2)
-			flags &= ~STUDIO_NF_FULLBRIGHT;
+			flags |= STUDIO_NF_FULLBRIGHT;
+
+		if((*currententity)->curstate.renderfx == kRenderFxFireLayer)
+		{
+			flags &= ~STUDIO_NF_CHROME;
+		}
+		else if((*currententity)->curstate.renderfx == kRenderFxInvulnLayer)
+		{
+			flags |= STUDIO_NF_CHROME;
+		}
+		else if((*currententity)->curstate.renderfx == kRenderFxCloak)
+		{
+			flags &= ~STUDIO_NF_CHROME;
+		}
 
 		if((*currententity)->curstate.renderfx != kRenderFxShadow)
 		{
@@ -450,7 +490,12 @@ void R_GLStudioDrawPointsEx(void)
 	pstudionorms = (vec3_t *)((byte *)(*pstudiohdr) + (*psubmodel)->normindex);
 	pnormbone = ((byte *)(*pstudiohdr) + (*psubmodel)->norminfoindex);
 
-	if((*currententity)->curstate.renderfx != kRenderFxShadow && (*currententity)->curstate.renderfx != kRenderFxCloak && (*currententity)->curstate.renderfx != kRenderFxGlowShell)
+	if((*currententity)->curstate.renderfx == kRenderFxShadow || (*currententity)->curstate.renderfx == kRenderFxCloak || (*currententity)->curstate.renderfx == kRenderFxGlowShell || (*currententity)->curstate.renderfx == kRenderFxFireLayer || (*currententity)->curstate.renderfx == kRenderFxInvulnLayer )
+	{
+		iNoBaseTexture = true;
+	}
+
+	if(!iNoBaseTexture)
 	{
 		has_extra_texture = false;
 		for(i = 0; i < g_LocalTexArray.iNumTexArray; ++i)
@@ -489,7 +534,7 @@ void R_GLStudioDrawPointsEx(void)
 		flags = ptexture[pskinref[pmesh->skinref]].flags | (*g_ForcedFaceFlags);
 
 		if (r_fullbright->value >= 2)
-			flags &= STUDIO_NF_FULLBRIGHT;
+			flags |= STUDIO_NF_FULLBRIGHT;
 
 		if((*currententity)->curstate.renderfx == kRenderFxCloak)
 		{
@@ -516,6 +561,19 @@ void R_GLStudioDrawPointsEx(void)
 			qglEnable(GL_POLYGON_OFFSET_FILL);
 			qglPolygonOffset(-1, -gl_polyoffset->value);
 			flags &= ~STUDIO_NF_CHROME;
+		}
+		else if((*currententity)->curstate.renderfx == kRenderFxInvulnLayer)
+		{
+			if ((flags & STUDIO_NF_MASKED) || (flags & STUDIO_NF_ADDITIVE))
+			{
+				continue;
+			}
+			qglDepthMask(0);
+			qglEnable(GL_BLEND);
+			qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			qglEnable(GL_POLYGON_OFFSET_FILL);
+			qglPolygonOffset(-1, -gl_polyoffset->value);
+			flags |= STUDIO_NF_CHROME;
 		}
 		else if((*currententity)->curstate.renderfx != kRenderFxShadow)
 		{
@@ -645,9 +703,28 @@ void R_GLStudioDrawPointsEx(void)
 			s = (1 / (float)ptexture[pskinref[pmesh->skinref]].width) / 1024;
 			t = (1 / (float)ptexture[pskinref[pmesh->skinref]].height) / 1024;
 
-			if((*currententity)->curstate.renderfx != kRenderFxFireLayer)
+			normal_texture = 0;
+
+			if(!iNoBaseTexture)
 			{
 				gStudioFuncs.R_StudioSetupSkin(ptexturehdr, pskinref[pmesh->skinref]);
+			}
+			else
+			{
+				if( (*currententity)->curstate.renderfx == kRenderFxInvulnLayer )
+				{
+					normal_texture = water_normalmap;
+
+					GL_EnableMultitexture();
+					qglEnable(GL_TEXTURE_2D);
+					GL_Bind(normal_texture);
+
+					qglUseProgramObjectARB(invuln_program);
+
+					qglUniform1iARB(invuln_uniform.basemap, 0);
+					qglUniform1iARB(invuln_uniform.normalmap, 1);
+					qglUniform1fARB(invuln_uniform.time, gEngfuncs.GetClientTime() * 0.3f);
+				}
 			}
 
 			if ((*g_ForcedFaceFlags) & STUDIO_NF_CHROME)
@@ -694,7 +771,10 @@ void R_GLStudioDrawPointsEx(void)
 
 					for ( ; i > 0; i--, ptricmds += 4)
 					{
-						qglTexCoord2f(chrome[ptricmds[1]][0] * s, chrome[ptricmds[1]][1] * t);
+						if(normal_texture)
+							qglMultiTexCoord2fARB(GL_TEXTURE0_ARB, chrome[ptricmds[1]][0] * s, chrome[ptricmds[1]][1] * t);
+						else
+							qglTexCoord2f(chrome[ptricmds[1]][0] * s, chrome[ptricmds[1]][1] * t);
 
 						lv = &pvlightvalues[ptricmds[1] * 3];
 						gStudioFuncs.R_LightLambert(lightpos[ptricmds[0]], pstudionorms[ptricmds[1]], lv, fl);
@@ -707,6 +787,14 @@ void R_GLStudioDrawPointsEx(void)
 					qglEnd();
 				}
 			}//no force chrome end
+
+			if(normal_texture)
+			{
+				qglEnable(GL_BLEND);
+				qglUseProgramObjectARB(0);
+				GL_DisableMultitexture();
+			}
+
 		}//chrome end
 		else
 		{//normal render
@@ -717,11 +805,12 @@ void R_GLStudioDrawPointsEx(void)
 			GL_SelectTexture(GL_TEXTURE0_ARB);
 			qglEnable(GL_TEXTURE_2D);
 
-			if((*currententity)->curstate.renderfx != kRenderFxFireLayer)
+			use_extra_texture = false;
+			replace_texture = 0;
+			normal_texture = 0;
+
+			if(!iNoBaseTexture)
 			{
-				use_extra_texture = false;
-				replace_texture = 0;
-				normal_texture = 0;
 				if(has_extra_texture)
 				{
 					for(k = 0; k < pTexArray->numtextures; ++k)
@@ -752,7 +841,7 @@ void R_GLStudioDrawPointsEx(void)
 						qglUseProgramObjectARB(studio_program);
 
 						vec3_t vlightpos;
-						VectorMA((*currententity)->origin, -100000, r_plightvec, vlightpos);
+						VectorMA((*currententity)->origin, -10000, r_plightvec, vlightpos);
 						qglUniform3fARB(studio_uniform.lightpos, vlightpos[0], vlightpos[1], vlightpos[2]);
 						qglUniform3fARB(studio_uniform.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
 						qglUniform1iARB(studio_uniform.basemap, 0);
@@ -881,6 +970,12 @@ void R_GLStudioDrawPointsEx(void)
 			qglDisable(GL_POLYGON_OFFSET_FILL);
 		}
 		else if((*currententity)->curstate.renderfx == kRenderFxFireLayer)
+		{
+			qglDepthMask(1);
+			qglDisable(GL_BLEND);
+			qglDisable(GL_POLYGON_OFFSET_FILL);
+		}
+		else if((*currententity)->curstate.renderfx == kRenderFxInvulnLayer)
 		{
 			qglDepthMask(1);
 			qglDisable(GL_BLEND);

@@ -66,10 +66,10 @@ int HudLocalize_VidInit(void)
 	_LocalizeStringUnicode(g_wszChooseTeam, "#CKF3_TeamMenu_ChooseTeam");
 	_LocalizeStringUnicode(g_wszTeamMenu_Spect, "#CKF3_TeamMenu_Spect");
 	_LocalizeStringUnicode(g_wszCloakEnergy, "#CKF3_CloakEnergy");
-	_LocalizeStringAll(g_szBuildables[0], g_wszBuildables[0], "#CKF3_Buildable_Sentry");
-	_LocalizeStringAll(g_szBuildables[1], g_wszBuildables[1], "#CKF3_Buildable_Dispenser");
-	_LocalizeStringAll(g_szBuildables[2], g_wszBuildables[2], "#CKF3_Buildable_TeleEntrance");
-	_LocalizeStringAll(g_szBuildables[3], g_wszBuildables[3], "#CKF3_Buildable_TeleExit");
+	_LocalizeStringAll(g_szBuildables[0], g_wszBuildables[0], "#CKF3_Object_Sentry");
+	_LocalizeStringAll(g_szBuildables[1], g_wszBuildables[1], "#CKF3_Object_Dispenser");
+	_LocalizeStringAll(g_szBuildables[2], g_wszBuildables[2], "#CKF3_Object_Tele_Entrance");
+	_LocalizeStringAll(g_szBuildables[3], g_wszBuildables[3], "#CKF3_Object_Tele_Exit");
 	_LocalizeStringAll(g_szBuildables[4], g_wszBuildables[4], "#CKF3_Object_Sapper");
 	_LocalizeStringUnicode(g_wszBuilding, "#CKF3_Buildable_Building");
 	_LocalizeStringAll(g_szNotBuilt, g_wszNotBuilt, "#CKF3_Buildable_NotBuilt");

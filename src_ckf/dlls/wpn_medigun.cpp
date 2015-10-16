@@ -136,28 +136,10 @@ void CMedigun::MedigunHeal(void)
 	//Effect
 	if(m_pPlayer->m_iUbercharge & UC_INVULNERABLE)
 	{
-		m_pPlayer->Invulnerable_Add(1.0f, (m_pPlayer->m_fUbercharge < 25) ? true : false);
 		m_pTarget->Invulnerable_Add(1.0f, (m_pPlayer->m_fUbercharge < 25) ? true : false);
 	}
 
 	int iHealerCount = m_pTarget->m_iHealerCount;
-	/*for(int i = 1; i <= gpGlobals->maxClients; ++i)
-	{
-		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
-		if (!pPlayer || !FNullEnt(pPlayer->pev))
-			continue;
-		if(pPlayer->m_iClass != CLASS_MEDIC)
-			continue;
-		if(!pPlayer->m_pActiveItem)
-			continue;
-		if(pPlayer->m_pActiveItem->iItemSlot() != WEAPON_SLOT_SECONDARY)
-			continue;
-		CMedigun *gun = (CMedigun *)pPlayer->m_pActiveItem;
-		if(gun->m_pTarget == m_pTarget && gun->m_bHealing)
-		{
-			iHealerCount ++;
-		}
-	}*/
 
 	float flHeal = 0;
 	float flCharge = 0;
@@ -284,6 +266,11 @@ void CMedigun::ItemPostFrame(void)
 		{
 			StopHeal();
 		}
+	}
+	//we added invulnerable effect to ourself
+	if(m_pPlayer->m_iUbercharge & UC_INVULNERABLE)
+	{
+		m_pPlayer->Invulnerable_Add(1.0f, (m_pPlayer->m_fUbercharge < 25) ? true : false);
 	}
 	return CBasePlayerWeapon::ItemPostFrame();
 }

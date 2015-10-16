@@ -30,8 +30,8 @@ int *maxTransObjs;
 transObjRef **transObjects;
 int numTransObjs;
 GLuint screenframebuffer;
-GLuint lastframebuffer;
-GLuint currentframebuffer;
+GLuint drawframebuffer;
+GLuint readframebuffer;
 
 mleaf_t **r_viewleaf, **r_oldviewleaf;
 texture_t *r_notexture_mip;
@@ -65,8 +65,11 @@ qboolean gl_framebuffer_object = false;
 qboolean gl_shader_support = false;
 qboolean gl_program_support = false;
 qboolean gl_msaa_support = false;
+qboolean gl_msaa_blit_support = false;
 qboolean gl_csaa_support = false;
 qboolean gl_float_buffer_support = false;
+qboolean gl_s3tc_compression_support = false;
+
 int gl_mtexable = 0;
 int gl_max_texture_size = 0;
 float gl_max_ansio = 0;
@@ -362,7 +365,7 @@ void R_DrawEntitiesOnList(void)
 			continue;
 		}
 
-		if( !candraw3dsky && ((*currententity)->curstate.effects & EF_3DSKY) )
+		if( !candraw3dsky && (*currententity)->curstate.entityType == ET_3DSKYENTITY )//if( !candraw3dsky && ((*currententity)->curstate.effects & EF_3DSKY) )
 			continue;
 
 		switch ((*currententity)->model->type)
@@ -481,7 +484,8 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 		{
 			(*currententity) = (*transObjects)[i].pEnt;
 
-			if( !candraw3dsky && ((*currententity)->curstate.effects & EF_3DSKY) )
+			//if( !candraw3dsky && ((*currententity)->curstate.effects & EF_3DSKY) )
+			if( !candraw3dsky && (*currententity)->curstate.entityType == ET_3DSKYENTITY )
 				continue;
 
 			qglDisable(GL_FOG);
@@ -757,7 +761,7 @@ void R_RenderScene(void)
 		R_Render3DSky();
 	}
 
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, screenframebuffer);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, screenframebuffer);
 
 	gRefFuncs.R_RenderScene();
 }
@@ -861,6 +865,9 @@ void GL_GenerateFBO(void)
 
 	if (g_pMetaSave->pEngineFuncs->CheckParm("-nomsaa", NULL))
 		bDoMSAAFBO = false;
+
+	//if (!gl_msaa_blit_support)
+	//	bDoMSAAFBO = false;
 
 	if (g_pMetaSave->pEngineFuncs->CheckParm("-nofbo", NULL))
 		bDoScaledFBO = false;
@@ -1166,7 +1173,7 @@ void GL_GenerateFBO(void)
 	}
 
 	qglBindFramebufferEXT(GL_FRAMEBUFFER, 0);
-	currentframebuffer = lastframebuffer = 0;
+	readframebuffer = drawframebuffer = 0;
 }
 
 void GL_Init(void)
@@ -1220,7 +1227,7 @@ void GL_BeginRendering(int *x, int *y, int *width, int *height)
 	if (s_BackBufferFBO.s_hBackBufferFBO)
 	{
 		screenframebuffer = s_BackBufferFBO.s_hBackBufferFBO;
-		R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, screenframebuffer);
+		qglBindFramebufferEXT(GL_FRAMEBUFFER, screenframebuffer);
 	}
 	
 	qglClearColor(0.0, 0.0, 0.0, 1.0);
@@ -1236,7 +1243,7 @@ void R_RenderView(void)
 		else
 			screenframebuffer = s_BackBufferFBO.s_hBackBufferFBO;
 
-		R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, screenframebuffer);
+		qglBindFramebufferEXT(GL_FRAMEBUFFER, screenframebuffer);
 	}
 
 	gRefFuncs.R_RenderView();
@@ -1246,8 +1253,8 @@ void R_RenderView(void)
 		//Do MSAA here so HUD won't be AA
 		if (s_MSAAFBO.s_hBackBufferFBO)
 		{
-			R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
-			R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, s_MSAAFBO.s_hBackBufferFBO);
+			qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
+			qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, s_MSAAFBO.s_hBackBufferFBO);
 			qglBlitFramebufferEXT(0, 0, s_MSAAFBO.iWidth, s_MSAAFBO.iHeight, 0, 0, s_BackBufferFBO.iWidth, s_BackBufferFBO.iHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		}
 
@@ -1280,16 +1287,16 @@ void R_RenderView(void)
 	}
 
 	screenframebuffer = s_BackBufferFBO.s_hBackBufferFBO;
-	R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, screenframebuffer);
-	R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, screenframebuffer);
+	qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, screenframebuffer);
+	qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, screenframebuffer);
 }
 
 void GL_EndRendering(void)
 {
 	if(s_BackBufferFBO.s_hBackBufferFBO)
 	{
-		R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, 0);
-		R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
+		qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, 0);
+		qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
 		qglClearColor(0, 0, 0, 0);
 		qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1371,10 +1378,9 @@ void GL_EndRendering(void)
 			qglPopMatrix();
 			qglDisable(GL_TEXTURE_2D);
 		}
-		R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, 0);
+		qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, 0);
 	}
 
-	//gRefFuncs.GL_EndRendering();
 	GL_SwapBuffer();
 }
 

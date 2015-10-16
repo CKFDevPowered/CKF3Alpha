@@ -449,5 +449,4 @@ void CDemoGrenade::CKFDetonate(void)
 void CDemoGrenade::Precache( void )
 {
 	PRECACHE_MODEL("models/CKF_III/pj_grenade.mdl");
-	PRECACHE_SOUND("CKF_III/explode.wav");
 }

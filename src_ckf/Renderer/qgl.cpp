@@ -935,7 +935,7 @@ void QGL_InitExtension(void)
 
 	if (strstr(extension, "GL_EXT_framebuffer_multisample_blit_scaled"))
 	{
-		bDoDirectBlit = true;
+		gl_msaa_blit_support = true;
 	}
 
 	if(strstr(extension, "GL_NV_framebuffer_multisample_coverage"))
@@ -947,5 +947,10 @@ void QGL_InitExtension(void)
 	if(strstr(extension, "GL_NV_float_buffer"))
 	{
 		gl_float_buffer_support = true;;
+	}
+
+	if(strstr(extension, "GL_EXT_texture_compression_s3tc"))
+	{
+		gl_s3tc_compression_support = true;;
 	}
 }

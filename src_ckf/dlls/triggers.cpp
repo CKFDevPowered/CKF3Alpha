@@ -2270,3 +2270,41 @@ void CNoBuildZone::Spawn(void)
 	}
 	g_pGameRules->m_NoBuildZone.push_back(edict());
 }
+
+//cs16
+
+class CWeather : public CBaseTrigger
+{
+public:
+	void Spawn(void) { InitTrigger(); }
+};
+
+LINK_ENTITY_TO_CLASS(env_snow, CWeather);
+LINK_ENTITY_TO_CLASS(func_snow, CWeather);
+LINK_ENTITY_TO_CLASS(env_rain, CWeather);
+LINK_ENTITY_TO_CLASS(func_rain, CWeather);
+
+void CClientFog::Spawn(void)
+{
+	pev->movetype = MOVETYPE_NOCLIP;
+	pev->solid = SOLID_NOT;
+	pev->renderamt = 0;
+	pev->rendermode = kRenderNormal;
+}
+
+void CClientFog::KeyValue(KeyValueData *pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "density"))
+	{
+		m_fDensity = atof(pkvd->szValue);
+
+		if (m_fDensity < 0 || m_fDensity > 0.01)
+			m_fDensity = 0;
+
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CBaseEntity::KeyValue(pkvd);
+}
+
+LINK_ENTITY_TO_CLASS(env_fog, CClientFog);

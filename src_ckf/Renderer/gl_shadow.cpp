@@ -386,12 +386,17 @@ void R_RenderAllShadowMaps(void)
 void R_UpdateShadow(void)
 {
 	if(s_ShadowFBO.s_hBackBufferFBO)
-		R_GLBindFrameBuffer(GL_FRAMEBUFFER, s_ShadowFBO.s_hBackBufferFBO);
+	{
+		R_PushFrameBuffer();
+		qglBindFramebufferEXT(GL_FRAMEBUFFER, s_ShadowFBO.s_hBackBufferFBO);
+	}
 
 	R_RenderAllShadowMaps();
 
 	if(s_ShadowFBO.s_hBackBufferFBO)
-		R_GLBindFrameBuffer(GL_FRAMEBUFFER, lastframebuffer);
+	{
+		R_PopFrameBuffer();
+	}
 
 	R_FreeDeadShadowLights();
 }

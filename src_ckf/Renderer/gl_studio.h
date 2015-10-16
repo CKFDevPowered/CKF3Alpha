@@ -24,10 +24,16 @@ SHADER_UNIFORM_BEGINDEF(studio)
 	int shiness;
 	int basemap;
 	int normalmap;
-	int usenormal;
-	int useshadow;
 }
 SHADER_UNIFORM_ENDDEF(studio)
+
+SHADER_UNIFORM_BEGINDEF(invuln)
+{
+	int basemap;
+	int normalmap;
+	int time;
+}
+SHADER_UNIFORM_ENDDEF(invuln)
 
 typedef struct
 {

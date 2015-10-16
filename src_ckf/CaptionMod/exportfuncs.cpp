@@ -24,11 +24,9 @@ void HudBase_MouseUp(int mx, int my);
 void HudBase_MouseDown(int mx, int my);
 bool HudBase_IsFullScreenMenu(void);
 
-void StudioEntityLight(struct alight_s *plight);
 void StudioSetupModel(int bodypart, void **ppbodypart, void **ppsubmodel);
 void StudioModelRenderer_InstallHook(void);
 void CL_TraceEntity(void);
-//void SpyWatch_Draw(void);
 
 void T_VidInit(void);
 void T_UpdateTEnts(void);
@@ -57,7 +55,7 @@ cl_exportfuncs_t gClientfuncs =
 	HUD_PlayerMoveTexture,
 	NULL,
 	NULL,
-	IN_MouseEvent,
+	NULL,
 	NULL,
 	NULL,
 	CL_CreateMove,
@@ -79,7 +77,7 @@ cl_exportfuncs_t gClientfuncs =
 	NULL,
 	NULL,
 	NULL,
-	NULL,
+	HUD_Frame,
 	HUD_Key_Event,
 	HUD_TempEntUpdate,
 	NULL,
@@ -181,6 +179,8 @@ int HUD_VidInit(void)
 	g_iHudVidInitalized = true;
 
 	cl_viewent = gEngfuncs.GetViewModel();
+	//bug fix: this will crash client when changing level if we don't set it null
+	g_pTraceEntity = NULL;
 
 	gEngfuncs.pfnClientCmd("bind \",\" \"chooseclass\"");
 	gEngfuncs.pfnClientCmd("bind \".\" \"chooseteam\"");
@@ -195,14 +195,6 @@ int HUD_Redraw(float time, int intermission)
 	return 1;
 }
 
-void IN_Accumulate(void)
-{
-	if(HudBase_IsFullScreenMenu())
-		return;
-
-	//gExportfuncs.IN_Accumulate();
-}
-
 int HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding )
 {
 	if(HudBase_KeyEvent(eventcode, keynum, pszCurrentBinding))
@@ -211,34 +203,6 @@ int HUD_Key_Event( int eventcode, int keynum, const char *pszCurrentBinding )
 	return 1;
 }
 
-void IN_MouseEvent(int mstate)
-{
-	if(HudBase_IsFullScreenMenu())
-	{
-		g_mouse_oldstate = g_mouse_state;
-		g_mouse_state = mstate;
-
-		int mx, my;
-		
-		gEngfuncs.GetMousePosition(&mx, &my);
-		if(g_mouse_state == 0 && g_mouse_oldstate == 1)
-		{
-			HudBase_MouseUp(mx, my);
-		}
-		else if(g_mouse_state == 1 && g_mouse_oldstate == 0)
-		{
-			HudBase_MouseDown(mx, my);
-		}
-	}
-}
-
-//void Hook_IN_MouseMove(float frametime, usercmd_t *cmd)
-//{
-//	if(HudBase_IsFullScreenMenu())
-//		return;
-//	gHookFuncs.IN_MouseMove(frametime, cmd);
-//}
-
 r_studio_interface_t studio_interface =
 {
 	STUDIO_INTERFACE_VERSION,
@@ -246,15 +210,15 @@ r_studio_interface_t studio_interface =
 	R_StudioDrawPlayer,
 };
 
-//void Sys_Error(const char *fmt, ...)
-//{
-//	if(strstr(fmt, "Mod_Extradata"))
-//	{
-//		return;
-//	}
-//
-//	return gHookFuncs.Sys_Error(fmt);
-//}
+void Sys_Error(const char *fmt, ...)
+{
+	if(strstr(fmt, "Mod_Extradata"))
+	{
+		return;
+	}
+
+	return gHookFuncs.Sys_Error(fmt);
+}
 
 model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 {
@@ -264,7 +228,7 @@ model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 
 	if(result)
 	{
-		if(result->type == mod_studio && needload == 3 && result->needload == 0)
+		if(result->type == mod_studio && needload == NL_CLIENT && result->needload != NL_CLIENT)
 		{
 			result->needload = needload;
 		}
@@ -288,24 +252,31 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 		SIG_NOT_FOUND("pstudiohdr");
 	StudioHeader = *(studiohdr_t ***)(addr + 0x1);
 
-	pstudio->StudioEntityLight = StudioEntityLight;
 	pstudio->StudioSetupModel = StudioSetupModel;
 
 	gpEngineStudio = pstudio;
 	
 	*ppinterface = &studio_interface;
+	memcpy(&StudioInterface, &studio_interface, sizeof(studio_interface));
 
 	R_StudioInit();
-
-	g_bRenderPlayerWeapon = 0;
 
 	//Fatal bug fix: CL_PrecacheResourses will overwrite model's needload flag to 0 even if it's never unloaded
 #define MOD_LOADMODEL_SIG "\x6A\x01\x57\xE8"
 	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->Mod_Extradata, 0x100, MOD_LOADMODEL_SIG, sizeof(MOD_LOADMODEL_SIG)-1);
 	if(!addr)
 		SIG_NOT_FOUND("Mod_LoadModel");
-	addr = GetCallAddress(addr+3);
-	g_pMetaHookAPI->InlineHook((void *)addr, Mod_LoadModel,(void *&)gHookFuncs.Mod_LoadModel);
+	gHookFuncs.Mod_LoadModel = (model_t *(*)(model_t *, qboolean, qboolean))GetCallAddress(addr+3);
+
+//#define SYS_ERROR_SIG "\x68\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
+//	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->Mod_Extradata, 0x100, SYS_ERROR_SIG, sizeof(SYS_ERROR_SIG)-1);
+//	if(!addr)
+//		SIG_NOT_FOUND("Sys_Error");
+//	gHookFuncs.Sys_Error = (void (*)(const char *, ...))GetCallAddress(addr+5);
+
+	//g_pMetaHookAPI->InlineHook((void *)gHookFuncs.Sys_Error, Sys_Error,(void *&)gHookFuncs.Sys_Error);
+	g_pMetaHookAPI->InlineHook((void *)gHookFuncs.Mod_LoadModel, Mod_LoadModel,(void *&)gHookFuncs.Mod_LoadModel);
+
 
 	return 1;
 }
@@ -335,31 +306,6 @@ void HUD_TempEntUpdate(double frametime, double client_time, double cl_gravity, 
 	T_UpdateTEnts();
 }
 
-void StudioEntityLight(struct alight_s *plight)
-{
-	if((*CurrentEntity)->player)
-	{
-		if(((*CurrentEntity)->curstate.effects & EF_INVULNERABLE) && !g_bRenderPlayerWeapon)
-		{
-			plight->ambientlight = 128;
-			plight->shadelight = 192;
-		}
-	}
-	if( (*CurrentEntity)->curstate.effects & EF_3DMENU )
-	{
-		plight->ambientlight = (*CurrentEntity)->curstate.iuser1;
-		plight->shadelight = (*CurrentEntity)->curstate.iuser2;
-		plight->color[0] = 1.0f;
-		plight->color[1] = 1.0f;
-		plight->color[2] = 1.0f;
-
-		plight->plightvec[0] = 0;
-		plight->plightvec[1] = 1;
-		plight->plightvec[2] = -1;
-	}
-	IEngineStudio.StudioEntityLight(plight);
-}
-
 void HUD_DrawNormalTriangles(void)
 {
 	T_DrawTEnts();
@@ -373,29 +319,47 @@ void HUD_DrawTransparentTriangles(void)
 void R_UpdateViewModel(void)
 {
 	*CurrentEntity = cl_viewent;
-	cl_viewent->curstate.skin = CL_GetViewSkin();
+
+	cl_entity_t *pViewEntity = gEngfuncs.GetEntityByIndex(refparams.viewentity);
+
+	if(!refparams.viewentity || !pViewEntity)
+		return;
+
 	cl_viewent->curstate.body = CL_GetViewBody();
 	cl_viewent->curstate.rendermode = kRenderNormal;
 	cl_viewent->curstate.renderfx = kRenderFxNone;
+
+	cl_viewent->curstate.team = 0;
+
+	if(pViewEntity->player)
+	{
+		cl_viewent->curstate.skin = pViewEntity->curstate.skin;
+		cl_viewent->curstate.team = pViewEntity->curstate.team;
+
+		if(pViewEntity->curstate.effects & EF_CRITBOOST)
+			cl_viewent->curstate.effects |= EF_CRITBOOST;
+		else
+			cl_viewent->curstate.effects &= ~EF_CRITBOOST;
+
+		if(pViewEntity->curstate.effects & EF_INVULNERABLE)
+			cl_viewent->curstate.effects |= EF_INVULNERABLE;
+		else
+			cl_viewent->curstate.effects &= ~EF_INVULNERABLE;
+	}
 
 	if(g_SpyWatch.show)
 	{
 		cl_viewent->curstate.renderfx = kRenderFxCloak;
 		cl_viewent->curstate.renderamt = g_SpyWatch.ent.curstate.renderamt;
+
+		g_SpyWatch.ent.curstate.effects = cl_viewent->curstate.effects;
+	}
+	else if(pViewEntity->curstate.renderfx == kRenderFxCloak)
+	{
+		cl_viewent->curstate.renderfx = kRenderFxCloak;
+		cl_viewent->curstate.renderamt = pViewEntity->curstate.renderamt;
 	}
 }
-
-//void Hook_R_DrawViewModel(void)
-//{
-//	R_UpdateViewModel();
-//
-//	if(CL_CanDrawViewModel())
-//	{
-//		gHookFuncs.R_DrawViewModel();
-//
-//		SpyWatch_Draw();
-//	}
-//}
 
 int HUD_AddEntity(int iType, struct cl_entity_s *pEntity, const char *szModel)
 {
@@ -405,6 +369,7 @@ int HUD_AddEntity(int iType, struct cl_entity_s *pEntity, const char *szModel)
 		{
 			pEntity->curstate.renderamt = 0;
 			pEntity->curstate.effects |= EF_NODRAW;
+			return 0;
 		}
 	}
 
@@ -420,9 +385,9 @@ void StudioSetupModel(int bodypart, void **ppbodypart, void **ppsubmodel)
 	}
 	cl_entity_t *pEntity = (*CurrentEntity);
 	int iSaveBody = (*CurrentEntity)->curstate.body;
-	studiohdr_t *header = (*StudioHeader);
-	bodypart = bodypart % header->numbodyparts;
-	mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((char *)header + header->bodypartindex) + bodypart;
+
+	bodypart = bodypart % (*StudioHeader)->numbodyparts;
+	mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((byte *)(*StudioHeader) + (*StudioHeader)->bodypartindex) + bodypart;
 	if(pEntity->player)//player model
 	{
 		if(g_bRenderPlayerWeapon)//player weapon body
@@ -546,3 +511,7 @@ void HUD_StudioEvent( const struct mstudioevent_s *ev, const struct cl_entity_s 
 	}
 }
 
+void HUD_Frame(double time)
+{
+	g_StudioRenderer.ResetEntityBones();
+}

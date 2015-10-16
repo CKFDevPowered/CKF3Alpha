@@ -277,7 +277,7 @@ int	CTFHudTargetID::CalculateTargetIndex( void )
 { 
 	int iIndex = 0; 
 
-	if(*gCKFVars.g_pTraceEntity)
+	if(gCKFVars.g_pTraceEntity && *gCKFVars.g_pTraceEntity)
 		iIndex = (*gCKFVars.g_pTraceEntity)->index;
 
 	// If our target entity is already in our secondary ID, don't show it in primary.
@@ -310,6 +310,8 @@ void CTFHudTargetID::UpdateID( void )
 		int iMaxHealth = 1;
 		int iMaxBuffedHealth = 0;
 
+		int iLocalPlayerIndex = engine->GetLocalPlayer()->index;
+
 		//hide as default
 		m_pTargetHealth->SetBuilding(false);
 		m_pMoveableSubPanel->SetVisible(false);
@@ -333,11 +335,17 @@ void CTFHudTargetID::UpdateID( void )
 			g_pVGuiLocalize->ConvertANSIToUnicode( g_PlayerInfoList[m_iTargetEntIndex].name, wszPlayerName, sizeof(wszPlayerName) );
 
 			int iDisguiseTarget = pEnt->curstate.endpos[0];
-			if(iDisguiseTarget) iDisguiseTarget = (iDisguiseTarget>>1);
+			int iDisguiseTargetIndex = 0;
+
+			//decode disguise target
+			if(iDisguiseTarget)				
+			{
+				iDisguiseTargetIndex = (iDisguiseTarget>>1);
+			}
 
 			// determine if the target is a disguised spy (either friendly or enemy)
 			if ( iDisguiseTarget && // they're disguised
-				!(pEnt->curstate.renderfx == kRenderFxCloak && pEnt->curstate.renderamt < 255) ) // they're not cloaked
+				!(pEnt->curstate.renderfx == kRenderFxCloak && pEnt->curstate.renderamt < 255) ) // and they're not cloaked
 			{
 				bDisguisedTarget = true;
 			}
@@ -349,13 +357,18 @@ void CTFHudTargetID::UpdateID( void )
 				// is the target a disguised enemy spy?
 				if ( (*gCKFVars.g_iTeam) == 3 - iTargetTeam )
 				{
-					if ( iDisguiseTarget )
+					bDisguisedEnemy = true;
+					if ( iDisguiseTargetIndex )
+					{						
+						// change the player name that disguised player's
+						if(g_PlayerInfoList[iDisguiseTargetIndex].name && g_PlayerInfoList[iDisguiseTargetIndex].name[0])
+							g_pVGuiLocalize->ConvertANSIToUnicode( g_PlayerInfoList[iDisguiseTargetIndex].name, wszPlayerName, sizeof(wszPlayerName) );
+					}
+					else
 					{
-						bDisguisedEnemy = true;
-						// change the player name
-						if(g_PlayerInfoList[iDisguiseTarget].name && g_PlayerInfoList[iDisguiseTarget].name[0])
-							g_pVGuiLocalize->ConvertANSIToUnicode( g_PlayerInfoList[iDisguiseTarget].name, wszPlayerName, sizeof(wszPlayerName) );
-						// change the team  / team color
+						// change the player name to mine
+						if(g_PlayerInfoList[iLocalPlayerIndex].name && g_PlayerInfoList[iLocalPlayerIndex].name[0])
+							g_pVGuiLocalize->ConvertANSIToUnicode( g_PlayerInfoList[iLocalPlayerIndex].name, wszPlayerName, sizeof(wszPlayerName) );
 					}
 				}
 				else
@@ -415,7 +428,7 @@ void CTFHudTargetID::UpdateID( void )
 		}
 		else
 		{
-			// see if it is a buildable
+			// see if it is a building
 			if ( pEnt->curstate.playerclass == CLASS_BUILDABLE )
 			{
 				int iTargetTeam = pEnt->curstate.team;
@@ -428,13 +441,16 @@ void CTFHudTargetID::UpdateID( void )
 				wchar_t *wszObjectName = L"";
 
 				if(iBuildClass == BUILDABLE_SENTRY)
-					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Buildable_Sentry" );
+					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Object_Sentry" );
 				else if(iBuildClass == BUILDABLE_DISPENSER)
-					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Buildable_Dispenser" );
+					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Object_Dispenser" );
 				else if(iBuildClass == BUILDABLE_ENTRANCE)
-					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Buildable_TeleEntrance" );
+					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Object_TeleEntrance" );
 				else if(iBuildClass == BUILDABLE_EXIT)
-					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Buildable_TeleExit" );
+					wszObjectName = g_pVGuiLocalize->Find( "#CKF3_Object_TeleExit" );
+
+				if(!wszObjectName)
+					wszObjectName = L"";
 
 				//is it a valid owner?
 				if ( iOwner >= 1 && iOwner <= engine->GetMaxClients() && g_PlayerInfoList[iOwner].name && g_PlayerInfoList[iOwner].name[0] )
@@ -474,6 +490,7 @@ void CTFHudTargetID::UpdateID( void )
 				bShowHealth = true;
 				iHealth = pEnt->curstate.startpos[0];
 				iMaxHealth = pEnt->curstate.endpos[0];
+				iMaxBuffedHealth = GetBuffedMaxHealth(iMaxHealth);
 
 				if(iMaxHealth < 150)
 					iMaxHealth = 150;//a display fix

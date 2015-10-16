@@ -290,8 +290,8 @@ void R_DrawHUDQuad(int w, int h)
 
 void R_BlitToScreen(FBO_Container_t *src)
 {
-	R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, 0);
-	R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, src->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, 0);
+	qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, src->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -308,8 +308,8 @@ void R_BlitToScreen(FBO_Container_t *src)
 
 void R_BlitToFBO(FBO_Container_t *src, FBO_Container_t *dst)
 {
-	R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, dst->s_hBackBufferFBO);
-	R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, src->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, src->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -326,7 +326,7 @@ void R_BlitToFBO(FBO_Container_t *src, FBO_Container_t *dst)
 
 void R_BlurPass(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertial)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -338,7 +338,7 @@ void R_BlurPass(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertial)
 
 void R_LuminAdaptation(FBO_Container_t *src, FBO_Container_t *dst, FBO_Container_t *ada, double frametime)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT);
@@ -466,7 +466,7 @@ void R_InitBlur(const char *vs_code, int samples)
 
 void R_ToneMapping(FBO_Container_t *src, FBO_Container_t *blur, FBO_Container_t *lum, FBO_Container_t *dst)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT);
@@ -503,7 +503,7 @@ void R_ToneMapping(FBO_Container_t *src, FBO_Container_t *blur, FBO_Container_t 
 
 void R_PartialBlur(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertical)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT);
@@ -526,7 +526,7 @@ void R_PartialBlur(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertical
 
 void R_LuminPass(FBO_Container_t *src, FBO_Container_t *dst, int logexp)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT);
@@ -557,7 +557,7 @@ void R_LuminPass(FBO_Container_t *src, FBO_Container_t *dst, int logexp)
 
 void R_DownSample(FBO_Container_t *src, FBO_Container_t *dst, qboolean filter2x2)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, dst->s_hBackBufferFBO);
 
 	qglClearColor(0.0, 1.0, 0.0, 0.25);
 	qglClear(GL_COLOR_BUFFER_BIT);
@@ -683,9 +683,8 @@ void R_BeginDrawTrianglesInHUD_FBO(int x, int y, int left, int top)
 {
 	qglEnable(GL_DEPTH_TEST);
 
-	R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, screenframebuffer);
-
-	R_GLBindFrameBuffer(GL_DRAW_FRAMEBUFFER, s_3DHUDFBO.s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, screenframebuffer);
+	qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, s_3DHUDFBO.s_hBackBufferFBO);
 
 	qglClearColor(0.0, 0.0, 0.0, 0.0);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -719,13 +718,11 @@ void R_FinishDrawTrianglesInHUD(void)
 
 	qglMatrixMode(GL_MODELVIEW);
 	qglPopMatrix();
-
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, screenframebuffer);
 }
 
 void R_BeginDrawHUDInWorld(int texid, int w, int h)
 {
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, s_HUDInWorldFBO.s_hBackBufferFBO);
+	qglBindFramebufferEXT(GL_FRAMEBUFFER, s_HUDInWorldFBO.s_hBackBufferFBO);
 
 	r_hudinworld_texture = texid;
 
@@ -759,8 +756,6 @@ void R_FinishDrawHUDInWorld(void)
 
 	qglMatrixMode(GL_MODELVIEW);
 	qglPopMatrix();
-
-	R_GLBindFrameBuffer(GL_FRAMEBUFFER, lastframebuffer);
 }
 
 void R_BeginDrawRoundRect(int centerX, int centerY, float radius, float blurdist)

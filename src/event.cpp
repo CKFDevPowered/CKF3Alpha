@@ -16,5 +16,5 @@ int EV_FindModelIndex(const char *pmodel)
 
 void EV_InstallHook(void)
 {
-	g_pMetaHookAPI->InlineHook(g_pMetaSave->pEngineFuncs->pEventAPI->EV_FindModelIndex, EV_FindModelIndex, (void *&)g_pfnEV_FindModelIndex);
+	//g_pMetaHookAPI->InlineHook(g_pMetaSave->pEngineFuncs->pEventAPI->EV_FindModelIndex, EV_FindModelIndex, (void *&)g_pfnEV_FindModelIndex);
 }

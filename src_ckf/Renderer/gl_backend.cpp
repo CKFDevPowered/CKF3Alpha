@@ -10,17 +10,17 @@ void R_CaptureScreen(const char *szExt)
 	char *pLevelName;
 	char szLevelName[64];
 	char szFileName[260];
-	typeSaveImage pfnSaveImage;
 
 	if(s_BackBufferFBO.s_hBackBufferFBO)
 	{
-		int current_readfbo;
-		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &current_readfbo);
-		if(current_readfbo != s_BackBufferFBO.s_hBackBufferFBO)
+		int current_readframebuffer;
+		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &current_readframebuffer);
+
+		if(current_readframebuffer != s_BackBufferFBO.s_hBackBufferFBO)
 		{
-			R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
+			qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, s_BackBufferFBO.s_hBackBufferFBO);
 			qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
-			R_GLBindFrameBuffer(GL_READ_FRAMEBUFFER, current_readfbo);
+			qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, current_readframebuffer);
 		}
 		else
 		{
@@ -46,36 +46,13 @@ void R_CaptureScreen(const char *szExt)
 		szLevelName[strlen(szLevelName)-4] = 0;
 	}
 
-	if(!stricmp(szExt, "jpg") || !stricmp(szExt, "jpeg"))
-	{	
-		pfnSaveImage = (typeSaveImage)SaveJPEG;
-		szExt = "jpg";
-	}
-	else if(!stricmp(szExt, "png"))
-	{
-		pfnSaveImage = (typeSaveImage)SavePNG;
-	}
-	else if(!stricmp(szExt, "tga"))
-	{
-		pfnSaveImage = (typeSaveImage)SaveTGA;
-	}
-	else if(!stricmp(szExt, "bmp"))
-	{
-		pfnSaveImage = (typeSaveImage)SaveBMP;
-	}
-	else
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("Unsupported image format: \".%s\"\n", szExt);
-		return;
-	}
-
 	do
 	{
 		sprintf(szFileName, "%s%.4d.%s", szLevelName, iFileIndex, szExt);
 		++iFileIndex;
-	}while(g_pFileSystem->FileExists(szFileName) == true);
+	}while( true == g_pFileSystem->FileExists(szFileName) );
 
-	if(pfnSaveImage(szFileName, glwidth, glheight, scrcapture_buffer))
+	if(TRUE == SaveImageGeneric(szFileName, glwidth, glheight, scrcapture_buffer))
 	{
 		g_pMetaSave->pEngineFuncs->Con_Printf("Screenshot %s saved.\n", szFileName);
 	}

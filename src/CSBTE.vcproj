@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\Test\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;"
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\Test\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\MetaHook\CSBTE.dll&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1164,6 +1164,28 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Client\VGUI\hud_deathnotice.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_deathnotice.h"
+						>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\hud_demopipes.cpp"
 						>
 					</File>
@@ -1221,6 +1243,14 @@
 					</File>
 					<File
 						RelativePath=".\Client\VGUI\hud_radar.h"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_screenoverlay.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_screenoverlay.h"
 						>
 					</File>
 					<File
@@ -1896,10 +1926,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\LoadBMP.h"
-				>
-			</File>
-			<File
 				RelativePath=".\LoadTGA.h"
 				>
 			</File>
@@ -2477,10 +2503,6 @@
 			</File>
 			<File
 				RelativePath=".\language.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\LoadBMP.cpp"
 				>
 			</File>
 			<File

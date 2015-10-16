@@ -27,6 +27,7 @@ tgasprite_t g_texDebris[6];
 tgasprite_t g_texStarFlash;
 tgasprite_t g_texCritHit;
 tgasprite_t g_texMiniCritHit;
+tgasprite_t g_texElectric1;
 
 std::vector<vispart_t> g_visparts;
 std::vector<CParticleSystem *> g_partsystems;
@@ -108,6 +109,7 @@ void R_Particles_VidInit(void)
 
 		R_LoadTGASprite(&g_texCritHit, "resource/tga/crit.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texMiniCritHit, "resource/tga/minicrit.tga", 1, 1, 0, 1);
+		R_LoadTGASprite(&g_texElectric1, "resource/tga/electric1.tga", 1, 1, 0, 1);
 	}
 
 	g_partsystems.clear();
@@ -224,7 +226,7 @@ void R_DrawParticles(void)
 			double start = cl_pmove->Sys_FloatTime();
 			std::sort(g_visparts.begin(), g_visparts.end(), R_SortVisParticle);
 			double end = cl_pmove->Sys_FloatTime();
-			gEngfuncs.Con_Printf("%d particles sort, %f msec used\n", size, (end-start)*1000 );
+			gEngfuncs.Con_Printf("%d particles sort, %.2f msec used\n", size, (end-start)*1000 );
 		}
 		else
 		{
@@ -246,6 +248,18 @@ void R_DrawParticles(void)
 void R_StickyKill(cl_entity_t *pEntity)
 {
 	
+}
+
+int CParticleSystem::GetActivePartCount(void)
+{
+	int size = m_part.size();
+	int count = 0;
+	for(int i = 0; i < size; ++i)
+	{
+		if(!m_part[i].free)
+			++ count;
+	}
+	return count;
 }
 
 void CParticleSystem::Init(int type, int numpart, int numchild)

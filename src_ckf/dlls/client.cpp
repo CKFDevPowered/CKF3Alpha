@@ -28,6 +28,8 @@ extern DLL_GLOBAL ULONG g_ulFrameCount;
 extern void CopyToBodyQue(entvars_t *pev);
 extern int giPrecacheGrunt;
 extern int gmsgSayText;
+extern int gmsgADStop;
+
 extern std::string g_MapInfoText;
 
 void LinkUserMessages(void);
@@ -1673,8 +1675,18 @@ if (FStrEq(pcmd, "fullupdate"))
 
 	if (FStrEq(pcmd, "specmode"))
 	{
-		if (pPlayer->IsObserver())
-			pPlayer->Observer_SetMode(atoi(CMD_ARGV(1)));
+		int i = atoi(CMD_ARGV(1));
+
+		if (pPlayer->IsObserver() && pPlayer->CanSwitchObserverModes())
+			pPlayer->Observer_SetMode(i);
+		else
+			pPlayer->m_iObserverLastMode = i;
+
+		if (i == OBS_CHASE_FREE)
+		{
+			MESSAGE_BEGIN(MSG_ONE, gmsgADStop, NULL, pPlayer->pev);
+			MESSAGE_END();
+		}
 
 		return;
 	}
@@ -1683,6 +1695,14 @@ if (FStrEq(pcmd, "fullupdate"))
 	{
 		if (pPlayer->IsObserver())
 			pPlayer->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != FALSE);
+
+		return;
+	}
+
+	if (FStrEq(pcmd, "follow"))
+	{
+		if (pPlayer->IsObserver() && pPlayer->CanSwitchObserverModes())
+			pPlayer->Observer_FindNextPlayer(false, (char *)CMD_ARGV(1));
 
 		return;
 	}
@@ -1938,7 +1958,7 @@ void ClientPrecache(void)
 	PRECACHE_SOUND("radio/com_go.wav");
 	PRECACHE_SOUND("radio/rescued.wav");
 	PRECACHE_SOUND("radio/rounddraw.wav");*/
-	PRECACHE_SOUND("items/kevlar.wav");
+	//PRECACHE_SOUND("items/kevlar.wav");
 	PRECACHE_SOUND("items/ammopickup2.wav");
 	/*PRECACHE_SOUND("items/nvg_on.wav");
 	PRECACHE_SOUND("items/nvg_off.wav");
@@ -2554,6 +2574,10 @@ int AddToFullPack(struct entity_state_s *state, int e, edict_t *ent, edict_t *ho
 			if(pPlayer->m_Cond.AfterBurn.m_iStatus)
 			{
 				state->effects |= EF_AFTERBURN;
+			}
+			if(pPlayer->pev->effects & EF_INVULNERABLE)
+			{
+				state->skin += 2;
 			}
 			if(pPlayer->m_iDisguise == DISGUISE_YES)
 			{

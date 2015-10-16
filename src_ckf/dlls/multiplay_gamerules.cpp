@@ -34,6 +34,8 @@ extern int gmsgTimeLimit;
 extern int gmsgRevenge;
 extern int gmsgDominate;
 extern int gmsgMapObject;
+extern int gmsgFog;
+extern int gmsgHLTV;
 
 #define ITEM_RESPAWN_TIME 10
 #define WEAPON_RESPAWN_TIME 10
@@ -899,6 +901,16 @@ void CHalfLifeMultiplay::RestartRound(void)
 	m_iNumCT = CountTeamPlayers(TEAM_CT);
 	m_iNumTerrorist = CountTeamPlayers(TEAM_TERRORIST);
 
+	MESSAGE_BEGIN(MSG_SPEC, gmsgHLTV);
+	WRITE_BYTE(0);
+	WRITE_BYTE(100 | 128);
+	MESSAGE_END();
+
+	MESSAGE_BEGIN(MSG_SPEC, gmsgHLTV);
+	WRITE_BYTE(0);
+	WRITE_BYTE(0);
+	MESSAGE_END();
+
 	if (CVAR_GET_FLOAT("mp_autoteambalance") != 0 && m_iUnBalancedRounds >= 1)
 		BalanceTeams();
 
@@ -1010,9 +1022,10 @@ void CHalfLifeMultiplay::RestartRound(void)
 
 	m_flIntermissionEndTime = 0;
 	m_flIntermissionStartTime = 0;
-	m_bLevelInitialized = FALSE;
-	m_bCompleteReset = FALSE;
+	m_bLevelInitialized = false;
+	m_bCompleteReset = false;
 	m_iRoundWinStatus = 0;
+
 	//m_bTimerExpired = false;
 
 	m_fMaxIdlePeriod = 120;//Idle Kick
@@ -1043,7 +1056,7 @@ void CHalfLifeMultiplay::RestartRound(void)
 
 		CBasePlayer *pPlayer = GetClassPtr((CBasePlayer *)pEntity->pev);
 		pPlayer->m_iNumSpawns = 0;
-		pPlayer->m_bTeamChanged = FALSE;
+		pPlayer->m_bTeamChanged = false;
 
 		if (pPlayer->m_iTeam != TEAM_UNASSIGNED && pPlayer->m_iTeam != TEAM_SPECTATOR)
 		{
@@ -1829,6 +1842,41 @@ void CHalfLifeMultiplay::InitHUD(CBasePlayer *pl)
 		WRITE_STRING(m_SkyCamera.model);
 		MESSAGE_END();
 	}
+
+	CClientFog *pFog = (CClientFog *)UTIL_FindEntityByClassname(NULL, "env_fog");
+
+	if (pFog)
+	{
+		int r = pFog->pev->rendercolor[0];
+		int g = pFog->pev->rendercolor[1];
+		int b = pFog->pev->rendercolor[2];
+		int density_y = pFog->pev->rendercolor[3];
+
+		if (r > 255)
+			r = 255;
+		else if (r < 0)
+			r = 0;
+
+		if (g > 255)
+			g = 255;
+		else if (g < 0)
+			g = 0;
+
+		if (b > 255)
+			b = 255;
+		else if (b < 0)
+			b = 0;
+
+		MESSAGE_BEGIN(MSG_ONE, gmsgFog, NULL, pl->edict());
+		WRITE_BYTE(r);
+		WRITE_BYTE(g);
+		WRITE_BYTE(b);
+		WRITE_BYTE((int)pFog->m_fDensity << 24);
+		WRITE_BYTE((int)pFog->m_fDensity << 16);
+		WRITE_BYTE((int)pFog->m_fDensity << 8);
+		WRITE_BYTE((int)pFog->m_fDensity);
+		MESSAGE_END();
+	}
 }
 
 void CHalfLifeMultiplay::ClientDisconnected(edict_t *pClient)
@@ -1839,7 +1887,7 @@ void CHalfLifeMultiplay::ClientDisconnected(edict_t *pClient)
 
 		if (pPlayer)
 		{
-			pPlayer->m_bDisconnect = TRUE;
+			pPlayer->m_bDisconnect = true;
 			pPlayer->pev->deadflag = DEAD_DEAD;
 			pPlayer->pev->frags = 0;
 			pPlayer->m_iClass = 0;
@@ -2265,7 +2313,7 @@ void CHalfLifeMultiplay::PlayerKilled(CBasePlayer *pVictim, entvars_t *pevKiller
 	pVictim->SendScoreInfo();
 
 
-	if (plKiller)
+	if (plKiller && plKiller != pVictim)
 	{
 		plKiller->SendScoreInfo();
 

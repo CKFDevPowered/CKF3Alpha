@@ -38,6 +38,8 @@ using namespace vgui;
 
 extern engine_studio_api_t IEngineStudio;
 
+DECLARE_BUILD_FACTORY( ModelPanel );
+
 ModelPanel::ModelPanel( Panel *parent, const char *name ) : Panel( parent, name )
 {
 	m_szModel[0] = '\0';
@@ -45,6 +47,20 @@ ModelPanel::ModelPanel( Panel *parent, const char *name ) : Panel( parent, name 
 
 	SetPaintBackgroundEnabled(false);
 	SetPaintBorderEnabled(false);
+
+	vgui::ivgui()->AddTickSignal( GetVPanel() );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Fix a bug that client crashes because of uncached model or invalid weaponmodel
+//-----------------------------------------------------------------------------
+void ModelPanel::OnTick( void )
+{
+	const char *mapname = gEngfuncs.pfnGetLevelName();
+	if(mapname && !mapname[0] && m_entity.model)
+	{
+		m_entity.model = NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -155,7 +171,7 @@ void ModelPanel::InitEntity(void)
 	m_entity.curstate.vuser1[1] = 0;
 	m_entity.curstate.vuser1[2] = 0;
 
-	m_entity.curstate.effects |= EF_3DMENU;
+	m_entity.curstate.entityType = ET_HUDENTITY;
 	m_entity.curstate.iuser1 = 128;
 	m_entity.curstate.iuser2 = 128;
 	m_entity.model = NULL;

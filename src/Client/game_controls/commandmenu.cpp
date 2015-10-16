@@ -268,7 +268,7 @@ bool CommandMenu::LoadFromKeyValues(KeyValues *params)
 	if (!params)
 		return false;
 
-	Q_snprintf(m_CurrentTeam, 4, "%i", g_iTeamNumber);
+	Q_snprintf(m_CurrentTeam, 4, "%i", *gCKFVars.g_iTeam );
 	Q_FileBase(gEngfuncs.pfnGetLevelName(), m_CurrentMap, sizeof(m_CurrentMap));
 
 	if (params != m_MenuKeys)

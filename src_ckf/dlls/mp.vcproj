@@ -466,10 +466,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\nvector.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\observer.cpp"
 				>
 			</File>
@@ -780,10 +776,6 @@
 			</File>
 			<File
 				RelativePath=".\nodes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\nvector.h"
 				>
 			</File>
 			<File

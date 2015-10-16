@@ -146,6 +146,8 @@ typedef struct
 	physent_t physent;
 }controlpoint_t;
 
+typedef vec_t matrix3x4[3][4];
+
 typedef std::vector<physent_t> zonevector;
 typedef std::vector<controlpoint_t> cpvector;
 
@@ -161,7 +163,7 @@ qboolean CL_IsValidPlayer(int team, int playerclass);
 void CL_SetupPMTrace(int idx);
 void CL_FinishPMTrace(void);
 int CL_TraceEntity_Ignore(physent_t *pe);
-
+BOOL CL_IsViewModel(cl_entity_t *entity);
 cl_entity_t *CL_FindEntityInSphere(float *org, float rad, int (*pfnFilter)(cl_entity_t *ent));
 model_t *CL_LoadTentModel(const char *pName);
 void CL_CreateTempEntity(cl_entity_t *pEntity, model_t *mod);
@@ -317,7 +319,8 @@ enum fx_e
 	FX_CLOAKBEGIN,
 	FX_CLOAKSTOP,
 	FX_DISGUISEHINT,
-	FX_KILLALLTRAIL
+	FX_KILLALLTRAIL,
+	FX_CRITPLAYERWEAPON
 };
 
 enum
@@ -339,8 +342,9 @@ enum
 #define EF_CRITBOOST				(1<<9)
 #define EF_AFTERBURN				(1<<10)
 #define EF_SHADOW					(1<<11)
-#define EF_3DSKY					(1<<12)
+//#define EF_3DSKY					(1<<12)
 #define EF_3DMENU					(1<<13)
+#define ET_HUDENTITY			6
 
 #define FL_LOCK_DUCK			(1<<17)
 #define	FL_LOCK_JUMP			(1<<18)

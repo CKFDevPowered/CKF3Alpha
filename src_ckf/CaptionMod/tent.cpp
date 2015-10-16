@@ -39,7 +39,9 @@ void T_PlayerModel_VidInit(void)
 		sprintf(szModelPath, "models/player/%s/%s.mdl", g_szPlayerModel[i], g_szPlayerModel[i]);
 		g_mdlPlayer[i] = CL_LoadTentModel(szModelPath);
 	}
-	g_mdlSpyMask = CL_LoadTentModel("models\\CKF_III\\p_spymask.mdl");
+	CL_LoadTentModel("models/CKF_III/wp_group_rf.mdl");
+	CL_LoadTentModel("models/CKF_III/wp_group_2bone.mdl");
+	g_mdlSpyMask = CL_LoadTentModel("models/CKF_III/p_spymask.mdl");
 	//g_mdlHats = CL_LoadTentModel("models\\CKF_III\\wp_hats.mdl");
 	g_mdlPlayer[9] = NULL;
 }
@@ -403,12 +405,8 @@ void SpyWatch_Draw(int flags)
 	VectorCopy(cl_viewent->angles, g_SpyWatch.ent.angles);
 	VectorCopy(cl_viewent->origin, g_SpyWatch.ent.origin);
 
-	qglDepthRange(0, 0.3);
-	
 	*CurrentEntity = &g_SpyWatch.ent;
 	g_StudioRenderer.StudioDrawModel(flags);
-
-	qglDepthRange(0, 1);
 }
 
 void CL_ControlPointUpdate(void)
@@ -458,3 +456,7 @@ void T_UpdateTEnts(void)
 	CL_ControlPointUpdate();
 }
 
+BOOL CL_IsViewModel(cl_entity_t *entity)
+{
+	return (entity == cl_viewent || entity == &g_SpyWatch.ent);
+}

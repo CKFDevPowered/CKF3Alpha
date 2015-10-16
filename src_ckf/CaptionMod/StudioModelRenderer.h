@@ -3,6 +3,19 @@
 int R_StudioDrawModel(int flags);
 int R_StudioDrawPlayer(int flags, entity_state_t *pplayer);
 
+#include <map>
+
+typedef struct
+{
+	float m_lighttransform[MAXSTUDIOBONES][3][4];
+	float m_bonetransform[MAXSTUDIOBONES][3][4];
+	char m_bonename[MAXSTUDIOBONES][32];
+	int m_cachedbones;
+	qboolean m_bonesaved;
+}entity_bones_t;
+
+typedef std::map<DWORD, entity_bones_t> entity_bones_map;
+
 class CStudioModelRenderer
 {
 public:
@@ -15,12 +28,12 @@ public:
 	virtual int StudioDrawPlayer(int flags, struct entity_state_s *pplayer);
 
 public:
-	virtual mstudioanim_t *StudioGetAnim(model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc);
+	virtual mstudioanim_t *StudioGetAnim(model_t *mod, mstudioseqdesc_t *pseqdesc);
 	virtual void StudioSetUpTransform(int trivial_accept);
 	virtual void StudioSetupBones(void);
 	virtual void StudioCalcAttachments(void);
 	virtual void StudioSaveBones(void);
-	virtual void StudioMergeBones(model_t *m_pSubModel);
+	virtual void StudioMergeBones(model_t *mod);
 	virtual float StudioEstimateInterpolant(void);
 	virtual float StudioEstimateFrame(mstudioseqdesc_t *pseqdesc);
 	virtual void StudioFxTransform(cl_entity_t *ent, float transform[3][4]);
@@ -39,8 +52,13 @@ public:
 
 public:
 	//ckf2 added
-	void StudioRenderCustomModel(void);
-	void StudioRenderAttach(model_t *mod);
+	void StudioRenderAttach(int flags, model_t *mod);
+	void SaveEntityBones(void);
+	void ResetEntityBones(void);
+	entity_bones_t *GetEntityBones(void);
+	void RestoreEntityBones(entity_bones_t *bones);
+	void StudioSpecialLight(alight_t *plight);
+	int StudioDrawBodyPart(void);
 
 public:
 	double m_clTime;
@@ -57,8 +75,8 @@ public:
 	int m_nPlayerIndex;
 	float m_flGaitMovement;
 	studiohdr_t *m_pStudioHeader;
-	mstudiobodyparts_t *m_pBodyPart;
-	mstudiomodel_t *m_pSubModel;
+	mstudiobodyparts_t **m_pBodyPart;
+	mstudiomodel_t **m_pSubModel;
 	int m_nTopColor;
 	int m_nBottomColor;
 	model_t *m_pChromeSprite;
@@ -80,4 +98,7 @@ public:
 
 	//CKF3 added
 	int m_texFireLayer;
+	int m_texCritLayer[2];
+	int m_texInvulnLayer[2];
+	entity_bones_map m_EntityBones;
 };

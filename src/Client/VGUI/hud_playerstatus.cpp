@@ -347,8 +347,8 @@ void CTFHudPlayerClass::OnThink()
 			}
 			else if(gCKFVars.g_Player->m_pActiveItem != NULL)
 			{
-			
-				pPlayerEntity->curstate.weaponmodel = gCKFVars.g_Player->pev.weaponmodel;
+				//we don't use gCKFVars.g_Player->pev.weaponmodel since there is a little lag while changing weaponmodel after disguised
+				pPlayerEntity->curstate.weaponmodel = engine->GetLocalPlayer()->curstate.weaponmodel;//gCKFVars.g_Player->pev.weaponmodel;
 				pPlayerEntity->curstate.sequence = gCKFVars.g_Player->pev.sequence;
 				pPlayerEntity->curstate.scale = pPlayer->curstate.scale;
 			}
@@ -366,10 +366,10 @@ void CTFHudPlayerClass::OnThink()
 
 int CTFHudPlayerClass::FireMessage(const char *pszName, int iSize, void *pbuf)
 {
-	BEGIN_READ(pbuf, iSize);
-
 	if(0 != strcmp(pszName, "DrawFX"))
 		return 0;
+
+	BEGIN_READ(pbuf, iSize);
 
 	int type = READ_BYTE();
 

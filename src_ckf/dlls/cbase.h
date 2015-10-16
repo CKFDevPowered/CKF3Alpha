@@ -626,6 +626,17 @@ public:
 	void KeyValue(KeyValueData *pkvd);
 };
 
+class CClientFog : public CBaseEntity
+{
+public:
+	void Spawn(void);
+	void KeyValue(KeyValueData *pkvd);
+
+public:
+	int m_iStartDist, m_iEndDist;
+	float m_fDensity;
+};
+
 extern CWorld *g_pWorld;
 
 class CNullEntity : public CBaseEntity

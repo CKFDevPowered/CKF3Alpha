@@ -20,7 +20,6 @@
 #include "HtmlWindow.h"
 #include "Video.h"
 #include "LoadTGA.h"
-#include "LoadBMP.h"
 #include "qgl.h"
 #include "Clip2D.h"
 #include <VGUI/Vector.h>
@@ -1623,48 +1622,44 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 
 		g_bIsLoadingDXT = false;
 
-		bool isRGB = false;
 		int width, height;
-		bool success = LoadTGA(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+		bool success = LoadImageGeneric(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 
 		if (!success)
 		{
 			const char *psz = Q_stristr(name, "vgui/");
 
 			if (psz)
-				success = LoadTGA(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+				success = LoadImageGeneric(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 		}
 
 		if (!success)
 		{
 			Q_snprintf(name, sizeof(name), "%s.dds", filename);
 
-			if (!LoadDDS(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+			if (!LoadImageGeneric(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
 			{
 				const char *psz = Q_stristr(name, "vgui/");
 
 				if (psz)
-					success = LoadDDS(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+					success = LoadImageGeneric(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 			}
 			else
 			{
 				success = true;
 			}
-
-			if(success)
-				g_bIsLoadingDXT = true;
 		}
 
 		if (!success)
 		{
 			Q_snprintf(name, sizeof(name), "%s.bmp", filename);
 
-			if (!LoadBMP(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+			if (!LoadImageGeneric(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
 			{
 				const char *psz = Q_stristr(name, "vgui/");
 
 				if (psz)
-					success = LoadBMP(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+					success = LoadImageGeneric(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 			}
 			else
 			{
@@ -1676,40 +1671,18 @@ void CSurface::DrawSetTextureFile(int id, const char *filename, int hardwareFilt
 		{
 			Q_snprintf(name, sizeof(name), "%s.png", filename);
 
-			if (!LoadPNG(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
+			if (!LoadImageGeneric(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
 			{
 				const char *psz = Q_stristr(name, "vgui/");
 
 				if (psz)
-					success = LoadPNG(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
+					success = LoadImageGeneric(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
 			}
 			else
 			{
 				success = true;
 			}
 		}
-
-		//if (!success)
-		//{
-		//	Q_snprintf(name, sizeof(name), "%s.jpg", filename);
-
-		//	if (!LoadJPEG(name, m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height))
-		//	{
-		//		const char *psz = Q_stristr(name, "vgui/");
-
-		//		if (psz)
-		//		{
-		//			success = LoadPNG(name + strlen("vgui/"), m_TextureBuffer, sizeof(m_TextureBuffer), &width, &height);
-		//			if(success)
-		//				isRGB = true;
-		//		}
-		//	}
-		//	else
-		//	{
-		//		isRGB = true;
-		//		success = true;
-		//	}
-		//}
 
 		if (success)
 		{
@@ -1823,14 +1796,7 @@ void CSurface::DrawSetTextureRGBA(int id, const unsigned char *rgba, int wide, i
 		texture->_s1 = 1;
 		texture->_t1 = 1;
 
-		if (g_bIsLoadingDXT)
-		{
-			//it's a DXT texture, use MetaRenderer to upload it
-			qglBindTexture(GL_TEXTURE_2D, id);
-
-			GL_UploadDXT((byte *)rgba, wide, tall, false, false);
-		}
-		else if (g_iVideoMode == VIDEOMODE_SOFTWARE)
+		if (g_iVideoMode == VIDEOMODE_SOFTWARE)
 		{
 			m_pfnSurface_DrawSetTextureRGBA(this, 0, id, rgba, wide, tall, hardwareFilter, forceReload);
 		}

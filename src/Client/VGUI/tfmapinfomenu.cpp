@@ -149,7 +149,7 @@ void CTFMapInfoMenu::OnCommand( const char *command )
 	if ( !Q_strcmp( command, "back" ) )
 	{
 		 // only want to go back to the Welcome menu if we're not already on a team
-		if ( g_iTeamNumber == TEAM_UNASSIGNED )
+		if ( (*gCKFVars.g_iTeam) == TEAM_UNASSIGNED )
 		{
 			g_pViewPort->ShowPanel( PANEL_INFO, true );
 			g_pViewPort->ShowPanel(this, false);			

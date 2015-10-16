@@ -85,7 +85,7 @@ BOOL WINAPI DllMain(HINSTANCE hModule, DWORD dwReason, LPVOID lpvReserved)
 			*(void (**)(void))((DWORD)&g_cldstAddrs + i) = EmptyFunction;
 
 		gExportfuncs.Initialize = (INITIALIZE_FUNC)&g_modfuncs;
-		gExportfuncs.HUD_VidInit = (HUD_VIDINIT_FUNC)&g_cldstAddrs;
+		gExportfuncs.HUD_VidInit = (HUD_VIDINIT_FUNC)&g_modfuncs;
 
 		GetModulePath();
 		GetFileSystem();
@@ -157,15 +157,15 @@ extern "C" EXPORT void F(void *pv)
 {
 	const char *cmdline = GetCommandLine();
 
-	if (strstr(cmdline, "-steam ") == NULL)
+	if (strstr(cmdline, "-steam") != NULL)
 	{
 		const char *result = strstr(cmdline, "-steam");
 
-		if (*(result + 6) == ' ' || *(result + 6) == '\0')
+		if (result[6] == ' ' || result[6] == '\0')
 			g_bIsUseSteam = true;
 	}
 	else
-		g_bIsUseSteam = true;
+		g_bIsUseSteam = false;
 
 	if (g_bIsUseSteam)
 	{

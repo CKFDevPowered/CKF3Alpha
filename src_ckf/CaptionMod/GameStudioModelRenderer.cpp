@@ -113,7 +113,8 @@ void CGameStudioModelRenderer::StudioSetupBones(void)
 	pseqdesc = (mstudioseqdesc_t *)((byte *)m_pStudioHeader + m_pStudioHeader->seqindex) + m_pCurrentEntity->curstate.sequence;
 	panim = StudioGetAnim(m_pRenderModel, pseqdesc);
 
-	if (m_pPlayerInfo && !(m_pCurrentEntity->curstate.effects & EF_3DMENU))
+	//if (m_pPlayerInfo && !(m_pCurrentEntity->curstate.effects & EF_3DMENU))
+	if (m_pPlayerInfo && m_pCurrentEntity->curstate.entityType != ET_HUDENTITY)
 	{
 		int playerNum = m_pCurrentEntity->index - 1;
 
@@ -827,6 +828,8 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 	if (pplayer->gaitsequence >= m_pStudioHeader->numseq)
 		pplayer->gaitsequence = 0;
 
+	entity_bones_t *bones = GetEntityBones();
+
 	if (pplayer->gaitsequence)
 	{
 		vec3_t orig_angles;
@@ -864,7 +867,7 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 
 	if (flags & STUDIO_RENDER)
 	{
-		if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
+		if(m_pCurrentEntity->curstate.entityType != ET_HUDENTITY)//if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
 		{
 			if (!gpEngineStudio->StudioCheckBBox())
 				return 0;
@@ -885,7 +888,8 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 	m_pPlayerInfo->renderframe = m_nFrameCount;
 	m_pPlayerInfo = NULL;
 
-	if (flags & STUDIO_EVENTS && (!(flags & STUDIO_RENDER) || !pplayer->weaponmodel || !WeaponHasAttachments(pplayer)))
+	//we don't have a weapon so we just CalcAttachments here, if we have, we CalcAttachments when we render weapons
+	if ((flags & STUDIO_EVENTS) && (!(flags & STUDIO_RENDER) || !pplayer->weaponmodel || !WeaponHasAttachments(pplayer)))
 	{
 		StudioCalcAttachments();
 		gpEngineStudio->StudioClientEvents();
@@ -904,8 +908,8 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 
 		lighting.plightvec = dir;
 
-		if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
-			gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
+		gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
+		StudioSpecialLight(&lighting);
 		gpEngineStudio->StudioEntityLight(&lighting);
 		gpEngineStudio->StudioSetupLighting(&lighting);
 
@@ -940,10 +944,16 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 
 			m_pStudioHeader = (studiohdr_t *)gpEngineStudio->Mod_Extradata(pweaponmodel);
 			gpEngineStudio->StudioSetHeader(m_pStudioHeader);
+
 			g_bRenderPlayerWeapon = 1;
 
 			StudioMergeBones(pweaponmodel);
 
+			SaveEntityBones();
+
+			//gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
+			//StudioSpecialLight(&lighting);
+			//gpEngineStudio->StudioEntityLight(&lighting);
 			gpEngineStudio->StudioSetupLighting(&lighting);
 
 			StudioRenderModel(dir);
@@ -961,8 +971,6 @@ int CGameStudioModelRenderer::_StudioDrawPlayer(int flags, entity_state_t *pplay
 				gpEngineStudio->StudioClientEvents();
 		}
 	}
-	g_bRenderPlayerWeapon = 0;
-
 	return 1;
 }
 
@@ -1072,6 +1080,7 @@ void CGameStudioModelRenderer::StudioDrawPlayer_3DHUD(void)
 
 	//hack hack
 	m_pCurrentEntity->angles[2] = -refdef->viewangles[2];
+
 	StudioSetUpTransform(0);
 
 	if (!gpEngineStudio->StudioCheckBBox())
@@ -1084,13 +1093,16 @@ void CGameStudioModelRenderer::StudioDrawPlayer_3DHUD(void)
 		return;
 
 	m_pPlayerInfo = &playerinfo;
+
 	StudioSetupBones();
 	StudioSaveBones();
+
 	m_pPlayerInfo->renderframe = m_nFrameCount;
 	m_pPlayerInfo = NULL;
 
 	lighting.plightvec = dir;
 	gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting );
+	StudioSpecialLight(&lighting);
 	gpEngineStudio->StudioEntityLight(&lighting);
 	gpEngineStudio->StudioSetupLighting(&lighting);
 
@@ -1128,7 +1140,6 @@ void CGameStudioModelRenderer::StudioDrawPlayer_3DHUD(void)
 	}
 
 	g_fLOD = 0;
-	g_bRenderPlayerWeapon = 0;
 }
 
 void CGameStudioModelRenderer::PM_StudioSetupBones(int playerindex)

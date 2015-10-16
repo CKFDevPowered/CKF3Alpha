@@ -17,6 +17,8 @@ namespace vgui
 	class CMainTargetID;
 	class CSpectatorTargetID;
 	class CSecondaryTargetID;
+	class CTFHudDeathNotice;
+	class CTFHudScreenOverlay;
 };
 
 class CHudLayer : public vgui::EditablePanel
@@ -64,6 +66,8 @@ private:
 	vgui::CMainTargetID *m_pMainTargetID;
 	vgui::CSpectatorTargetID *m_pSpectatorTargetID;
 	vgui::CSecondaryTargetID *m_pSedondaryTargetID;
+	vgui::CTFHudDeathNotice *m_pDeathNotice;
+	vgui::CTFHudScreenOverlay *m_pScreenOverlay;
 };
 
 #endif

@@ -6,15 +6,15 @@
 #include "event_api.h"
 #include <cl_entity.h>
 
-DECLARE_MESSAGE(m_ViewModel, ViewBodySkin)
-DECLARE_MESSAGE(m_ViewModel, ViewRender)
+//DECLARE_MESSAGE(m_ViewModel, ViewBodySkin)
+//DECLARE_MESSAGE(m_ViewModel, ViewRender)
 
 int CHudViewModel::Init(void)
 {
 	m_iFlags = 0;
 
-	HOOK_MESSAGE(ViewBodySkin);
-	HOOK_MESSAGE(ViewRender);
+	//HOOK_MESSAGE(ViewBodySkin);
+	//HOOK_MESSAGE(ViewRender);
 
 	return 1;
 }
@@ -35,19 +35,19 @@ int CHudViewModel::VidInit(void)
 
 void CHudViewModel::CalcRefdef(struct ref_params_s *pparams)
 {
-	cl_entity_t *viewmodel = gEngfuncs.GetViewModel();
+	//cl_entity_t *viewmodel = gEngfuncs.GetViewModel();
 
-	if (viewmodel)
-	{
-		viewmodel->curstate.body = m_body;
-		viewmodel->curstate.skin = m_skin;
-		viewmodel->curstate.rendermode = m_rendermode;
-		viewmodel->curstate.renderamt = m_renderamt;
-		viewmodel->curstate.rendercolor.r = m_rendercolor.r;
-		viewmodel->curstate.rendercolor.g = m_rendercolor.g;
-		viewmodel->curstate.rendercolor.b = m_rendercolor.b;
-		viewmodel->curstate.renderfx = m_renderfx;
-	}
+	//if (viewmodel)
+	//{
+	//	viewmodel->curstate.body = m_body;
+	//	viewmodel->curstate.skin = m_skin;
+	//	viewmodel->curstate.rendermode = m_rendermode;
+	//	viewmodel->curstate.renderamt = m_renderamt;
+	//	viewmodel->curstate.rendercolor.r = m_rendercolor.r;
+	//	viewmodel->curstate.rendercolor.g = m_rendercolor.g;
+	//	viewmodel->curstate.rendercolor.b = m_rendercolor.b;
+	//	viewmodel->curstate.renderfx = m_renderfx;
+	//}
 }
 
 int CHudViewModel::MsgFunc_ViewBodySkin(const char *pszName, int iSize, void *pbuf)

@@ -786,7 +786,9 @@ int CHud::MsgFunc_SpecHealth(const char *pszName, int iSize, void *pbuf)
 		BEGIN_READ(pbuf, iSize);
 
 		gHUD.m_Radar.m_iPlayerLastPointedAt = g_iUser2;
-		g_PlayerExtraInfo[g_iUser2].health = READ_BYTE();
+		int health = READ_BYTE();
+		g_PlayerExtraInfo[g_iUser2].health = health;
+		gCKFVars.g_PlayerInfo[g_iUser2].iHealth = health;
 		g_pViewPort->UpdateSpectatorGUI();
 		return 1;
 	}
@@ -800,11 +802,12 @@ int CHud::MsgFunc_SpecHealth2(const char *pszName, int iSize, void *pbuf)
 	{
 		BEGIN_READ(pbuf, iSize);
 
-		int health = READ_BYTE();
 		int target = READ_BYTE();
+		int health = READ_BYTE();		
 
 		gHUD.m_Radar.m_iPlayerLastPointedAt = g_iUser2;
 		g_PlayerExtraInfo[target].health = health;
+		gCKFVars.g_PlayerInfo[target].iHealth = health;
 		g_pViewPort->UpdateSpectatorGUI();
 		return 1;
 	}

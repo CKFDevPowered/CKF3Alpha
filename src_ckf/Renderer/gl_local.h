@@ -60,8 +60,8 @@ extern float videowindowaspect_old;
 extern float windowvideoaspect_old;
 
 extern GLuint screenframebuffer;
-extern GLuint lastframebuffer;
-extern GLuint currentframebuffer;
+extern GLuint drawframebuffer;
+extern GLuint readframebuffer;
 
 extern mleaf_t **r_viewleaf, **r_oldviewleaf;
 extern texture_t *r_notexture_mip;
@@ -93,8 +93,11 @@ extern qboolean gl_framebuffer_object;
 extern qboolean gl_shader_support;
 extern qboolean gl_program_support;
 extern qboolean gl_msaa_support;
+extern qboolean gl_msaa_blit_support;
 extern qboolean gl_csaa_support;
 extern qboolean gl_float_buffer_support;
+extern qboolean gl_s3tc_compression_support;
+
 extern int gl_mtexable;
 extern int gl_max_texture_size;
 extern float gl_max_ansio;
@@ -264,19 +267,19 @@ GLuint R_GLGenTexture(int w, int h);
 byte *R_GetTexLoaderBuffer(int *bufsize);
 gltexture_t *R_GetCurrentGLTexture(void);
 int GL_LoadTextureEx(const char *identifier, GL_TEXTURETYPE textureType, int width, int height, byte *data, qboolean mipmap, qboolean ansio);
-int R_LoadTextureEx(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio);
+int R_LoadTextureEx(const char *filepath, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio);
 
 void GL_UploadDXT(byte *data, int width, int height, qboolean mipmap, qboolean ansio);
-int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadPNG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadDDS(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int LoadJPEG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
-int SaveBMP(const char *file_name, int width, int height, byte *data);
-int SaveTGA(const char *file_name, int width, int height, byte *data);
-int SavePNG(const char *file_name, int width, int height, byte *data);
-int SaveJPEG(const char *file_name, int width, int height, byte *data);
+int LoadDDS(const char *filename, byte *buf, int bufSize, int *width, int *height);
+int LoadImageGeneric(const char *filename, byte *buf, int bufSize, int *width, int *height);
+int SaveImageGeneric(const char *filename, int width, int height, byte *data);
 
+//framebuffer
+void R_PushFrameBuffer(void);
+void R_PopFrameBuffer(void);
+void R_GLBindFrameBuffer(GLenum target, GLuint framebuffer);
+
+//refdef
 void R_PushRefDef(void);
 void R_UpdateRefDef(void);
 void R_PopRefDef(void);
@@ -288,7 +291,6 @@ int R_GetDrawPass(void);
 int R_GetSupportExtension(void);
 void R_LoadRendererEntities(void);
 void GL_FreeTexture(gltexture_t *glt);
-void R_GLBindFrameBuffer(GLuint fb, GLuint fbo);
 void R_InitRefHUD(void);
 
 //patch engine limitation
@@ -297,7 +299,6 @@ void Lightmaps_Patch(void);
 //for screenshot
 byte *R_GetSCRCaptureBuffer(int *bufsize);
 void CL_ScreenShot_f(void);
-typedef int (*typeSaveImage)(const char *, int, int, byte *);
 
 //player state for StudioDrawPlayer
 entity_state_t *R_GetPlayerState(int index);

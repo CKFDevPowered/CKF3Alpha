@@ -40,38 +40,6 @@ extern gltexture_t *currentglt;
 extern float gl_max_ansio;
 extern float gl_force_ansio;
 
-//PNG
-typedef struct
-{
-	FileHandle_t fp;
-	size_t size;
-	size_t offset;
-}png_source;
-
-typedef struct
-{
-	FileHandle_t fp;
-}png_dest;
-
-//TGA
-typedef struct tgaheader_s
-{
-	byte bIDLength;        /* 00h  Size of Image ID field */
-	byte bColorMapType;    /* 01h  Color map type */
-	byte bImageType;       /* 02h  Image type code */
-	byte bMapStart[2];       /* 03h  Color map origin */
-	byte bMapLength[2];      /* 05h  Color map length */
-	byte bMapDepth;       /* 07h  Depth of color map entries */
-	byte bXOffset[2];         /* 08h  X origin of image */
-	byte bYOffset[2];         /* 0Ah  Y origin of image */
-	byte bWidth[2];           /* 0Ch  Width of image */
-	byte bHeight[2];          /* 0Eh  Height of image */
-	byte bPixelDepth;      /* 10h  Image pixel size */
-	byte bImageDescriptor; /* 11h  Image descriptor byte */
-}tgaheader_t;
-
-//JPEG
-
 //DXT
 
 #define DDS_MAGIC 0x20534444

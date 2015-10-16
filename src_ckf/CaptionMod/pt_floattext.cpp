@@ -181,17 +181,21 @@ public:
 		COLOR_FADE(255, 255, 0);
 		ALPHA_FADE_OUT(0.75);
 
-		ent.curstate.fuser1 = 1;
+ 		ent.curstate.fuser1 = 1;
 		ent.curstate.frame = 0;
 
 		VectorCopy(org, ent.origin);
 		ent.angles[2] = 0;
+
+		gRefExports.R_PushFrameBuffer();
 
 		gRefExports.R_BeginDrawHUDInWorld(m_sprite.tex, m_sprite.w, m_sprite.h);
 
 		R_DrawHitDamageText(m_text, m_sprite.w, m_sprite.h);
 
 		gRefExports.R_FinishDrawHUDInWorld();
+
+		gRefExports.R_PopFrameBuffer();
 
 		R_DrawTGASprite(&ent, &m_sprite);
 	}

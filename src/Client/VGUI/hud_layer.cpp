@@ -22,6 +22,8 @@ using namespace vgui;
 #include "hud_cloakmeter.h"
 #include "hud_metalmeter.h"
 #include "hud_targetid.h"
+#include "hud_deathnotice.h"
+#include "hud_screenoverlay.h"
 
 CHudLayer::CHudLayer(Panel *parent) : EditablePanel(parent, "HudLayer")
 {
@@ -57,6 +59,9 @@ void CHudLayer::Start(void)
 	m_pMainTargetID = (CMainTargetID *)AddNewPanel(new CMainTargetID);
 	m_pSpectatorTargetID = (CSpectatorTargetID *)AddNewPanel(new CSpectatorTargetID);
 	m_pSedondaryTargetID = (CSecondaryTargetID *)AddNewPanel(new CSecondaryTargetID);
+
+	m_pDeathNotice = (CTFHudDeathNotice *)AddNewPanel(new CTFHudDeathNotice);
+	m_pScreenOverlay = (CTFHudScreenOverlay *)AddNewPanel(new CTFHudScreenOverlay);
 
 	// reload the .res file from disk
 	LoadControlSettings( "resource/UI/HudLayout.res" );

@@ -60,9 +60,9 @@ void R_HitDamageText(int damage, vec3_t vecSrc);
 void ShowHudMenu(int type, int keys);
 void HudFloatText_AddHealth(int iHealth);
 void HudFloatText_AddMetal(int iMetal);
-void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flTime);
-void CL_DisguiseHint(void);
+void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flDuration);
 void R_KillAllEntityPartSystem(int instant);
+void R_CritPlayerWeapon(cl_entity_t *pEntity, int iTeam, float flDuration);
 
 int MsgFunc_HideWeapon(const char *pszName, int iSize, void *pbuf)
 {
@@ -706,14 +706,23 @@ int MF_DrawFX_CloakStop(void)
 
 int MF_DrawFX_DisguiseHint(void)
 {
-	CL_DisguiseHint();
-
-	return 1;
+	return 0;
 }
 
 int MF_DrawFX_KillAllTrail(void)
 {
 	R_KillAllEntityPartSystem(true);
+
+	return 1;
+}
+
+int MF_DrawFX_CritPlayerWeapon(void)
+{
+	READ_ENTITY();
+	int iTeam = READ_BYTE();
+	float flDuration = READ_COORD();
+
+	R_CritPlayerWeapon(pEntity, iTeam, flDuration);
 
 	return 1;
 }
@@ -747,7 +756,8 @@ pfnMF_DrawFX gDrawFXList[] = {
 	MF_DrawFX_CloakBegin,
 	MF_DrawFX_CloakStop,
 	MF_DrawFX_DisguiseHint,
-	MF_DrawFX_KillAllTrail
+	MF_DrawFX_KillAllTrail,
+	MF_DrawFX_CritPlayerWeapon
 };
 
 int MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
@@ -1272,7 +1282,7 @@ void UserMsg_InstallHook(void)
 	pfnMsgFunc_InitHUD = HOOK_USERMSG(InitHUD);
 	pfnMsgFunc_TeamInfo = HOOK_USERMSG(TeamInfo);
 	pfnMsgFunc_TeamScore = HOOK_USERMSG(TeamScore);
-	HOOK_USERMSG(DeathMsg);
+	//HOOK_USERMSG(DeathMsg);
 	//pfnMsgFunc_VGUIMenu = HOOK_USERMSG(VGUIMenu);
 	pfnMsgFunc_HideWeapon = HOOK_USERMSG(HideWeapon);
 	HOOK_USERMSG(ScoreAttrib);

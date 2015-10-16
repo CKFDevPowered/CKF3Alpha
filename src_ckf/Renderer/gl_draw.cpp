@@ -1,17 +1,12 @@
 #include "gl_local.h"
 #include "command.h"
 
-//For PNG Support
 extern "C"
 {
-#include "libpng/png.h"
-#include "libpng/pnginfo.h"
-
-#define MEM_SRCDST_SUPPORTED
-
-#include "libjpeg/jpeglib.h"
-#include "libjpeg/jerror.h"
+#include "FreeImage/FreeImage.h"
 };
+
+#pragma comment(lib,"FreeImage/FreeImage.lib")
 
 GLenum TEXTURE0_SGIS;
 GLenum TEXTURE1_SGIS;
@@ -36,22 +31,6 @@ int gl_filter_max = GL_LINEAR;
 
 int gl_loadtexture_format;
 int gl_loadtexture_size;
-
-//PNG
-#pragma comment(lib,"libpng/zlib.lib")
-#pragma comment(lib,"libpng/libpng.lib")
-
-//JPEG
-
-#pragma comment(lib,"libjpeg/jpeg-static.lib")
-
-struct jpeg_my_error_mgr
-{
-	struct jpeg_error_mgr pub;    /* "public" fields */
-	jmp_buf setjmp_buffer;        /* for return to caller */
-};
-
-typedef struct jpeg_my_error_mgr *my_jpeg_error_ptr;
 
 //GL Start
 
@@ -98,14 +77,21 @@ void GL_EnableMultitexture(void)
 int GL_LoadTexture2(char *identifier, GL_TEXTURETYPE textureType, int width, int height, byte *data, qboolean mipmap, int iType, byte *pPal, int filter)
 {
 	if (!mipmap || textureType != GLT_WORLD)
+	{
+		if(qglTexParameterf)
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
 		return gRefFuncs.GL_LoadTexture2(identifier, textureType, width, height, data, mipmap, iType, pPal, filter);
+	}
 
 	Draw_UpdateAnsios();
 
-	if(gl_force_ansio)
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_force_ansio);
-	else
-		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max(min(gl_ansio->value, gl_max_ansio), 1));
+	if(qglTexParameterf)
+	{
+		if(gl_force_ansio)
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, gl_force_ansio);
+		else
+			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, max(min(gl_ansio->value, gl_max_ansio), 1));
+	}
 
 	return gRefFuncs.GL_LoadTexture2(identifier, textureType, width, height, data, mipmap, iType, pPal, filter);
 }
@@ -546,85 +532,30 @@ int GL_LoadTextureEx(const char *identifier, GL_TEXTURETYPE textureType, int wid
 	return texnum;
 }
 
-int LoadBMP(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
+gltexture_t *R_GetCurrentGLTexture(void)
 {
-	FileHandle_t file = g_pFileSystem->Open(szFilename, "rb");
+	return currentglt;
+}
 
-	if (!file)
-	{
-		//g_pMetaSave->pEngineFuncs->Con_Printf("LoadBMP: Cannot open file %s for reading\n", szFilename);
-		return FALSE;
-	}
+extern cvar_t *r_wsurf_decal;
 
-	BITMAPFILEHEADER bmfHeader;
-	LPBITMAPINFO lpbmi;
-	DWORD dwFileSize = g_pFileSystem->Size(file);
+texture_t *Draw_DecalTexture(int index)
+{
+	texture_t *t = gRefFuncs.Draw_DecalTexture(index);
+	if(index < 0)
+		return t;
+	if(t->anim_next && r_wsurf_decal->value)
+		return t->anim_next;
 
-	if (!g_pFileSystem->Read(&bmfHeader, sizeof(bmfHeader), file))
-	{
-		*width = 0;
-		*height = 0;
+	return t;
+}
 
-		g_pFileSystem->Close(file);
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadBMP: File %s has no BMP header.\n", szFilename);
-		return FALSE;
-	}
+void Draw_MiptexTexture(cachewad_t *wad, byte *data)
+{
+	gRefFuncs.Draw_MiptexTexture(wad, data);
 
-	if (bmfHeader.bfType == DIB_HEADER_MARKER)
-	{
-		DWORD dwBitsSize = dwFileSize - sizeof(bmfHeader);
-
-		HGLOBAL hDIB = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, dwBitsSize);
-		char *pDIB = (LPSTR)::GlobalLock((HGLOBAL)hDIB);
-
-		if (!g_pFileSystem->Read(pDIB, dwBitsSize, file))
-		{
-			::GlobalUnlock(hDIB);
-			::GlobalFree((HGLOBAL)hDIB);
-
-			*width = 0;
-			*height = 0;
-
-			g_pFileSystem->Close(file);
-			g_pMetaSave->pEngineFuncs->Con_Printf("LoadBMP: File %s has no DIB info.\n", szFilename);
-			return FALSE;
-		}
-
-		lpbmi = (LPBITMAPINFO)pDIB;
-
-		if (width)
-			*width = lpbmi->bmiHeader.biWidth;
-
-		if (height)
-			*height = lpbmi->bmiHeader.biHeight;
-
-		unsigned char *rgba = (unsigned char *)(pDIB + sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-
-		for (int j = 0; j < lpbmi->bmiHeader.biHeight; j++)
-		{
-			for (int i = 0; i < lpbmi->bmiHeader.biWidth; i++)
-			{
-				int y = (lpbmi->bmiHeader.biHeight - j - 1);
-
-				int offs = (y * lpbmi->bmiHeader.biWidth + i);
-				int offsdest = (j * lpbmi->bmiHeader.biWidth + i) * 4;
-				unsigned char *src = rgba + offs;
-				unsigned char *dst = buffer + offsdest;
-
-				dst[0] = lpbmi->bmiColors[*src].rgbRed;
-				dst[1] = lpbmi->bmiColors[*src].rgbGreen;
-				dst[2] = lpbmi->bmiColors[*src].rgbBlue;
-				dst[3] = 255;
-			}
-		}
-
-		::GlobalUnlock(hDIB);
-		::GlobalFree((HGLOBAL)hDIB);
-	}
-
-	g_pFileSystem->Close(file);
-
-	return TRUE;
+	texture_t *t = (texture_t *)data;
+	R_LinkDecalTexture(t);
 }
 
 DWORD ByteToUInt( byte *byte )
@@ -655,9 +586,8 @@ qboolean PowerOfTwo(int iWidth,int iHeight)
 	return true;
 }
 
-int LoadDDS(const char *szFilename, byte *buf, int bufsize, int *width, int *height)
+int LoadDDS(const char *filename, byte *buf, int bufsize, int *width, int *height)
 {
-	FileHandle_t fp;
 	dds_header_t header;
 	int fileSize;
 
@@ -667,19 +597,17 @@ int LoadDDS(const char *szFilename, byte *buf, int bufsize, int *width, int *hei
 	if (height)
 		*height = 0;
 
-	fp = g_pFileSystem->Open(szFilename, "rb");
+	FileHandle_t fileHandle = g_pFileSystem->Open(filename, "rb");
 
-	if(!fp)
-	{
-		//g_pMetaSave->pEngineFuncs->Con_DPrintf("LoadDDS: Cannot open file %s for reading.\n", szFilename);
+	if(!fileHandle)
 		return FALSE;
-	}
 
-	fileSize = g_pFileSystem->Size(fp);
+	fileSize = g_pFileSystem->Size(fileHandle);
 
-	if(!g_pFileSystem->Read((void *)&header, sizeof(dds_header_t), fp))
+	if(!g_pFileSystem->Read((void *)&header, sizeof(dds_header_t), fileHandle))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
@@ -693,68 +621,61 @@ int LoadDDS(const char *szFilename, byte *buf, int bufsize, int *width, int *hei
 	int w = ByteToUInt(header.bWidth);
 	int h = ByteToUInt(header.bHeight);
 
-	//if(!PowerOfTwo(w, h))
-	//{
-	//	g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s's size is not power of 2.\n", szFilename);
-	//	if(fp) g_pFileSystem->Close(fp);
-	//	return FALSE;
-	//}
-
 	if(iMagic != DDS_MAGIC)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(iSize != 124)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_PIXELFORMAT))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_CAPS))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iPFFlags & DDPF_FOURCC))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(iFourCC != D3DFMT_DXT1 && iFourCC != D3DFMT_DXT3 && iFourCC != D3DFMT_DXT5)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is not DXT1/3/5 format!\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is not DXT1/3/5 format!\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if((int)iLinSize > bufsize)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is too large!\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is too large!\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
-	g_pFileSystem->Seek(fp, 128, FILESYSTEM_SEEK_HEAD);
+	g_pFileSystem->Seek(fileHandle, 128, FILESYSTEM_SEEK_HEAD);
 
-	if(!g_pFileSystem->Read((void *)buf, iLinSize, fp))
+	if(!g_pFileSystem->Read((void *)buf, iLinSize, fileHandle))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is corrupted.\n", szFilename);
-		if(fp) g_pFileSystem->Close(fp);
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is corrupted.\n", filename);
+		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
@@ -772,262 +693,8 @@ int LoadDDS(const char *szFilename, byte *buf, int bufsize, int *width, int *hei
 	if(height)
 		*height = h;
 
-	if(fp) g_pFileSystem->Close(fp);
+	g_pFileSystem->Close(fileHandle);
 	return TRUE;
-}
-
-void ReadPNGCallBack(png_structp png_ptr, png_bytep data, png_size_t length)
-{
-	png_source *src = (png_source *)png_get_io_ptr(png_ptr);
-	if(src->offset + length <= src->size)
-	{
-		g_pFileSystem->Read(data, length, src->fp);
-		src->offset += length;
-	}
-	else
-		png_error(png_ptr, "ReadPNGCallBack failed");
-}
-
-int LoadPNG(const char *szFilename, byte *buf, int bufsize, int *width, int *height)
-{
-	FileHandle_t fp;
-	int fileLength;
-	byte fileHeader[8];
-
-	png_structp png_ptr;
-	png_infop info_ptr;
-	png_source src;
-	png_bytep *row_pointers;
-	int w, h, i, j, pos, block_size;
-	int bbp, colorType;
-
-	if (width)
-		*width = 0;
-
-	if (height)
-		*height = 0;
-
-	fp = g_pFileSystem->Open((char *)szFilename, "rb");
-	if(!fp)
-	{
-		//g_pMetaSave->pEngineFuncs->Con_DPrintf("LoadPNG: Couldn't open file %s\n", szFilename);
-		return FALSE;
-	}
-
-	fileLength = g_pFileSystem->Size(fp);
-
-	if(!g_pFileSystem->Read(fileHeader, 8, fp) || png_sig_cmp(fileHeader, 0, 8))
-    {
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadPNG: File %s is not a PNG image.\n", szFilename);
-		return FALSE;
-    }
-
-	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-	if(!png_ptr)
-	{
-		if(fp) g_pFileSystem->Close(fp);
-
-		return FALSE;
-	}
-
-	png_set_sig_bytes(png_ptr, 8);
-
-	info_ptr = png_create_info_struct(png_ptr);
-	if(!info_ptr)
-	{
-		if(fp) g_pFileSystem->Close(fp);
-		png_destroy_read_struct(&png_ptr, 0, 0);
-		return FALSE;
-	}
-
-	if(setjmp(png_jmpbuf(png_ptr)))
-	{
-		if(fp) g_pFileSystem->Close(fp);
-		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		return FALSE;
-	}
-
-	src.fp = fp;
-	src.size = fileLength;
-	src.offset = 0;
-
-	png_set_read_fn(png_ptr, &src, ReadPNGCallBack);
-	png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_STRIP_ALPHA, 0);
-	w = png_get_image_width(png_ptr, info_ptr);
-	h = png_get_image_height(png_ptr, info_ptr);
-	colorType = png_get_color_type(png_ptr, info_ptr);
-	bbp = png_get_bit_depth(png_ptr, info_ptr);
-
-	row_pointers = png_get_rows(png_ptr, info_ptr);
-
-	if(colorType == PNG_COLOR_TYPE_RGB)
-	{
-		block_size = 3;
-	}
-	else if(colorType == PNG_COLOR_TYPE_RGBA)
-	{
-		block_size = 4;
-	}
-	else
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadPNG: %s not supported, Only RGB/RGBA are supported!\n", szFilename);
-
-		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		if(fp) g_pFileSystem->Close(fp);
-		return FALSE;
-	}
-
-	if(w * h * 4 > bufsize)
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadPNG: Texture %s is too large!\n", szFilename);
-
-		png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-		if(fp) g_pFileSystem->Close(fp);
-		return FALSE;
-	}
-	
-	pos = 0;
-	for( i = 0; i < h; i++ )
-	{
-		for( j = 0; j < w * block_size; j += block_size )
-		{
-			buf[pos++] = row_pointers[i][j + 0];//B
-			buf[pos++] = row_pointers[i][j + 1];//G
-			buf[pos++] = row_pointers[i][j + 2];//R
-			buf[pos++] = (block_size == 3) ? 255 : row_pointers[i][j + 3];//Alpha
-		}
-	}
-
-	if(width)
-		*width = w;
-	if(height)
-		*height = h;
-
-	gl_loadtexture_format = GL_RGBA;
-	gl_loadtexture_size = pos;
-
-	png_destroy_read_struct(&png_ptr, &info_ptr, 0);
-
-	if(fp) g_pFileSystem->Close(fp);
-	return TRUE;
-}
-
-METHODDEF(void) JPEGErrorCallback(j_common_ptr cinfo)
-{
-  /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-  my_jpeg_error_ptr myerr = (my_jpeg_error_ptr) cinfo->err;
-
-  /* Always display the message. */
-  /* We could postpone this until after returning, if we chose. */
-  //(*cinfo->err->output_message) (cinfo);
-
-  /* Return control to the setjmp point */
-  longjmp(myerr->setjmp_buffer, 1);
-}
-
-int LoadJPEG(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
-{
-	FileHandle_t fp = g_pFileSystem->Open(szFilename, "rb");
-    if (!fp)
-    {
-        return FALSE;  
-    }
-
-	struct jpeg_decompress_struct cinfo;
-	struct jpeg_my_error_mgr jerr;
-	JSAMPARRAY jbuffer;
-	int row_stride, outRowStride;
-	byte *outBuffer;
-	byte *fileBuffer = NULL;
-	int outSize;
-
-	cinfo.err = jpeg_std_error(&jerr.pub);
-	jerr.pub.error_exit = JPEGErrorCallback;
-
-	if (setjmp(jerr.setjmp_buffer))
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadJPEG: We encountered an error while reading %s!\n", szFilename);
-
-		jpeg_destroy_decompress(&cinfo);
-		if(fileBuffer) free(fileBuffer);
-		if(fp) g_pFileSystem->Close(fp);		
-		return FALSE;
-	}
-
-	jpeg_create_decompress(&cinfo);
-
-	int fileSize = g_pFileSystem->Size(fp);
-
-	fileBuffer = (byte *)malloc(fileSize);
-
-	g_pFileSystem->Read(fileBuffer, fileSize, fp);
-
-	jpeg_mem_src(&cinfo, fileBuffer, fileSize);
-
-	jpeg_read_header(&cinfo, TRUE);
-
-	jpeg_start_decompress(&cinfo);
-
-	outSize = cinfo.output_width * cinfo.output_height * 4;
-	
-	if(outSize > bufferSize)
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadJPEG: Texture %s is too large!\n", szFilename);
-
-		jpeg_destroy_decompress(&cinfo);
-		if(fileBuffer) free(fileBuffer);
-		if(fp) g_pFileSystem->Close(fp);
-		return FALSE;
-	}
-
-	outBuffer = buffer ;
-	outRowStride = cinfo.output_width * 4;
-
-	row_stride = cinfo.output_width * cinfo.output_components;
-
-	jbuffer = (*cinfo.mem->alloc_sarray)
-		 ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
-
-	while (cinfo.output_scanline < cinfo.output_height)
-	{
-		outBuffer += outRowStride;
-		jpeg_read_scanlines(&cinfo, jbuffer, 1);
-		if(cinfo.output_components == 4)
-		{
-			memcpy(outBuffer, jbuffer[0], row_stride);
-		}
-		else if(cinfo.output_components == 3)
-		{
-			byte *out2 = jbuffer[0];
-			byte *outBuffer2 = outBuffer;
-			for( int i = 0; i < (int)cinfo.output_width; ++i )
-			{
-				outBuffer2[0] = out2[0];
-				outBuffer2[1] = out2[1];
-				outBuffer2[2] = out2[2];
-				outBuffer2[3] = 255;
-				outBuffer2 += 4;
-				out2 += 3;
-			}
-		}
-	}
-
-	jpeg_finish_decompress(&cinfo);
-
-	if(width)
-		*width = cinfo.output_width;
-	if(height)
-		*height = cinfo.output_height;
-
-	g_pFileSystem->Close(fp);
-
-	jpeg_destroy_decompress(&cinfo);	
-	return TRUE;
-}
-
-int LoadTGA(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height)
-{
-	return gRefFuncs.LoadTGA(szFilename, buffer, bufferSize, width, height);
 }
 
 const char * V_GetFileExtension( const char * path )
@@ -1051,358 +718,202 @@ const char * V_GetFileExtension( const char * path )
 	return src;
 }
 
-int R_LoadTextureEx(const char *path, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio)
+unsigned WINAPI FI_Read(void *buffer, unsigned size, unsigned count, fi_handle handle)
 {
-	int w, h;
-	const char *extension = V_GetFileExtension(path);
-	if(!extension)
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: File %s has no extension \"%s\".\n", path);
-		return 0;
-	}
-	if(!stricmp(extension, "bmp"))
-	{
-		gl_loadtexture_format = GL_RGBA;
-		if(LoadBMP(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
-		{
-			if(width)
-				*width = w;
-			if(height)
-				*height = h;
-			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
-		}
-	}
-	else if(!stricmp(extension, "dds"))
-	{
-		if(LoadDDS(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
-		{
-			if(width)
-				*width = w;
-			if(height)
-				*height = h;
-			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
-		}
-	}
-	else if(!stricmp(extension, "tga"))
-	{
-		gl_loadtexture_format = GL_RGBA;
-		if(LoadTGA(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
-		{
-			if(width)
-				*width = w;
-			if(height)
-				*height = h;
-			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
-		}
-	}
-	else if(!stricmp(extension, "png"))
-	{
-		gl_loadtexture_format = GL_RGBA;
-		if(LoadPNG(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
-		{
-			if(width)
-				*width = w;
-			if(height)
-				*height = h;
-			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
-		}
-	}
-	else if(!stricmp(extension, ".jpg") || !stricmp(extension, ".jpeg"))
-	{
-		gl_loadtexture_format = GL_RGBA;
-		if(LoadJPEG(path, texloader_buffer, sizeof(texloader_buffer), &w, &h))
-		{
-			if(width)
-				*width = w;
-			if(height)
-				*height = h;
-			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
-		}
-	}
-	else
-	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: %s unsupported texture format.\n", path);
-		return 0;
-	}
-
-	g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: Failed to load texture %s.\n", path);
+	if(g_pFileSystem->Read(buffer, size*count, handle))
+		return count;
 	return 0;
 }
 
-gltexture_t *R_GetCurrentGLTexture(void)
+unsigned WINAPI FI_Write(void *buffer, unsigned size, unsigned count, fi_handle handle)
 {
-	return currentglt;
+	if(g_pFileSystem->Write(buffer, size*count, handle))
+		return count;
+	return 0;
 }
 
-extern cvar_t *r_wsurf_decal;
-
-texture_t *Draw_DecalTexture(int index)
+int WINAPI FI_Seek(fi_handle handle, long offset, int origin)
 {
-	texture_t *t = gRefFuncs.Draw_DecalTexture(index);
-	if(index < 0)
-		return t;
-	if(t->anim_next && r_wsurf_decal->value)
-		return t->anim_next;
-
-	return t;
+	g_pFileSystem->Seek(handle, offset, (FileSystemSeek_t)origin);
+	return 0;
 }
 
-void Draw_MiptexTexture(cachewad_t *wad, byte *data)
+long WINAPI FI_Tell(fi_handle handle)
 {
-	gRefFuncs.Draw_MiptexTexture(wad, data);
-
-	texture_t *t = (texture_t *)data;
-	R_LinkDecalTexture(t);
+	return g_pFileSystem->Tell(handle);
 }
 
-void WritePNGCallBack(png_structp png_ptr, png_bytep data, png_size_t length)
+int LoadImageGeneric(const char *filename, byte *buf, int bufSize, int *width, int *height)
 {
-	png_dest *dst = (png_dest *)png_get_io_ptr(png_ptr);
-	g_pFileSystem->Write(data, length, dst->fp);
-}
+	FileHandle_t fileHandle = g_pFileSystem->Open(filename, "rb");
 
-void FlushPNGCallBack(png_structp png_ptr)
-{
-	png_dest *dst = (png_dest *)png_get_io_ptr(png_ptr);
-	g_pFileSystem->Flush(dst->fp);
-}
+	if(!fileHandle)
+		return FALSE;
 
-int SavePNG(const char *file_name, int width, int height, byte *data)
-{
-    int i;
-	png_dest dst;
-    png_structp png_ptr;
-    png_infop info_ptr;
-    png_bytep *row_pointers;
+	FreeImageIO fiIO;
+	fiIO.read_proc = FI_Read;
+	fiIO.write_proc = FI_Write;
+	fiIO.seek_proc = FI_Seek;
+	fiIO.tell_proc = FI_Tell;
 
-	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
-    if (!fp)
+	FREE_IMAGE_FORMAT fiFormat = FreeImage_GetFileTypeFromHandle(&fiIO, (fi_handle)fileHandle);
+
+	if(fiFormat == FIF_UNKNOWN)
+		fiFormat = FreeImage_GetFIFFromFilename(filename);
+
+	if(fiFormat == FIF_UNKNOWN)
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Cannot open %s for writing.\n", file_name);
-        return FALSE;  
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
+		return FALSE;
     }
 
-    /* initialize stuff */  
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);  
-
-    if (!png_ptr)  
+	if(!FreeImage_FIFSupportsReading(fiFormat))
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_create_write_struct failed");
-		g_pFileSystem->Close(fp);
-        return FALSE;  
+		g_pMetaSave->pEngineFuncs->Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
+		return FALSE;
     }
 
-    info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr)  
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_create_info_struct failed");
-		g_pFileSystem->Close(fp);
-		png_destroy_write_struct(&png_ptr, NULL);
+	FIBITMAP *fiB = FreeImage_LoadFromHandle(fiFormat, &fiIO, (fi_handle)fileHandle);
+
+	g_pFileSystem->Close(fileHandle);
+
+	if(!fiB)
+		return FALSE;
+
+	int pos, w, h, blockSize;
+
+	pos = 0;
+	w = FreeImage_GetWidth(fiB);
+	h = FreeImage_GetHeight(fiB);
+	blockSize = FreeImage_GetLine(fiB) / w;
+
+	if(w * h * 4 > bufSize)
+	{
+		FreeImage_Unload(fiB);
+		return FALSE;
+	}
+
+	for( int y = 0; y < h; ++y )
+	{
+		BYTE *bits = FreeImage_GetScanLine(fiB, h-y-1);
+		for( int x = 0; x < w; ++x )
+		{
+			buf[pos++] = bits[FI_RGBA_RED];//B
+			buf[pos++] = bits[FI_RGBA_GREEN];//G
+			buf[pos++] = bits[FI_RGBA_BLUE];//R
+			if(blockSize == 4)
+				buf[pos++] = bits[FI_RGBA_ALPHA];//Alpha
+			else
+				buf[pos++] = 255;
+			bits += blockSize;
+		}
+	}
+	if(width)
+		*width = w;
+	if(height)
+		*height = h;
+
+	gl_loadtexture_format = GL_RGBA;
+	gl_loadtexture_size = pos;
+
+	FreeImage_Unload(fiB);
+	return TRUE;
+}
+
+int SaveImageGeneric(const char *filename, int width, int height, byte *data)
+{
+	const char *extension = V_GetFileExtension(filename);
+
+	FREE_IMAGE_FORMAT fiFormat = FreeImage_GetFIFFromFilename(filename);
+
+	if(fiFormat == FIF_UNKNOWN)
+	{
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
+		return FALSE;  
+	}
+
+	if(!FreeImage_FIFSupportsWriting(fiFormat))
+    {
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
+		return FALSE;
+    }
+
+	FileHandle_t fileHandle = g_pFileSystem->Open(filename, "wb");
+
+	if(!fileHandle)
+    {
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: Cannot open %s for writing.\n", filename);
 		return FALSE;  
     }
 
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: png_set_write_fn failed ");
-		g_pFileSystem->Close(fp);
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-        return FALSE;  
-    }
+	FreeImageIO fiIO;
+	fiIO.read_proc = FI_Read;
+	fiIO.write_proc = FI_Write;
+	fiIO.seek_proc = FI_Seek;
+	fiIO.tell_proc = FI_Tell;
 
-	dst.fp = fp;
+	FIBITMAP *fiB = FreeImage_Allocate(width, height, 24);
 
-	png_set_write_fn(png_ptr, &dst, WritePNGCallBack, FlushPNGCallBack);
+	int pos = 0;
+	int blockSize = FreeImage_GetLine(fiB) / width;
 
-	if (setjmp(png_jmpbuf(png_ptr)))  
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error writing header");
-		g_pFileSystem->Close(fp);
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		return FALSE;
-    }
-
-    png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);  
-
-	png_write_info(png_ptr, info_ptr);
-  
-	row_pointers = (png_bytepp)malloc(height * sizeof(png_bytep));
-	if(!row_pointers)
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during allocate row_pointers");
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		g_pFileSystem->Close(fp);
-        return FALSE;
-    }
-
-	for (i = 0; i < height; i++)
-        row_pointers[height-i-1] = data + i * width * 3;//reverse image
-
-    /* write bytes */  
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during writing bytes");
-		g_pFileSystem->Close(fp);
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		free(row_pointers);
-        return FALSE;
-    }
-
-    png_write_image(png_ptr, row_pointers);
-  
-    if (setjmp(png_jmpbuf(png_ptr)))  
-    {  
-		g_pMetaSave->pEngineFuncs->Con_Printf("SavePNG: Error during end of write");
-		png_destroy_write_struct(&png_ptr, &info_ptr);
-		free(row_pointers);
-		g_pFileSystem->Close(fp);
-		return FALSE;
-    }
-
-	png_write_end(png_ptr, info_ptr);
-	png_destroy_write_struct(&png_ptr, &info_ptr);
-	free(row_pointers);
-	g_pFileSystem->Close(fp);
-	return TRUE;
-}
-
-int SaveTGA(const char *file_name, int width, int height, byte *data)
-{
-	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
-    if (!fp)
-    {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveTGA: Cannot open %s for writing.\n", file_name);
-		return FALSE;
-    }
-
-	tgaheader_t header;
-
-	memset(&header, 0, sizeof(tgaheader_t));
-	header.bImageType = 2;
-	header.bWidth[0] = width & 255;
-	header.bWidth[1] = width >> 8;
-	header.bHeight[0] = height & 255;
-	header.bHeight[1] = height >> 8;
-	header.bPixelDepth = 24;
-
-	g_pFileSystem->Write(&header, sizeof(tgaheader_t), fp);
-
-	int nPixelSize = width * height * 3;
-	int i;
-
-	byte buf[3];
-	byte *p = data;
-	for (i = 0; i < nPixelSize; i += 3, p += 3)
+	for(int y = 0; y < height; ++y)
 	{
-		buf[0] = p[2];
-		buf[1] = p[1];
-		buf[2] = p[0];
-		g_pFileSystem->Write(buf, sizeof(buf), fp);
-	}
-
-	g_pFileSystem->Close(fp);
-	return TRUE;
-}
-
-int SaveBMP(const char *file_name, int width, int height, byte *data)
-{
-	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
-    if (!fp)
-    {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveBMP: Cannot open %s for writing.\n", file_name);
-        return FALSE;  
-    }
-
-	BITMAPFILEHEADER bmfh;
-	BITMAPINFOHEADER bmih;
-
-	const int OffBits = 54;
-
-	bmfh.bfReserved1 = 0;  
-	bmfh.bfReserved2 = 0;  
-	bmfh.bfType = 0x4D42;
-	bmfh.bfOffBits = OffBits;
-	bmfh.bfSize = width * height * 3 + OffBits;
-  
-    memset(&bmih, 0 ,sizeof(BITMAPINFOHEADER));
-    bmih.biSize = 40; 
-    bmih.biPlanes = 1;
-    bmih.biSizeImage = width * height * 3;
-    bmih.biBitCount = 24;
-    bmih.biCompression = 0;
-    bmih.biWidth = width;
-    bmih.biHeight = height;
-  
-	g_pFileSystem->Write(&bmfh, sizeof(BITMAPFILEHEADER), fp);
-	g_pFileSystem->Write(&bmih, sizeof(BITMAPINFOHEADER), fp);
-
-	byte buf[3];
-	byte *p = data;
-	for( int i = height - 1; i >= 0; --i)  
-	{
-		for( int j = 0; j < width; ++j, p += 3)  
+		BYTE *bits = FreeImage_GetScanLine(fiB, y);
+		for(int x = 0; x < width; ++x)
 		{
-			buf[0] = p[2];
-			buf[1] = p[1];
-			buf[2] = p[0];
-			g_pFileSystem->Write(buf, sizeof(buf), fp);
+			bits[FI_RGBA_RED] = data[pos++];
+			bits[FI_RGBA_GREEN] = data[pos++];
+			bits[FI_RGBA_BLUE] = data[pos++];
+			bits += blockSize;
 		}
 	}
 
-	g_pFileSystem->Close(fp);
+	if(FALSE == FreeImage_SaveToHandle(fiFormat, fiB, &fiIO, (fi_handle)fileHandle))
+    {
+		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: Cannot save %s.\n", filename);
+		g_pFileSystem->Close(fileHandle);
+		FreeImage_Unload(fiB);
+        return FALSE;
+    }
+
+	g_pFileSystem->Close(fileHandle);
+	FreeImage_Unload(fiB);
 	return TRUE;
 }
 
-int SaveJPEG(const char *file_name, int width, int height, byte *data)
+int R_LoadTextureEx(const char *filepath, const char *name, int *width, int *height, GL_TEXTURETYPE type, qboolean mipmap, qboolean ansio)
 {
-	FileHandle_t fp = g_pFileSystem->Open(file_name, "wb");
-    if (!fp)
-    {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveJPEG: Cannot open %s for writing.\n", file_name);
-        return FALSE;  
-    }
+	int w, h;
 
-	struct jpeg_compress_struct cinfo;
-	struct jpeg_error_mgr jerr;
-	JSAMPROW row_pointer[1];
-	int row_stride;
+	const char *extension = V_GetFileExtension(filepath);
 
-	cinfo.err = jpeg_std_error(&jerr);
-	jpeg_create_compress(&cinfo);
-
-	byte *outBuffer = NULL;
-
-	unsigned long outSize = 0;
-
-	jpeg_mem_dest(&cinfo, &outBuffer, &outSize);
-
-	cinfo.image_width = width;
-	cinfo.image_height = height;
-	cinfo.input_components = 3;
-	cinfo.in_color_space = JCS_EXT_RGB;
-
-	jpeg_set_defaults(&cinfo);
-	jpeg_set_quality(&cinfo, 70, TRUE);
-
-	jpeg_start_compress(&cinfo, TRUE);
-
-	row_stride = width * 3;
-
-	while(cinfo.next_scanline < cinfo.image_height)
+	if(!extension)
 	{
-		/* jpeg_write_scanlines expects an array of pointers to scanlines.
-		* Here the array is only one element long, but you could pass
-		* more than one scanline at a time if that's more convenient.
-		*/
-		row_pointer[0] = &data[(cinfo.image_height - 1 - cinfo.next_scanline) * row_stride];
-		jpeg_write_scanlines(&cinfo, row_pointer, 1);
+		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: File %s has no extension.\n", filepath);
+		return 0;
 	}
 
-	jpeg_finish_compress(&cinfo);
+	if(!stricmp(extension, "dds") && gl_s3tc_compression_support)
+	{
+		if(LoadDDS(filepath, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+		{
+			if(width)
+				*width = w;
+			if(height)
+				*height = h;
+			return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
+		}
+	}
+	else if(LoadImageGeneric(filepath, texloader_buffer, sizeof(texloader_buffer), &w, &h))
+	{
+		if(width)
+			*width = w;
+		if(height)
+			*height = h;
+		return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
+	}
 
-	g_pFileSystem->Write(outBuffer, outSize, fp);
-	g_pFileSystem->Close(fp);
-	if(outBuffer) free(outBuffer);
-
-	jpeg_destroy_compress(&cinfo);
-	return TRUE;
+	g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: Cannot load texture %s.\n", filepath);
+	return 0;
 }

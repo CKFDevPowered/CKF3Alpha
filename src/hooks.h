@@ -12,6 +12,11 @@ typedef struct
 	void (__fastcall *DrawStartupGraphic)(void *, int, HWND);
 	void (*SDL_GetWindowSize)(HWND, int *, int *);
 	void (*SDL_SwapBuffer)(HWND);
+	//https://github.com/ValveSoftware/halflife/issues/1654
+	void (*CL_ReadClientDLLData)(void);
+	void (*CL_DemoParseSound)(void);
+	void (*CL_DemoPlaySound)( int channel, char *sample, float attenuation, float volume, int flags, int pitch );
+	FileHandle_t *cls_demofile;	
 }HookFuncs_t;
 
 extern HookFuncs_t gHookFuncs;

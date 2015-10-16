@@ -307,9 +307,9 @@ void W_Precache(void)
 	PRECACHE_SOUND("weapons/debris1.wav");
 	PRECACHE_SOUND("weapons/debris2.wav");
 	PRECACHE_SOUND("weapons/debris3.wav");
-	PRECACHE_SOUND("weapons/grenade_hit1.wav");
-	PRECACHE_SOUND("weapons/grenade_hit2.wav");
-	PRECACHE_SOUND("weapons/grenade_hit3.wav");
+	//PRECACHE_SOUND("weapons/grenade_hit1.wav");
+	//PRECACHE_SOUND("weapons/grenade_hit2.wav");
+	//PRECACHE_SOUND("weapons/grenade_hit3.wav");
 	PRECACHE_SOUND("weapons/bullet_hit1.wav");
 	PRECACHE_SOUND("weapons/bullet_hit2.wav");
 	PRECACHE_SOUND("items/weapondrop1.wav");

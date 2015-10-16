@@ -6,34 +6,38 @@
 #include "util.h"
 #include "studio_util.h"
 #include "particle.h"
+#include "StudioModelRenderer.h"
+#include "GameStudioModelRenderer.h"
 
 extern cl_entity_t ent;
 
-class CPSBurningPlayer : public CPartSystemBones
+class CPSBurningPlayer : public CPartSystemEntity
 {
 public:
 	CPSBurningPlayer(){}
-	void Init(int parts, int childs, cl_entity_t *entity, int team, float time)
+	void Init(int parts, int childs, cl_entity_t *entity, int team)
 	{
-		CPartSystemBones::Init(PS_BurningPlayer, parts, childs, entity);
-		Reset(team, time);
+		CPartSystemEntity::Init(PS_BurningPlayer, parts, childs, entity);
+		Reset(team);
 	}
-	void Reset(int team, float time)
+	void Reset(int team)
 	{
-		SetDie(time);
 		m_team = team;
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
 		CALC_FRACTION(p);
-		VectorTransform(p->org, m_lighttransform[p->bone], org);
-		VectorMA(org, frac2, p->vel, org);
+
+		g_StudioRenderer.m_pCurrentEntity = m_entity;
+		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
+		if(bones)
+		{
+			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+			VectorMA(org, frac2, p->vel, org);
+		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
-		if(!m_bonesaved)
-			return;
-
 		CALC_FRACTION(p);
 
 		ent.curstate.rendermode = kRenderAddColor;
@@ -53,7 +57,7 @@ public:
 	}
 	virtual void Update(void)
 	{
-		if(!m_dead)
+		if(!m_dead && m_entity->model)
 		{
 			if(!(m_entity->curstate.effects & EF_AFTERBURN))
 			{
@@ -71,7 +75,6 @@ public:
 		COLOR_RANDOM_LERP(231, 143, 81, 252, 158, 118);
 		p->col[3] = RANDOM_LONG(128, 200);
 
-		if(m_entity->model)
 		{
 			studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
 			if(pstudiohdr && pstudiohdr->numhitboxes > 0)
@@ -113,9 +116,13 @@ public:
 	virtual void Movement(part_t *p, float *org)
 	{
 		CALC_FRACTION(p);
-		CPSBurningPlayer *parent = (CPSBurningPlayer *)m_parent;
-		VectorTransform(p->org, parent->m_lighttransform[p->bone], org);
-		//VectorMA(org, frac2, p->vel, org);
+
+		g_StudioRenderer.m_pCurrentEntity = m_entity;
+		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
+		if(bones)
+		{
+			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
@@ -144,7 +151,7 @@ public:
 	}
 	virtual void Update(void)
 	{
-		if(!m_parent->m_dead && m_part.size() < 40)
+		if(!m_parent->m_dead && GetActivePartCount() < 40 && m_entity->model)
 		{
 			AddParticle();
 		}
@@ -165,7 +172,6 @@ public:
 		}
 		p->col[3] = RANDOM_LONG(100, 122);
 
-		if(m_entity->model)
 		{
 			studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
 			if(pstudiohdr && pstudiohdr->numhitboxes > 0)
@@ -189,26 +195,28 @@ public:
 private:
 };
 
-void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flTime)
+void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flDuration)
 {
 	CPSBurningPlayer *pCore = (CPSBurningPlayer *)R_FindPartSystem(PS_BurningPlayer, pEntity);
 
 	if(pCore)
 	{
-		if(flTime <= 0)
+		if(flDuration <= 0)
 		{
 			pCore->SetDead(1);
 		}
 		else
 		{
 			pCore->SetDead(0);
-			pCore->Reset(iTeam - 1, flTime);
+			pCore->Reset(iTeam - 1);
+			pCore->SetDie(flDuration);
 		}
 		return;
 	}
 
 	pCore = new CPSBurningPlayer;
-	pCore->Init(150, 1, pEntity, iTeam - 1, flTime);
+	pCore->Init(150, 1, pEntity, iTeam - 1);
+	pCore->SetDie(flDuration);
 
 	CPSBurningPlayerGlow *pGlow = new CPSBurningPlayerGlow;
 	pGlow->Init(40, 0, pEntity);

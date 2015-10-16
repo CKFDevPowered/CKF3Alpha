@@ -8,7 +8,6 @@
 #include "VideoMode.h"
 #include "Video.h"
 #include "LoadTGA.h"
-#include "LoadBMP.h"
 #include <IRenderer.h>
 
 struct bimage_t
@@ -31,7 +30,6 @@ void __fastcall LoadStartupGraphic(void *pthis, int)
 	int texBufSize;
 	int width, height;
 	char token[512];
-	char fileExtension[32];
 
 	g_ImageLayers.RemoveAll();
 
@@ -70,22 +68,7 @@ void __fastcall LoadStartupGraphic(void *pthis, int)
 		if ( !buffer || !buffer[0] )
 			break;
 
-		int (*pfnLoadImage)(const char *, byte *, int , int *, int *);
-
-		V_ExtractFileExtension(token, fileExtension, sizeof(fileExtension));
-
-		if(!Q_stricmp(fileExtension, "tga"))
-			pfnLoadImage = LoadTGA;
-		else if(!Q_stricmp(fileExtension, "png"))
-			pfnLoadImage = LoadPNG;
-		else if(!Q_stricmp(fileExtension, "bmp"))
-			pfnLoadImage = LoadBMP;
-		else if(!Q_stricmp(fileExtension, "jpg") || !Q_stricmp(fileExtension, "jpeg"))
-			pfnLoadImage = LoadJPEG;
-		else//unsupported image format
-			break;
-
-		if(pfnLoadImage(token, texBuffer, texBufSize, &width, &height))
+		if(LoadImageGeneric(token, texBuffer, texBufSize, &width, &height))
 		{
 			buffer = g_pFileSystem->ParseFile( buffer, token, NULL );
 

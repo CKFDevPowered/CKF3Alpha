@@ -307,7 +307,6 @@ void CRocket::RocketLaunch(void)
 void CRocket::Precache( void )
 {
 	PRECACHE_MODEL("models/CKF_III/pj_rocket.mdl");
-	PRECACHE_SOUND("CKF_III/explode.wav");
 }
 
 void CRocket::Killed(entvars_t *pevAttacker, int iGib)

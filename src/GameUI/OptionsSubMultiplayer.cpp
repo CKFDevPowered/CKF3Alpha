@@ -29,7 +29,6 @@
 #include "UtlBuffer.h"
 #include "ModInfo.h"
 #include "LogoFile.h"
-#include "LoadBMP.h"
 
 #include <setjmp.h>
 #include <io.h>
@@ -37,6 +36,8 @@
 #include "configs.h"
 
 using namespace vgui;
+
+#define DIB_HEADER_MARKER ((WORD) ('M' << 8) | 'B')
 
 struct ColorItem_t
 {

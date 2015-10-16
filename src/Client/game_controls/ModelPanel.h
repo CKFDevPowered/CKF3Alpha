@@ -27,6 +27,9 @@ public:
 	void SetModel(const char *szModel);
 	void SetAnimation(const char *szAnim);
 	void InitEntity(void);
+
+	MESSAGE_FUNC(OnTick, "Tick");
+
 	cl_entity_t *GetEntity(void){return &m_entity;};
 
 protected:

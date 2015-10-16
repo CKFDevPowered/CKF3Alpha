@@ -4,15 +4,12 @@
 #include "pm_materials.h"
 #include "hintmessage.h"
 
-//#include <hash_map>
-//using namespace stdext;
+#include <vector>
 
 #define EF_INVULNERABLE				(1<<8)//256
 #define EF_CRITBOOST				(1<<9)
 #define EF_AFTERBURN				(1<<10)
 #define EF_SHADOW					(1<<11)
-#define EF_3DSKY					(1<<12)
-#define EF_3DMENU					(1<<13)
 
 #define FL_LOCK_DUCK				(1<<17)
 #define	FL_LOCK_JUMP				(1<<18)
@@ -52,7 +49,9 @@ enum fx_e
 	FX_CLOAKBEGIN,
 	FX_CLOAKSTOP,
 	FX_DISGUISEHINT,
-	FX_KILLALLTRAIL
+	FX_KILLALLTRAIL,
+	FX_CRITPLAYERWEAPON,
+	FX_INVULNPLAYER
 };
 
 enum
@@ -120,13 +119,6 @@ typedef enum
 	GETINTOGAME
 }
 JoinState;
-
-/*#define STATE_JOINED 0
-#define STATE_ASSIGNED 1
-#define STATE_CLEAR 2
-#define STATE_SHOWLTEXT 3
-#define STATE_PICKING 4
-#define STATE_FINISHED 5*/
 
 #define MAPZONE_RESUPPLYROOM (1<<0)
 #define MAPZONE_CONTROLPOINT (1<<1)
@@ -266,6 +258,7 @@ public:
 	int m_iStatus;
 	float m_flDie;
 	float m_flNextThink;
+	float m_flNextEffect;
 	CBasePlayer *m_pPlayer;
 };
 
@@ -285,6 +278,7 @@ public:
 	virtual void OnThink(void);
 	virtual void OnRemove(void);
 public:
+	float m_flNextEffect;
 };
 
 class CCondAfterBurn : public CPlayerCondition
@@ -295,6 +289,7 @@ public:
 	virtual void OnRemove(void);
 public:
 	int m_iDamage;
+	float m_flNextEffect;
 	entvars_t *m_pevIgniter;
 	entvars_t *m_pevInflictor;
 };
@@ -388,8 +383,8 @@ public:
 	void CheatImpulseCommands(int iImpulse);
 	void StartDeathCam(void);
 	void StartObserver(Vector vecPosition, Vector vecViewAngle);
-	CBaseEntity *Observer_IsValidTarget(int iTarget, BOOL bOnlyTeam);
-	void Observer_FindNextPlayer(BOOL bReverse);
+	CBaseEntity *Observer_IsValidTarget(int iTarget, bool bOnlyTeam);
+	void Observer_FindNextPlayer(bool bReverse, char *name = NULL);
 	void Observer_HandleButtons(void);
 	void Observer_SetMode(int iMode);
 	void Observer_CheckTarget(void);
@@ -525,6 +520,11 @@ public:
 	int Dominate_Count(void);
 	int PM_NoCollision(CBaseEntity *pEntity);
 	void SendWeaponUpdate(CBasePlayerItem *pItem);
+	bool IsObservingPlayer(CBasePlayer *pTarget);
+	void SetObserverAutoDirector(bool bState);
+	bool CanSwitchObserverModes(void);
+	void SendSpecHealth(bool bShowEntIndex, entvars_t *pevInflictor);
+
 public:
 	static TYPEDESCRIPTION m_playerSaveData[];
 
@@ -532,42 +532,42 @@ public:
 	int random_seed;
 	EHANDLE m_hObserverTarget;
 	float m_flNextObserverInput;
-	int m_iObserverWeaponId;
+	int m_iObserverWeapon;
 	int m_iObserverC4State;
-	BOOL m_bObserverHasDefuseKit;
-	int m_iObserverMode;
+	bool m_bObserverHasDefuser;
+	int m_iObserverLastMode;
 	float m_flFlinchTime;
-	BOOL m_bTakenHighDamage;
+	bool m_bTakenHighDamage;
 	float m_flVelocityModifier;
 	float m_flEjectBrass;
 	int m_iKevlar;
-	BOOL m_bNotKilled;
+	bool m_bNotKilled;
 	int m_iTeam;
 	int m_iAccount;
-	BOOL m_bHasPrimaryWeapon;
+	bool m_bHasPrimaryWeapon;
 	float m_flDeathThrowTime;
 	int m_iThrowDirection;
 	float m_flLastTalk;
-	BOOL m_bJustConnected;
+	bool m_bJustConnected;
 	JoinState m_iJoiningState;
 	CBaseEntity *m_pIntroCamera;
 	float m_fIntroCamTime;
 	float m_fLastMovement;
-	BOOL m_bMissionBriefing;
-	BOOL m_bTeamChanged;
+	bool m_bMissionBriefing;
+	bool m_bTeamChanged;
 	int m_iTeamKills;
 	int m_iIgnoreMessage;
-	BOOL m_bHasNightVision;
-	BOOL m_bNightVisionOn;
+	bool m_bHasNightVision;
+	bool m_bNightVisionOn;
 	float m_flIdleCheckTime;
 	float m_flNextRadioTime;
 	int m_iRadioLeft;
-	BOOL m_bIgnoreRadio;
-	BOOL m_bIsBombGuy;
-	BOOL m_bHasDefuseKit;
-	BOOL m_bInjuredBlast;
+	bool m_bIgnoreRadio;
+	bool m_bIsBombGuy;
+	bool m_bHasDefuseKit;
+	bool m_bInjuredBlast;
 	Vector m_vecInjuredLOS;
-	BOOL m_bInjuredExplosion;
+	bool m_bInjuredExplosion;
 	CHintMessageQueue m_hintMessageQueue;
 	int m_flDisplayHistory;
 	int m_iMenu;
@@ -575,12 +575,12 @@ public:
 	float m_flUpdateSignalTime;
 	int m_iVotingKikedPlayerId;
 	float m_flNextVoteTime;
-	BOOL m_bJustKilledTeammate;
+	bool m_bJustKilledTeammate;
 	int m_iHostagesKilled;
 	int m_iVotingMapId;
 	bool m_bAllowAttack;
 	float m_flLastAttackTime;
-	BOOL m_bNameChanged;
+	bool m_bNameChanged;
 	char m_szNewName[32];
 	float m_flHandleSignalDelay;
 	int m_iMapZone;
@@ -668,6 +668,10 @@ public:
 	BOOL m_bVGUIMenus;
 	BOOL m_bShowHints;
 	float m_flYawModifier;
+	bool m_bObserverAutoDirector;
+	bool m_canSwitchObserverModes;;
+	bool m_bWasFollowing;
+	float m_flNextFollowTime;
 	//ckf
 	int m_iClass;
 	int m_iNewClass;
@@ -690,11 +694,11 @@ public:
 	float m_flCloakEnergyTimer;
 	unsigned long m_ulModelIndexPlayer;
 	float m_fHitDamageTimer;
-	BOOL m_bCritKilled;
-	BOOL m_bLastHitCrit;
-	BOOL m_bBackStabKilled;
-	BOOL m_bLastHitBackStab;
-	BOOL m_bHeadShotKilled;
+	bool m_bCritKilled;
+	bool m_bLastHitCrit;
+	bool m_bBackStabKilled;
+	bool m_bLastHitBackStab;
+	bool m_bHeadShotKilled;
 	float m_fUbercharge;
 	int m_iUbercharge;
 	float m_flUberThink;
@@ -704,11 +708,33 @@ public:
 	cond_manager_t m_Cond;
 	float m_flResupplyCase;
 	edict_t *m_pentControlPoint;
-	dmg_record_t m_DmgRecord[MAX_DMGRECORD];
-	int m_iDmgRecord;
+	//DmageRecord
+	std::vector<dmg_record_t> m_DmgRecord;
 	//Disguise Field
+	/*struct
+	{
+		int iStatus;
+		int iBegin;
+		float flTime;
+		int iNewTeam;
+		int iNewClass;
+		int iTeam;
+		int iClass;
+		int iHealth;
+		int iMaxHealth;
+		int iWeaponModel;
+		int iWeaponID;
+		int iWeaponBody;
+		float flHealthReduce;
+		char szAnimExt[32];
+		int iSequence;
+		int iStandSequence;
+		int iMaxSpeed;
+		CBasePlayer *pTargetPlayer;
+		int iTargetPlayer
+	}m_Disguise;*/
 	int m_iDisguise;
-	BOOL m_bDisguiseStart;
+	bool m_bDisguiseStart;
 	float m_flDisguiseTimer;
 	int m_iDisguiseNewTeam;
 	int m_iDisguiseNewClass;

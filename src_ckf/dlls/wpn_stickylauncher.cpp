@@ -439,7 +439,6 @@ void CSticky::StickyTouch( CBaseEntity *pOther )
 void CSticky::Precache( void )
 {
 	PRECACHE_MODEL("models/CKF_III/pj_stickybomb.mdl");
-	PRECACHE_SOUND("CKF_III/explode.wav");
 }
 
 void CSticky::Killed(entvars_t *pevAttacker, int iGib)

@@ -4,17 +4,29 @@ vec3_t save_vieworg[MAX_SAVEREFDEF_STACK];
 vec3_t save_viewang[MAX_SAVEREFDEF_STACK];
 int save_refdefstack = 0;
 
-void R_GLBindFrameBuffer(GLuint fb, GLuint fbo)
+void R_PushFrameBuffer(void)
 {
-	if(fb == GL_READ_FRAMEBUFFER)
+	if(gl_framebuffer_object)
 	{
-		qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, fbo);
+		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, (GLint *)&readframebuffer);
+		qglGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, (GLint *)&drawframebuffer);
 	}
-	else if(currentframebuffer != fbo)
+}
+
+void R_PopFrameBuffer(void)
+{
+	if(gl_framebuffer_object)
 	{
-		qglBindFramebufferEXT(fb, fbo);
-		lastframebuffer = currentframebuffer;
-		currentframebuffer = fbo;
+		qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, readframebuffer);
+		qglBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, drawframebuffer);
+	}
+}
+
+void R_GLBindFrameBuffer(GLenum target, GLuint framebuffer)
+{
+	if(gl_framebuffer_object)
+	{
+		qglBindFramebufferEXT(target, framebuffer);
 	}
 }
 

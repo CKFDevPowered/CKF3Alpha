@@ -401,8 +401,12 @@ void R_FinishRefract(void)
 
 void R_UpdateWater(void)
 {
+	int currentframebuffer = 0;
 	if(s_WaterFBO.s_hBackBufferFBO)
-		R_GLBindFrameBuffer(GL_FRAMEBUFFER, s_WaterFBO.s_hBackBufferFBO);
+	{
+		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentframebuffer);
+		qglBindFramebufferEXT(GL_FRAMEBUFFER, s_WaterFBO.s_hBackBufferFBO);
+	}
 
 	for(r_water_t *w = waters_active; w; w = w->next)
 	{
@@ -444,5 +448,7 @@ void R_UpdateWater(void)
 	}
 
 	if(s_WaterFBO.s_hBackBufferFBO)
-		R_GLBindFrameBuffer(GL_FRAMEBUFFER, lastframebuffer);
+	{
+		qglBindFramebufferEXT(GL_FRAMEBUFFER, currentframebuffer);
+	}
 }

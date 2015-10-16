@@ -635,6 +635,7 @@ BOOL CClientWeapon::DefaultDeploy(char *szViewModel, char *szWeaponModel, int iA
 		return FALSE;
 
 	gEngfuncs.CL_LoadModel( szViewModel, &g_Player.pev.viewmodel );
+	gEngfuncs.CL_LoadModel( szWeaponModel, &g_Player.pev.weaponmodel );
 
 	SendWeaponAnim(iAnim);
 

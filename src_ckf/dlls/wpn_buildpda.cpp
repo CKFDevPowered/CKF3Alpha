@@ -86,6 +86,11 @@ void CBuildPDA::Holster(int skiplocal)
 {
 	ShowHudMenu(m_pPlayer, MENU_CLOSE, 0, FALSE);
 
+	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, m_pPlayer->pev);
+	WRITE_BYTE(FX_BLUEPRINT);
+	WRITE_BYTE(0);
+	MESSAGE_END();
+
 	m_pPlayer->m_iCarryBluePrint = 0;
 }
 

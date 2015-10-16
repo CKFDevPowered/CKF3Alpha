@@ -20,54 +20,17 @@ extern model_t *g_mdlSapper;
 extern model_t *g_mdlSpyMask;
 extern char *g_szPlayerModel[];
 
-void CStudioModelRenderer::StudioRenderCustomModel(void)
-{
-	alight_t lighting;
-	vec3_t dir;
-
-	g_fLOD = 0;
-
-	gpEngineStudio->GetTimes( &m_nFrameCount, &m_clTime, &m_clOldTime );
-	gpEngineStudio->GetViewInfo( m_vRenderOrigin, m_vUp, m_vRight, m_vNormal );
-	gpEngineStudio->GetAliasScale( &m_fSoftwareXScale, &m_fSoftwareYScale );
-
-	m_pCurrentEntity = gpEngineStudio->GetCurrentEntity();
-	m_pRenderModel = m_pCurrentEntity->model;
-	m_pStudioHeader = (studiohdr_t *)gpEngineStudio->Mod_Extradata (m_pRenderModel);
-	gpEngineStudio->StudioSetHeader( m_pStudioHeader );
-	gpEngineStudio->SetRenderModel( m_pRenderModel );
-
-	StudioSetUpTransform( 0 );
-
-	if (!gpEngineStudio->StudioCheckBBox ())
-		return;
-
-	(*m_pModelsDrawn)++;
-	(*m_pStudioModelCount)++;
-
-	if (m_pStudioHeader->numbodyparts == 0)
-		return;
-
-	StudioSetupBones();
-	StudioSaveBones();
-
-	lighting.plightvec = dir;
-	gpEngineStudio->StudioEntityLight(&lighting);
-	gpEngineStudio->StudioSetupLighting(&lighting);
-
-	gpEngineStudio->StudioSetRemapColors( m_nTopColor, m_nBottomColor );
-
-	StudioRenderModel(dir);
-}
-
-void CStudioModelRenderer::StudioRenderAttach(model_t *mod)
+void CStudioModelRenderer::StudioRenderAttach(int flags, model_t *mod)
 {
 	m_pStudioHeader = (studiohdr_t *)gpEngineStudio->Mod_Extradata(mod);
 	gpEngineStudio->StudioSetHeader( m_pStudioHeader );
 
 	StudioMergeBones(mod);
 
-	StudioRenderModel(NULL);
+	if(flags & STUDIO_RENDER)
+	{
+		StudioRenderModel(NULL);
+	}
 }
 
 void CStudioModelRenderer::Init(void)
@@ -77,7 +40,11 @@ void CStudioModelRenderer::Init(void)
 	m_pCvarDrawEntities = gpEngineStudio->GetCvar("r_drawentities");
 
 	m_pChromeSprite = gpEngineStudio->GetChromeSprite();
-	m_texFireLayer = gRefExports.R_LoadTextureEx("resource\\tga\\firelayeredslowtiled512.tga", "firelayeredslowtiled512", NULL, NULL, GLT_SYSTEM, false, false);
+	m_texFireLayer = gRefExports.R_LoadTextureEx("resource/tga/firelayeredslowtiled512.tga", "firelayeredslowtiled512", NULL, NULL, GLT_SYSTEM, true, false);
+	m_texCritLayer[0] = gRefExports.R_LoadTextureEx("resource/tga/invulnerability_red.tga", "invulnerability_red", NULL, NULL, GLT_SYSTEM, true, false);
+	m_texCritLayer[1] = gRefExports.R_LoadTextureEx("resource/tga/invulnerability_blue.tga", "invulnerability_blue", NULL, NULL, GLT_SYSTEM, true, false);
+	m_texInvulnLayer[0] = gRefExports.R_LoadTextureEx("resource/tga/invuln_red.dds", "invuln_red", NULL, NULL, GLT_SYSTEM, true, false);
+	m_texInvulnLayer[1] = gRefExports.R_LoadTextureEx("resource/tga/invuln_blue.dds", "invuln_blue", NULL, NULL, GLT_SYSTEM, true, false);
 
 	gpEngineStudio->GetModelCounters(&m_pStudioModelCount, &m_pModelsDrawn);
 
@@ -337,7 +304,7 @@ void CStudioModelRenderer::StudioSlerpBones(vec4_t q1[], float pos1[][3], vec4_t
 	}
 }
 
-mstudioanim_t *CStudioModelRenderer::StudioGetAnim(model_t *m_pSubModel, mstudioseqdesc_t *pseqdesc)
+mstudioanim_t *CStudioModelRenderer::StudioGetAnim(model_t *mod, mstudioseqdesc_t *pseqdesc)
 {
 	mstudioseqgroup_t *pseqgroup;
 	cache_user_t *paSequences;
@@ -347,12 +314,12 @@ mstudioanim_t *CStudioModelRenderer::StudioGetAnim(model_t *m_pSubModel, mstudio
 	if (pseqdesc->seqgroup == 0)
 		return (mstudioanim_t *)((byte *)m_pStudioHeader + pseqgroup->data + pseqdesc->animindex);
 
-	paSequences = (cache_user_t *)m_pSubModel->submodels;
+	paSequences = (cache_user_t *)mod->submodels;
 
 	if (paSequences == NULL)
 	{
 		paSequences = (cache_user_t *)gpEngineStudio->Mem_Calloc(16, sizeof(cache_user_t));
-		m_pSubModel->submodels = (dmodel_t *)paSequences;
+		mod->submodels = (dmodel_t *)paSequences;
 	}
 
 	if (!gpEngineStudio->Cache_Check((struct cache_user_s *)&(paSequences[pseqdesc->seqgroup])))
@@ -812,28 +779,10 @@ void CStudioModelRenderer::StudioSaveBones(void)
 	if(gRefExports.R_GetDrawPass() != r_draw_normal)
 		return;
 
-	CParticleSystem *t;
-	CPartSystemBones *tb;
-	int size;
-
-	//ckf3 added
-	size = g_partsystems.size();
-	for(i = 0; i < size; ++i)
-	{
-		t = g_partsystems[i];
-		if(t->IsBindBone())
-		{
-			tb = (CPartSystemBones *)t;
-			if(tb->m_entity == *CurrentEntity && tb->GetDead() < 2)
-			{
-				tb->m_bonesaved = true;
-				memcpy(tb->m_lighttransform, m_plighttransform, m_pStudioHeader->numbones*sizeof(matrix3x4));
-			}
-		}
-	}
+	SaveEntityBones();
 }
 
-void CStudioModelRenderer::StudioMergeBones(model_t *m_pSubModel)
+void CStudioModelRenderer::StudioMergeBones(model_t *mod)
 {
 	int i, j;
 	double f;
@@ -858,7 +807,7 @@ void CStudioModelRenderer::StudioMergeBones(model_t *m_pSubModel)
 	{
 	}
 
-	panim = StudioGetAnim(m_pSubModel, pseqdesc);
+	panim = StudioGetAnim(mod, pseqdesc);
 	StudioCalcRotations(pos, q, pseqdesc, panim, f);
 
 	pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
@@ -956,7 +905,7 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 
 	if (flags & STUDIO_RENDER)
 	{
-		if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
+		if(m_pCurrentEntity->curstate.entityType != ET_HUDENTITY)//if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
 		{
 			if (!gpEngineStudio->StudioCheckBBox())
 				return 0;
@@ -994,9 +943,8 @@ int CStudioModelRenderer::StudioDrawModel(int flags)
 		vec3_t dir;
 		lighting.plightvec = dir;
 
-		if(!(m_pCurrentEntity->curstate.effects & EF_3DMENU))
-			gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
-
+		gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
+		StudioSpecialLight(&lighting);
 		gpEngineStudio->StudioEntityLight(&lighting);
 		gpEngineStudio->StudioSetupLighting(&lighting);
 
@@ -1255,6 +1203,7 @@ int CStudioModelRenderer::StudioDrawPlayer(int flags, entity_state_t *pplayer)
 		lighting.plightvec = dir;
 
 		gpEngineStudio->StudioDynamicLight(m_pCurrentEntity, &lighting);
+		StudioSpecialLight(&lighting);
 		gpEngineStudio->StudioEntityLight(&lighting);
 		gpEngineStudio->StudioSetupLighting(&lighting);
 
@@ -1342,7 +1291,7 @@ void CStudioModelRenderer::StudioCalcAttachments(void)
 
 void CStudioModelRenderer::StudioRenderModel(float *lightdir)
 {
-	if(m_pCurrentEntity == cl_viewent && lightdir)
+	if(CL_IsViewModel(m_pCurrentEntity) && lightdir)
 	{
 		gRefExports.R_PushRefDef();
 		VectorMA(refdef->vieworg, 200, lightdir, refdef->vieworg);
@@ -1387,13 +1336,58 @@ void CStudioModelRenderer::StudioRenderModel(float *lightdir)
 		StudioRenderFinal();
 	}
 	
-	if ( (m_pCurrentEntity->curstate.effects & EF_AFTERBURN))//iSaveRenderFx != kRenderFxCloak &&
+	if ( (m_pCurrentEntity->curstate.effects & EF_AFTERBURN) && !g_bRenderPlayerWeapon )
 	{
 		m_pCurrentEntity->curstate.rendermode = kRenderTransAdd;
 		m_pCurrentEntity->curstate.renderfx = kRenderFxFireLayer;		
 		m_pCurrentEntity->curstate.renderamt = 192;
 
 		gRefExports.RefAPI.GL_Bind(m_texFireLayer);
+
+		gpEngineStudio->SetForceFaceFlags(0);
+		StudioRenderFinal();
+	}
+
+	//player's weapon model is critboosted
+	if ( (m_pCurrentEntity->curstate.effects & EF_CRITBOOST) && g_bRenderPlayerWeapon )
+	{
+		m_pCurrentEntity->curstate.rendermode = kRenderTransAdd;
+		m_pCurrentEntity->curstate.renderfx = kRenderFxFireLayer;		
+		m_pCurrentEntity->curstate.renderamt = 255;
+
+		int iTeam = m_pCurrentEntity->curstate.skin % 2;
+
+		gRefExports.RefAPI.GL_Bind(m_texCritLayer[iTeam]);
+
+		gpEngineStudio->SetForceFaceFlags( STUDIO_NF_FULLBRIGHT );
+		StudioRenderFinal();
+	}
+
+	//my viewmodel is critboosted
+	if ( (m_pCurrentEntity->curstate.effects & EF_CRITBOOST) && CL_IsViewModel(m_pCurrentEntity) )
+	{
+		m_pCurrentEntity->curstate.rendermode = kRenderTransAdd;
+		m_pCurrentEntity->curstate.renderfx = kRenderFxFireLayer;		
+		m_pCurrentEntity->curstate.renderamt = 255;
+
+		int iTeam = m_pCurrentEntity->curstate.skin % 2;
+
+		gRefExports.RefAPI.GL_Bind(m_texCritLayer[iTeam]);
+
+		gpEngineStudio->SetForceFaceFlags( STUDIO_NF_FULLBRIGHT );
+		StudioRenderFinal();
+	}
+
+	if ( (m_pCurrentEntity->curstate.effects & EF_INVULNERABLE) && (CL_IsViewModel(m_pCurrentEntity) || g_bRenderPlayerWeapon) )
+	{
+		m_pCurrentEntity->curstate.rendermode = kRenderNormal;
+		m_pCurrentEntity->curstate.renderfx = kRenderFxInvulnLayer;		
+		m_pCurrentEntity->curstate.renderamt = 255;
+
+		int iTeam = m_pCurrentEntity->curstate.skin % 2;
+
+		gRefExports.RefAPI.GL_SelectTexture(GL_TEXTURE0);
+		gRefExports.RefAPI.GL_Bind(m_texInvulnLayer[iTeam]);
 
 		gpEngineStudio->SetForceFaceFlags(0);
 		StudioRenderFinal();
@@ -1432,7 +1426,8 @@ void CStudioModelRenderer::StudioRenderFinal_Software(void)
 		for (i = 0; i < m_pStudioHeader->numbodyparts; i++)
 		{
 			gpEngineStudio->StudioSetupModel(i, (void **)&m_pBodyPart, (void **)&m_pSubModel);
-			gpEngineStudio->StudioDrawPoints();
+			if(StudioDrawBodyPart())
+				gpEngineStudio->StudioDrawPoints();
 		}
 	}
 
@@ -1454,7 +1449,7 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware(void)
 	int i;
 	int rendermode;
 
-	rendermode = gpEngineStudio->GetForceFaceFlags() ? kRenderTransAdd : m_pCurrentEntity->curstate.rendermode;
+	rendermode = (gpEngineStudio->GetForceFaceFlags() & (STUDIO_NF_CHROME | STUDIO_NF_ALPHA | STUDIO_NF_ADDITIVE | STUDIO_NF_MASKED)) ? kRenderTransAdd : m_pCurrentEntity->curstate.rendermode;
 	gpEngineStudio->SetupRenderer(rendermode);
 
 	if (m_pCvarDrawEntities->value == 2)
@@ -1470,13 +1465,16 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware(void)
 		for (i = 0; i < m_pStudioHeader->numbodyparts; i++)
 		{
 			gpEngineStudio->StudioSetupModel(i, (void **)&m_pBodyPart, (void **)&m_pSubModel);
-
+			
 			if (m_fDoInterp)
 				m_pCurrentEntity->trivial_accept = 0;
 
-			gpEngineStudio->GL_SetRenderMode(rendermode);
-			gpEngineStudio->StudioSetRenderamt(m_pCurrentEntity->curstate.renderamt);
-			gpEngineStudio->StudioDrawPoints();
+			if(StudioDrawBodyPart())
+			{
+				gpEngineStudio->GL_SetRenderMode(rendermode);
+				gpEngineStudio->StudioSetRenderamt(m_pCurrentEntity->curstate.renderamt);
+				gpEngineStudio->StudioDrawPoints();
+			}
 		}
 	}
 
@@ -1505,7 +1503,7 @@ void R_StudioInit(void)
 
 int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 {
-#define DRAWPLAYER_FL_DISGUISE (1<<0)
+#define DRAWPLAYER_FL_DISGUISEMASK (1<<0)
 	int iResult;
 	int iDrawFlags;
 	float flDistance;
@@ -1513,7 +1511,6 @@ int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 	cl_entity_t *pEntity;
 	float flSavePitch;
 	char szSaveModel[32];
-	int iSaveColor;
 	player_info_t *pPlayerInfo;
 
 	g_fLOD = 1;
@@ -1550,14 +1547,14 @@ int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 		int iRealTeam = g_PlayerInfo[pEntity->index].iTeam;
 		int iShowClass = pEntity->curstate.playerclass;
 		int iDisgTarget = pEntity->curstate.endpos[0];
-		if(iShowClass >= CLASS_SCOUT && iShowClass <= CLASS_SPY)
+		if(iShowClass >= CLASS_SCOUT && iShowClass <= CLASS_SPY && (iShowTeam == 1 || iShowTeam == 2) && iDisgTarget)
 		{
-			if((iShowTeam == 1 || iShowTeam == 2) && (iRealTeam != g_iTeam && iRealTeam != iShowTeam))//disguise
+			if(iRealTeam != g_iTeam && iRealTeam != iShowTeam)//disguised enemy
 			{
 				pPlayerInfo = gpEngineStudio->PlayerInfo(pEntity->index-1);
 				strcpy(szSaveModel, pPlayerInfo->model);
 				strcpy(pPlayerInfo->model, g_szPlayerModel[iShowClass-1]);
-				int color = 0;
+				/*int color = 0;
 				if (iShowTeam == 2)
 				{
 					color = 140;
@@ -1568,32 +1565,30 @@ int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 				}
 				iSaveColor = pPlayerInfo->topcolor;
 				pPlayerInfo->topcolor = color;
-				pPlayerInfo->bottomcolor = color;
+				pPlayerInfo->bottomcolor = color;*/
 			}
-			if(iDisgTarget)
+			else//disguised friend
 			{
-				iDrawFlags |= DRAWPLAYER_FL_DISGUISE;
+				iDrawFlags |= DRAWPLAYER_FL_DISGUISEMASK;
 			}
 		}
 	}
 
 	iResult = g_StudioRenderer.StudioDrawPlayer(flags, pplayer);
 	
-	if(flags & STUDIO_RENDER)
+	if(iDrawFlags & DRAWPLAYER_FL_DISGUISEMASK)
 	{
-		if(iDrawFlags & DRAWPLAYER_FL_DISGUISE)
-		{
-			int iSaveSkin = pEntity->curstate.skin;
-			int iSaveSequence = pEntity->curstate.sequence;
-			//calculate bones again
-			//g_StudioRenderer.StudioDrawPlayer(0, pplayer);
-			pEntity->curstate.sequence = 0;
-			pEntity->curstate.skin = pEntity->curstate.playerclass-1;
-			g_StudioRenderer.StudioRenderAttach(g_mdlSpyMask);
-			
-			pEntity->curstate.sequence = iSaveSequence;
-			pEntity->curstate.skin = iSaveSkin;
-		}
+		int iSaveSkin = pEntity->curstate.skin;
+		int iSaveSequence = pEntity->curstate.sequence;
+
+		pEntity->curstate.sequence = 0;
+		pEntity->curstate.skin = pEntity->curstate.playerclass-1;
+
+		g_bRenderPlayerWeapon = 0;
+		g_StudioRenderer.StudioRenderAttach(flags, g_mdlSpyMask);
+
+		pEntity->curstate.sequence = iSaveSequence;
+		pEntity->curstate.skin = iSaveSkin;
 	}
 
 	if(pEntity == gEngfuncs.GetLocalPlayer())
@@ -1603,8 +1598,8 @@ int R_StudioDrawPlayer(int flags, entity_state_t *pplayer)
 	if(pPlayerInfo)
 	{
 		strcpy(pPlayerInfo->model, szSaveModel);
-		pPlayerInfo->topcolor = iSaveColor;
-		pPlayerInfo->bottomcolor = iSaveColor;
+		//pPlayerInfo->topcolor = iSaveColor;
+		//pPlayerInfo->bottomcolor = iSaveColor;
 	}
 
 	g_fLOD = 0;
@@ -1627,7 +1622,6 @@ int R_StudioDrawModel(int flags)
 	int iSaveSkin;
 
 	g_fLOD = 0;
-	g_bRenderPlayerWeapon = 0;
 	iDrawFlags = 0;
 
 	if(*CurrentEntity == cl_viewent)
@@ -1641,6 +1635,7 @@ int R_StudioDrawModel(int flags)
 		if(header)
 		{
 			mstudiobodyparts_t *pbodypart = (mstudiobodyparts_t *)((char *)header + header->bodypartindex);
+			
 			if(pbodypart->nummodels > 0 && pbodypart->nummodels % 3 == 0)
 			{
 				g_fLOD = 1;
@@ -1680,42 +1675,40 @@ int R_StudioDrawModel(int flags)
 
 	iResult = g_StudioRenderer.StudioDrawModel(flags);
 
-	if(flags & STUDIO_RENDER)
+	if(iDrawFlags & DRAWMODEL_FL_SAPPERATTACH)
 	{
-		if(iDrawFlags & DRAWMODEL_FL_SAPPERATTACH)
+		int iSapperSequence = -1;
+		switch(pEntity->curstate.iuser3)
 		{
-			int iSapperSequence = -1;
-			switch(pEntity->curstate.iuser3)
-			{
-			case BUILDABLE_SENTRY:
-				iSapperSequence = pEntity->curstate.iuser2-1;
-				break;
-			case BUILDABLE_DISPENSER:
-				iSapperSequence = 3;
-				break;
-			case BUILDABLE_ENTRANCE:
-			case BUILDABLE_EXIT:
-				iSapperSequence = 4;
-				break;
-			default:
-				break;
-			}
-			int iSaveSequence = pEntity->curstate.sequence;
-			iSaveSkin = pEntity->curstate.skin;
-			pEntity->curstate.sequence = iSapperSequence;
-			if(iSapperSequence != -1)
-			{
-				pEntity->curstate.skin = iSaveSkin+1;
-				g_StudioRenderer.StudioRenderAttach(g_mdlSapper);
-			}
-			pEntity->curstate.skin = iSaveSkin;
-			pEntity->curstate.sequence = iSaveSequence;
+		case BUILDABLE_SENTRY:
+			iSapperSequence = pEntity->curstate.iuser2-1;
+			break;
+		case BUILDABLE_DISPENSER:
+			iSapperSequence = 3;
+			break;
+		case BUILDABLE_ENTRANCE:
+		case BUILDABLE_EXIT:
+			iSapperSequence = 4;
+			break;
+		default:
+			break;
 		}
+		int iSaveSequence = pEntity->curstate.sequence;
+		iSaveSkin = pEntity->curstate.skin;
+		pEntity->curstate.sequence = iSapperSequence;
+		if(iSapperSequence != -1)
+		{
+			pEntity->curstate.skin = iSaveSkin+1;
+			g_bRenderPlayerWeapon = 0;
+			g_StudioRenderer.StudioRenderAttach(flags, g_mdlSapper);
+		}
+		pEntity->curstate.skin = iSaveSkin;
+		pEntity->curstate.sequence = iSaveSequence;
+	}
 
-		if(iDrawFlags & DRAWMODEL_FL_SENTRYCLIP)
-		{
-			qglDisable(GL_CLIP_PLANE1);
-		}
+	if(iDrawFlags & DRAWMODEL_FL_SENTRYCLIP)
+	{
+		qglDisable(GL_CLIP_PLANE1);
 	}
 
 	if(*CurrentEntity == cl_viewent)
@@ -1725,4 +1718,105 @@ int R_StudioDrawModel(int flags)
 
 	g_fLOD = 0;
 	return iResult;
+}
+
+void CStudioModelRenderer::SaveEntityBones(void)
+{
+	DWORD key = (DWORD)m_pCurrentEntity;
+
+	mstudiobone_t *pbones = (mstudiobone_t *)((byte *)m_pStudioHeader + m_pStudioHeader->boneindex);
+
+	m_EntityBones[key].m_cachedbones = m_pStudioHeader->numbones;
+
+	for (int i = 0; i < m_pStudioHeader->numbones; i++)
+		strcpy(m_EntityBones[key].m_bonename[i], pbones[i].name);
+	memcpy(m_EntityBones[key].m_bonetransform, m_pbonetransform, m_pStudioHeader->numbones*sizeof(matrix3x4));
+	memcpy(m_EntityBones[key].m_lighttransform, m_plighttransform, m_pStudioHeader->numbones*sizeof(matrix3x4));
+
+	m_EntityBones[key].m_bonesaved = true;
+}
+
+void CStudioModelRenderer::RestoreEntityBones(entity_bones_t *bones)
+{
+	memcpy(m_pbonetransform, bones->m_bonetransform, m_pStudioHeader->numbones*sizeof(matrix3x4));
+	memcpy(m_plighttransform, bones->m_lighttransform, m_pStudioHeader->numbones*sizeof(matrix3x4));
+
+	m_nCachedBones = bones->m_cachedbones;
+
+	for (int i = 0; i < m_nCachedBones; i++)
+		strcpy( m_nCachedBoneNames[i], bones->m_bonename[i] );
+	memcpy(m_rgCachedBoneTransform, bones->m_bonetransform, m_nCachedBones * sizeof(matrix3x4));
+	memcpy(m_rgCachedLightTransform, bones->m_lighttransform, m_nCachedBones * sizeof(matrix3x4));
+}
+
+entity_bones_t *CStudioModelRenderer::GetEntityBones(void)
+{
+	DWORD key = (DWORD)m_pCurrentEntity;
+	entity_bones_map::iterator it = m_EntityBones.find(key);
+	if(it != m_EntityBones.end())
+	{
+		return &it->second;
+	}
+	return NULL;
+}
+
+void CStudioModelRenderer::ResetEntityBones(void)
+{
+	entity_bones_map::iterator it = m_EntityBones.begin();
+	while(it != m_EntityBones.end())
+	{
+		it->second.m_bonesaved = false;
+		it ++;
+	}
+}
+
+void CStudioModelRenderer::StudioSpecialLight(alight_t *plight)
+{
+	if(m_pCurrentEntity->player)
+	{
+		if((m_pCurrentEntity->curstate.effects & EF_INVULNERABLE) && !g_bRenderPlayerWeapon)
+		{
+			plight->ambientlight = 128;
+			plight->shadelight = 128;
+		}
+		if((m_pCurrentEntity->curstate.effects & EF_CRITBOOST) && g_bRenderPlayerWeapon)
+		{
+			plight->ambientlight = 128;
+			plight->shadelight = 128;
+		}
+	}
+	//my viewmodel is critboosted, but don't light up here
+	/*if((m_pCurrentEntity->curstate.effects & EF_CRITBOOST) && CL_IsViewModel(m_pCurrentEntity) )
+	{
+		plight->ambientlight = 128;
+		plight->shadelight = 128;
+	}*/
+	if( m_pCurrentEntity->curstate.entityType == ET_HUDENTITY )
+	{
+		plight->ambientlight = m_pCurrentEntity->curstate.iuser1;
+		plight->shadelight = m_pCurrentEntity->curstate.iuser2;
+		plight->color[0] = 1.0f;
+		plight->color[1] = 1.0f;
+		plight->color[2] = 1.0f;
+
+		plight->plightvec[0] = 0;
+		plight->plightvec[1] = 1;
+		plight->plightvec[2] = -1;
+	}
+}
+
+int CStudioModelRenderer::StudioDrawBodyPart(void)
+{
+	if(CL_IsViewModel(m_pCurrentEntity))
+	{
+		//that is a critboost
+		if(m_pCurrentEntity->curstate.renderfx == kRenderFxFireLayer && m_pCurrentEntity->curstate.renderamt == 255)
+		{			
+			if(!stricmp((*m_pBodyPart)->name,"arms"))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
 }

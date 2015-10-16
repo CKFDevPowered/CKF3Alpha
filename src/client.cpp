@@ -7,9 +7,11 @@
 #include "hooks.h"
 #include "cmd.h"
 #include "scripts.h"
+#include "demo.h"
 #include <progs.h>
 #include "modules.h"
 #include <cvardef.h>
+#include "strtools.h"
 
 extern engine_studio_api_t IEngineStudio;
 
@@ -31,17 +33,25 @@ void CL_ClearCaches(void)
 	g_iModelPrecacheNums = 0;
 }
 
+qboolean CL_IsNewPrecachedModel(const char *pszFileName)
+{
+	//if( !Q_strncmp(pszFileName, "models/CKF_III/", sizeof("models/CKF_III/") - 1) || !Q_strncmp(pszFileName, "models\\CKF_III\\", sizeof("models\\CKF_III\\") - 1) )
+	//{
+	//	const char *p = pszFileName + sizeof("models/CKF_III/") - 1;
+	//	if( p[0] == 'v' && p[1] == '_' )
+	//		return true;
+	//}
+	return false;
+}
+
 int CL_FindModelIndex(const char *pmodel)
 {
-	if (strlen(pmodel) > 12 && pmodel[8] == '_' && (pmodel[7] == 'p' || pmodel[7] == 'v'))
+	if (CL_IsNewPrecachedModel(pmodel))
 	{
-		if (!strncmp(pmodel, "models/", 7))
+		for (int i = 0; i < 512; i++)
 		{
-			for (int i = 0; i < 512; i++)
-			{
-				if (!strcmp(g_szModelPrecache[i], pmodel))
-					return MAX_MODELS + i;
-			}
+			if (!Q_strcmp(g_szModelPrecache[i], pmodel))
+				return MAX_MODELS + i;
 		}
 	}
 
@@ -63,21 +73,18 @@ void CL_AddToResourceList(resource_t *pResource, resource_t *pList)
 {
 	if (pResource->type == t_model)
 	{
-		if (strlen(pResource->szFileName) > 12 && pResource->szFileName[8] == '_' && (pResource->szFileName[7] == 'p' || pResource->szFileName[7] == 'v'))
-		{
-			if (!strncmp(pResource->szFileName, "models/", 7))
-			{
-				for (int i = 0; i < MAX_MODELS; i++)
-				{
-					if (!strcmp(g_szModelPrecache[i], pResource->szFileName))
-						return;
-				}
+		//if ( CL_IsNewPrecachedModel(pResource->szFileName) && !(pResource->ucFlags & RES_CHECKFILE) && g_iModelPrecacheNums < 512 )
+		//{
+		//	for (int i = 0; i < MAX_MODELS; i++)
+		//	{
+		//		if (!Q_strcmp(g_szModelPrecache[i], pResource->szFileName))
+		//			return;
+		//	}
 
-				IEngineStudio.Mod_ForName(pResource->szFileName, false);
-				strcpy(g_szModelPrecache[g_iModelPrecacheNums++], pResource->szFileName);
-				return;
-			}
-		}
+		//	IEngineStudio.Mod_ForName(pResource->szFileName, false);
+		//	strcpy(g_szModelPrecache[g_iModelPrecacheNums++], pResource->szFileName);
+		//	return;
+		//}
 	}
 	else if (pResource->type == t_eventscript)
 	{
@@ -163,6 +170,52 @@ void CL_Init(void)
 		cl_name->flags &= ~FCVAR_PRINTABLEONLY;
 	}
 
+}
+
+void CL_ReadClientDLLData( void )
+{
+	static byte	data[0x8000];
+	int		i;
+
+	Q_memset( data, 0, sizeof(data) );
+	g_pFileSystem->Read( &i, sizeof(int), *gHookFuncs.cls_demofile );
+	i = min( LittleLong(i), sizeof(data) );
+	g_pFileSystem->Read( data, i, *gHookFuncs.cls_demofile );
+	Demo_ReadBuffer( i, data );
+}
+
+void CL_DemoParseSound( void )
+{
+	int		channel;
+	char	sample[256];
+	float	volume;
+	float	attenuation;
+	int		flags;
+	int		pitch;
+	int		i;
+
+	g_pFileSystem->Read( &channel, sizeof(int), *gHookFuncs.cls_demofile );
+	channel = LittleLong (channel);
+
+	g_pFileSystem->Read( &i, sizeof(int), *gHookFuncs.cls_demofile );
+	i = min(LittleLong(i), sizeof(sample)-1);
+
+	g_pFileSystem->Read( sample, i, *gHookFuncs.cls_demofile );
+	sample[i] = 0;
+
+	g_pFileSystem->Read( &attenuation, sizeof(int), *gHookFuncs.cls_demofile );
+	LittleFloat (&attenuation, &attenuation);
+
+	g_pFileSystem->Read( &volume, sizeof(int), *gHookFuncs.cls_demofile );
+	LittleFloat (&volume, &volume);
+
+	g_pFileSystem->Read( &flags, sizeof(int), *gHookFuncs.cls_demofile );
+	flags = LittleLong (flags);
+
+	g_pFileSystem->Read( &pitch, sizeof(int), *gHookFuncs.cls_demofile );
+	pitch = LittleLong (pitch);
+
+	gHookFuncs.CL_DemoPlaySound(channel, sample, attenuation, volume, flags, pitch);
 }
 
 void CL_VidInit(void)

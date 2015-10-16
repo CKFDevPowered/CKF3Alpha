@@ -84,12 +84,8 @@ int CHudGraphicMenu::MsgFunc_GraphicMenu(const char *pszName, int iSize, void *p
 
 int CHudGraphicMenu::MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
 {
-	const char *vgui_menus = gEngfuncs.LocalPlayerInfo_ValueForKey("_vgui_menus");
-
-	if (gConfigs.bEnableClientUI && vgui_menus && strlen(vgui_menus) && atoi(vgui_menus) != 0)
-	{
+	if(gConfigs.bEnableClientUI)
 		return g_pViewPort->FireMessage(pszName, iSize, pbuf);
-	}
 
 	return 0;
 }

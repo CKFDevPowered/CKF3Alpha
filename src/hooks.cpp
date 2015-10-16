@@ -11,6 +11,8 @@
 #include "VideoMode.h"
 #include "hooks.h"
 
+#define GetCallAddress(addr) (addr + (*(DWORD *)(addr+1)) + 5)
+
 #define LOADTGA_SIG "\x8B\x44\x24\x14\x8B\x4C\x24\x10\x8B\x54\x24\x0C\x6A\x01\x50\x8B\x44\x24\x10\x51\x8B\x4C\x24\x10\x52\x50\x51\xE8\x2A\x2A\x2A\x2A\x83\xC4\x18\xC3"
 #define LOADTGA_SIG_NEW "\x55\x8B\xEC\x8B\x45\x18\x8B\x4D\x14\x8B\x55\x10\x6A\x00\x50\x8B\x45\x0C\x51\x8B\x4D\x08\x52\x50\x51\xE8\x2A\x2A\x2A\x2A\x83\xC4\x18\x5D\xC3"
 #define VIDEOMODE_CREATE_SIG "\x83\xEC\x08\x8B\x0D\x2A\x2A\x2A\x2A\x53\x56\x33\xF6\x8B\x01\x56\x68\x2A\x2A\x2A\x2A\xFF\x50\x08"
@@ -42,10 +44,20 @@
 #define LOADSTARTUPGRAPHIC_SIG2 "\x55\x8B\xEC\x81\xEC\x08\x02\x00\x00\x53\x56\x57\x8B\xF1\x68\x2A\x2A\x2A\x2A\x68"
 //6153
 #define LOADSTARTUPGRAPHIC_SIG_NEW "\x55\x8B\xEC\x81\xEC\x0C\x02\x00\x00\x53\x56\x57\x8B\xF1\x68\x2A\x2A\x2A\x2A\x68"
-//3266
+//3266,4554
 #define DRAWSTARTUPGRAPHIC_SIG "\x55\x8B\xEC\x83\xE4\xF8\x83\xEC\x2C\x53\x56\x57"
 //6153
 #define DRAWSTARTUPGRAPHIC_SIG_NEW "\x55\x8B\xEC\x83\xEC\x78\x53\x56\x8B\xF1"
+
+//3266,4554
+#define CL_READCLIENTDLLDATA_SIG "\xB8\x04\x80\x00\x00\xE8\x2A\x2A\x2A\x2A\x68\x00\x80\x00\x00\x8D\x44\x24\x08\x6A\x00\x50"
+//6153
+#define CL_READCLIENTDLLDATA_SIG_NEW "\x55\x8B\xEC\xB8\x04\x80\x00\x00\xE8\x2A\x2A\x2A\x2A\x68\x00\x80\x00\x00\x8D\x85\xFC\x7F\xFF\xFF\x6A\x00\x50"
+
+//3266,4554
+#define CL_DEMOPARSESOUND_SIG "\x81\xEC\x10\x01\x00\x00\xA1\x2A\x2A\x2A\x2A\x56\x57\x50\x6A\x01"
+//6153
+#define CL_DEMOPARSESOUND_SIG_NEW "\x55\x8B\xEC\x81\xEC\x10\x01\x00\x00\xA1\x2A\x2A\x2A\x2A\x56\x57\x50\x6A\x01"
 
 void Sys_ErrorEx(const char *fmt, ...)
 {
@@ -88,6 +100,9 @@ void InstallHook(void)
 		gHookFuncs.DrawStartupGraphic = (void (__fastcall *)(void *, int, HWND))g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.LoadStartupGraphic, g_dwEngineSize - (DWORD)gHookFuncs.LoadStartupGraphic + g_dwEngineBase, DRAWSTARTUPGRAPHIC_SIG_NEW, sizeof(DRAWSTARTUPGRAPHIC_SIG_NEW)-1);
 		if(!gHookFuncs.DrawStartupGraphic)
 			SIG_NOT_FOUND("DrawStartupGraphic");
+
+		gHookFuncs.CL_ReadClientDLLData = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_READCLIENTDLLDATA_SIG_NEW, sizeof(CL_READCLIENTDLLDATA_SIG_NEW)-1);
+		gHookFuncs.CL_DemoParseSound = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_DEMOPARSESOUND_SIG_NEW, sizeof(CL_DEMOPARSESOUND_SIG_NEW)-1);
 	}
 	else
 	{
@@ -96,6 +111,9 @@ void InstallHook(void)
 		gHookFuncs.CL_FindEventHook = (struct event_hook_s *(*)(char *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_FINDEVENTHOOK_SIG, sizeof(CL_FINDEVENTHOOK_SIG) - 1);
 		gHookFuncs.Info_SetValueForKey = (void (*)(char *, char *, char *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, INFO_SETVALUEFORKEY_SIG, sizeof(INFO_SETVALUEFORKEY_SIG) - 1);
 		gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG, sizeof(VIDEOMODE_CREATE_SIG) - 1);
+		if (!gHookFuncs.VideoMode_Create)
+			gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG2, sizeof(VIDEOMODE_CREATE_SIG2) - 1);
+
 		gHookFuncs.VID_EnumDisplayModesProc = (HRESULT (CALLBACK *)(void *, DWORD *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VID_ENUMDISPLAYMODESPROC_SIG, sizeof(VID_ENUMDISPLAYMODESPROC_SIG) - 1);
 
 		gHookFuncs.LoadStartupGraphic = (void (__fastcall *)(void *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, LOADSTARTUPGRAPHIC_SIG, sizeof(LOADSTARTUPGRAPHIC_SIG)-1);
@@ -108,15 +126,29 @@ void InstallHook(void)
 		if(!gHookFuncs.DrawStartupGraphic)
 			SIG_NOT_FOUND("DrawStartupGraphic");
 
-		if (!gHookFuncs.VideoMode_Create)
-			gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG2, sizeof(VIDEOMODE_CREATE_SIG2) - 1);
+		gHookFuncs.CL_ReadClientDLLData = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_READCLIENTDLLDATA_SIG, sizeof(CL_READCLIENTDLLDATA_SIG)-1);
+		gHookFuncs.CL_DemoParseSound = (void (*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_DEMOPARSESOUND_SIG, sizeof(CL_DEMOPARSESOUND_SIG)-1);
+	}
+
+	DWORD addr;
+
+	if(gHookFuncs.CL_ReadClientDLLData && gHookFuncs.CL_DemoParseSound)
+	{
+		#define CLS_DEMOFILE_SIG "\x00\x00\xA1"
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.CL_DemoParseSound, 0x10, CLS_DEMOFILE_SIG, sizeof(CLS_DEMOFILE_SIG)-1);
+		gHookFuncs.cls_demofile = *(FileHandle_t **)(addr + 3);
+
+		#define CL_DEMOPLAYSOUND_SIG "\x52\x50\x56\xE8\x2A\x2A\x2A\x2A\x83\xC4\x18"
+		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.CL_DemoParseSound, 0x200, CL_DEMOPLAYSOUND_SIG, sizeof(CL_DEMOPLAYSOUND_SIG)-1);
+		gHookFuncs.CL_DemoPlaySound = (void (*)( int, char *, float, float, int, int ))GetCallAddress(addr + 3);
+
+		g_pMetaHookAPI->InlineHook(gHookFuncs.CL_ReadClientDLLData, CL_ReadClientDLLData, (void *&)gHookFuncs.CL_ReadClientDLLData);
+		g_pMetaHookAPI->InlineHook(gHookFuncs.CL_DemoParseSound, CL_DemoParseSound, (void *&)gHookFuncs.CL_DemoParseSound);
 	}
 
 	g_pMetaHookAPI->InlineHook(gHookFuncs.CL_AddToResourceList, CL_AddToResourceList, (void *&)gHookFuncs.CL_AddToResourceList);
 	g_pMetaHookAPI->InlineHook(gHookFuncs.Info_SetValueForKey, Info_SetValueForKey, (void *&)gHookFuncs.Info_SetValueForKey);
-	g_pMetaHookAPI->InlineHook(gHookFuncs.CL_GetModelByIndex, CL_GetModelByIndex, (void *&)gHookFuncs.CL_GetModelByIndex);
-
-	DWORD addr;
+	//g_pMetaHookAPI->InlineHook(gHookFuncs.CL_GetModelByIndex, CL_GetModelByIndex, (void *&)gHookFuncs.CL_GetModelByIndex);
 
 	//E8 83 FA FF FF		call    VideoMode_Create
 	//5E					pop     esi
@@ -147,7 +179,6 @@ void InstallHook(void)
 
 	if(g_dwEngineBuildnum >= 5953)
 	{
-	#define GetCallAddress(addr) (addr + (*(DWORD *)(addr+1)) + 5)
 	#define SDL_GETWINDOWSIZE_SIG "\x50\x51\x52\xE8"
 		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.DrawStartupGraphic, 0x50, SDL_GETWINDOWSIZE_SIG, sizeof(SDL_GETWINDOWSIZE_SIG)-1);
 		if(!addr)

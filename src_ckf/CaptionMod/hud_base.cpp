@@ -125,7 +125,7 @@ int HudBase_VidInit(void)
 		HudClass_VidInit();
 		HudAmmo_VidInit();
 		HudCrosshair_VidInit();
-		HudOverlay_VidInit();
+		//HudOverlay_VidInit();
 
 		//HudIntroMenu_VidInit();
 		//HudTeamMenu_VidInit();
@@ -136,7 +136,7 @@ int HudBase_VidInit(void)
 		HudStatusBar_VidInit();
 		HudBuild_VidInit();
 
-		HudDeathMsg_VidInit();
+		//HudDeathMsg_VidInit();
 		HudFloatText_VidInit();
 		//HudScoreBoard_VidInit();
 		HudObject_VidInit();
@@ -146,7 +146,7 @@ int HudBase_VidInit(void)
 	//HudTeamMenu_Init();
 	//HudClassMenu_Init();
 	HudBuild_Init();
-	HudDeathMsg_Init();
+	//HudDeathMsg_Init();
 	//HudScoreBoard_Init();
 	HudObject_Init();
 
@@ -155,8 +155,8 @@ int HudBase_VidInit(void)
 
 int HudBase_Redraw(float flTime, int iIntermission)
 {
-	HudOverlay_Redraw(flTime, iIntermission);
-	HudDeathMsg_Redraw(flTime, iIntermission);
+	//HudOverlay_Redraw(flTime, iIntermission);
+	//HudDeathMsg_Redraw(flTime, iIntermission);
 	HudObject_Redraw(flTime, iIntermission);
 	if(!(g_iHideHUD & HIDEHUD_ALL))
 	{

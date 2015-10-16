@@ -533,7 +533,7 @@ void R_LinkDecalTexture(texture_t *t)
 					else
 						t2->height = glt->height;
 
-					strcpy(t->name, t->name);
+					strcpy(t2->name, t->name);
 					t->anim_next = t2;
 					t2->anim_next = t;
 					t2->alternate_anims = (texture_t *)glt;

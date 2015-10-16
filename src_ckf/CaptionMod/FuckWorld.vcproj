@@ -174,7 +174,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll &quot;..\..\Test\ckf3\ckf3.dll&quot;&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll &quot;F:\Steam\steamapps\common\Half-Life\ckf3\ckf3.dll&quot;"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll &quot;..\..\Test\ckf3\ckf3.dll&quot;&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll &quot;F:\Steam\steamapps\common\Half-Life\ckf3\ckf3.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -629,6 +629,10 @@
 				</File>
 				<File
 					RelativePath=".\particle.h"
+					>
+				</File>
+				<File
+					RelativePath=".\pt_critical.cpp"
 					>
 				</File>
 				<File

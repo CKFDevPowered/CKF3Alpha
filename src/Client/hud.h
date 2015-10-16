@@ -289,6 +289,10 @@ public:
 
 public:
 	int MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_Dominate(const char *pszName, int iSize, void *pbuf);
+	int MsgFunc_Revenge(const char *pszName, int iSize, void *pbuf);
 
 private:
 	int m_HUD_d_skull;

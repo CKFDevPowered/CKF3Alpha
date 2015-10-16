@@ -102,7 +102,7 @@ void CTFHudMedicChargeMeter::OnThink(void)
 		else
 		{
 			// we've got invuln charge or we're using our invuln
-			if ( gCKFVars.g_Player->m_iUbercharge )
+			if ( !(gCKFVars.g_Player->m_iUbercharge && gCKFVars.g_Player->m_pActiveItem && gCKFVars.g_Player->m_pActiveItem->m_iId == WEAPON_MEDIGUN) )
 			{
 				GetAnimationController()->StartAnimationSequence( this, "HudMedicChargedStop" );
 				m_bCharged = false;

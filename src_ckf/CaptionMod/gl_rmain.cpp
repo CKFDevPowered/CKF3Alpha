@@ -439,12 +439,18 @@ void R_Draw3DHUDStudioModel(cl_entity_t *pEntity, int x, int y, int w, int h, qb
 		int left = w/2;
 		int top = h/2;
 
+		gRefExports.R_PushFrameBuffer();
+
 		gRefExports.R_BeginDrawTrianglesInHUD_FBO(centerX, centerY, left, top);
+
 		if(pEntity->player)
 			g_StudioRenderer.StudioDrawPlayer_3DHUD();
 		else
 			g_StudioRenderer.StudioDrawModel(STUDIO_RENDER);
+
 		gRefExports.R_FinishDrawTrianglesInHUD();
+
+		gRefExports.R_PopFrameBuffer();
 
 		if(g_RefSupportExt & r_ext_shader)
 			gRefExports.R_BeginFXAA(ScreenWidth, ScreenHeight);

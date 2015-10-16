@@ -20,8 +20,7 @@ extern tgasprite_t g_texDebris[6];
 extern tgasprite_t g_texStarFlash;
 extern tgasprite_t g_texCritHit;
 extern tgasprite_t g_texMiniCritHit;
-
-typedef vec_t matrix3x4[3][4];
+extern tgasprite_t g_texElectric1;
 
 //add new particle system here
 enum PartSysEnum
@@ -75,7 +74,10 @@ enum PartSysEnum
 	PS_BurningPlayerGlow,
 	PS_BulletImpact,
 	PS_BulletImpactDebris,
-	PS_BulletImpactSprak
+	PS_BulletImpactSprak,
+	PS_CritPlayerWeapon,
+	PS_CritFirstWeaponGlow,
+	PS_CritFirstWeapon
 };
 
 typedef struct
@@ -121,18 +123,19 @@ public:
 			m_child[i]->SetDead(dead);
 		}
 	}
+	void SetCull(int cull){ m_cull = cull;}
 	int GetDead(void){return m_dead;}
 	int GetCull(void ){ return m_cull;}
 	int GetSort(void ){ return m_sort;}
 	int GetType(void){return m_type;}
 	CParticleSystem *GetChild(int i){return m_child[i];}
 	void Init(int type, int numpart, int numchild);
+	int GetActivePartCount(void);
 
 public:
 	virtual void Movement(part_t *p, float *org){};
 	virtual void Render(part_t *p, float *org){};
 	virtual void Update(void){};
-	virtual qboolean IsBindBone(void){ return false; }
 	virtual qboolean IsBindAttachment(void){ return false; }
 	virtual qboolean IsFollowEntity(void){ return false; }
 
@@ -160,23 +163,6 @@ public:
 	cl_entity_t *GetFollowEntity(void){ return m_entity; }
 public:
 	cl_entity_t *m_entity;
-};
-
-class CPartSystemBones : public CPartSystemEntity
-{
-public:
-	CPartSystemBones(){}
-	void Init(int type, int parts, int childs, cl_entity_t *entity)
-	{
-		CPartSystemEntity::Init(type, parts, childs, entity);
-		memset(m_lighttransform, 0, sizeof(m_lighttransform));
-		m_bonesaved = false;
-	}
-	virtual qboolean IsBindBone(void){ return true; }
-
-public:
-	matrix3x4 m_lighttransform[MAXSTUDIOBONES];
-	qboolean m_bonesaved;
 };
 
 class CPartSystemAttachment : public CPartSystemEntity

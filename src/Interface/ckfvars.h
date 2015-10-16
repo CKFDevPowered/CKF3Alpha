@@ -159,7 +159,8 @@ enum
 {
 	kRenderFxCloak = 22,
 	kRenderFxShadow,
-	kRenderFxFireLayer
+	kRenderFxFireLayer,
+	kRenderFxInvulnLayer
 };
 
 extern ckf_vars_t gCKFVars;

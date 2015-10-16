@@ -443,7 +443,7 @@ void CTFTeamMenu::OnKeyCodePressed( KeyCode code )
 	{
 		m_pBlueTeamButton->DoClick();
 	}
-	else if( code == KEY_3 )
+	else if( code == KEY_4 )
 	{
 		m_pRedTeamButton->DoClick();
 	}

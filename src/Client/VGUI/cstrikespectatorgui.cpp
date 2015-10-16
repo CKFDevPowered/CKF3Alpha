@@ -122,7 +122,7 @@ void CCSSpectatorGUI::UpdateAccount(void)
 {
 	m_nLastAccount = gHUD.m_accountBalance.m_iAccount;
 
-	if ((g_iTeamNumber == TEAM_TERRORIST) || (g_iTeamNumber == TEAM_CT))
+	if ((*gCKFVars.g_iTeam == TEAM_TERRORIST) || (*gCKFVars.g_iTeam == TEAM_CT))
 	{
 		wchar_t szText[63];
 		_snwprintf(szText, sizeof(szText), L"$%i", m_nLastAccount);

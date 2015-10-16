@@ -39,67 +39,67 @@ static void UpdateModel(void)
 
 static void RenderModel(int x, int y, int w, int h)
 {
-	if(g_PlayerEntity.model == NULL)
-		return;
+	//if(g_PlayerEntity.model == NULL)
+	//	return;
 
-	cl_entity_t *pEnt = &g_PlayerEntity;
+	//cl_entity_t *pEnt = &g_PlayerEntity;
 
-	gRefExports.R_PushRefDef();
-	VectorClear(refdef->viewangles);
-	VectorClear(refdef->vieworg);
-	gRefExports.R_UpdateRefDef();
-	VectorClear(pEnt->origin);
-	VectorClear(pEnt->angles);
+	//gRefExports.R_PushRefDef();
+	//VectorClear(refdef->viewangles);
+	//VectorClear(refdef->vieworg);
+	//gRefExports.R_UpdateRefDef();
+	//VectorClear(pEnt->origin);
+	//VectorClear(pEnt->angles);
 
-	pEnt->origin[0] = 200;
-	pEnt->angles[1] = 180-30;
+	//pEnt->origin[0] = 200;
+	//pEnt->angles[1] = 180-30;
 
-	pEnt->curstate.colormap = (g_iTeam == 1) ? (1 | (1<<8)) : (140 | (140<<8));
+	//pEnt->curstate.colormap = (g_iTeam == 1) ? (1 | (1<<8)) : (140 | (140<<8));
 
-	cl_entity_t *pSaveEnt = *CurrentEntity;
-	*CurrentEntity = pEnt;
+	//cl_entity_t *pSaveEnt = *CurrentEntity;
+	//*CurrentEntity = pEnt;
 
-	int centerX = x+w/2;
-	int centerY = y+h/2;
-	if(g_3dhud->value >= 2 && (g_RefSupportExt & r_ext_fbo))
-	{
-		int left = w/2 + ScreenHeight * 0.05;
-		int top = h/2 + ScreenHeight * 0.05;
+	//int centerX = x+w/2;
+	//int centerY = y+h/2;
+	//if(g_3dhud->value >= 2 && (g_RefSupportExt & r_ext_fbo))
+	//{
+	//	int left = w/2 + ScreenHeight * 0.05;
+	//	int top = h/2 + ScreenHeight * 0.05;
 
-		gRefExports.R_BeginDrawTrianglesInHUD_FBO(centerX, centerY, left, top);
-		g_StudioRenderer.StudioDrawPlayer_3DHUD();
-		gRefExports.R_FinishDrawTrianglesInHUD();
+	//	gRefExports.R_BeginDrawTrianglesInHUD_FBO(centerX, centerY, left, top);
+	//	g_StudioRenderer.StudioDrawPlayer_3DHUD();
+	//	gRefExports.R_FinishDrawTrianglesInHUD();
 
-		qglEnable(GL_SCISSOR_TEST);
-		qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
+	//	qglEnable(GL_SCISSOR_TEST);
+	//	qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
 
-		if(g_RefSupportExt & r_ext_shader)
-			gRefExports.R_BeginFXAA(ScreenWidth, ScreenHeight);
+	//	if(g_RefSupportExt & r_ext_shader)
+	//		gRefExports.R_BeginFXAA(ScreenWidth, ScreenHeight);
 
-		gRefExports.R_Draw3DHUDQuad(centerX, centerY, left, top);
+	//	gRefExports.R_Draw3DHUDQuad(centerX, centerY, left, top);
 
-		if(g_RefSupportExt & r_ext_shader)
-			gRefExports.ShaderAPI.GL_EndProgram();
+	//	if(g_RefSupportExt & r_ext_shader)
+	//		gRefExports.ShaderAPI.GL_EndProgram();
 
-		qglDisable(GL_SCISSOR_TEST);
-	}
-	else
-	{
-		int x2 = centerX-ScreenWidth/2;
-		int y2 = centerY-ScreenHeight/2;
+	//	qglDisable(GL_SCISSOR_TEST);
+	//}
+	//else
+	//{
+	//	int x2 = centerX-ScreenWidth/2;
+	//	int y2 = centerY-ScreenHeight/2;
 
-		qglEnable(GL_SCISSOR_TEST);
-		qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
+	//	qglEnable(GL_SCISSOR_TEST);
+	//	qglScissor(0, ScreenHeight -(y + h), ScreenWidth, ScreenHeight);
 
-		gRefExports.R_BeginDrawTrianglesInHUD_Direct(centerX, centerY);
-		g_StudioRenderer.StudioDrawPlayer_3DHUD();
-		gRefExports.R_FinishDrawTrianglesInHUD();
+	//	gRefExports.R_BeginDrawTrianglesInHUD_Direct(centerX, centerY);
+	//	g_StudioRenderer.StudioDrawPlayer_3DHUD();
+	//	gRefExports.R_FinishDrawTrianglesInHUD();
 
-		qglDisable(GL_SCISSOR_TEST);
-	}
+	//	qglDisable(GL_SCISSOR_TEST);
+	//}
 
-	*CurrentEntity = pSaveEnt;
-	gRefExports.R_PopRefDef();
+	//*CurrentEntity = pSaveEnt;
+	//gRefExports.R_PopRefDef();
 }
 
 void DrawCross(int x, int y, float health, float scale);
@@ -132,7 +132,7 @@ int HudClass_VidInit(void)
 	CL_CreateTempEntity(&g_PlayerEntity, NULL);
 	g_PlayerEntity.index = 0;
 	g_PlayerEntity.player = 1;
-	g_PlayerEntity.curstate.effects |= EF_3DMENU;
+	g_PlayerEntity.curstate.entityType = ET_HUDENTITY;
 	g_PlayerEntity.curstate.iuser1 = 128;
 	g_PlayerEntity.curstate.iuser2 = 192;
 	g_PlayerEntity.curstate.vuser1[0] = 0;
