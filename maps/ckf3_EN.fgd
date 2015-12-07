@@ -1,0 +1,185 @@
+// ------------------------------------------------------------------------------
+// CKF 3 Game Definition (.fgd)
+// °æ±¾ºÅ: 0.0.0.3
+// Last Update at£ºMay. 24th 2015 by stay
+//   this is for mod Chicken Fortress 3
+// -------------------------------------------------------------------------------
+//
+// License:
+//   This FGD File is under WTFPL, DO WHATEVER WANT TO !
+//
+// Authors:
+// ver 0.0.0.1 by hzqst (113660872@qq.com)
+// ver 0.0.0.2 by stay (344233108@qq.com)
+// ver 0.0.0.3 by hzqst (113660872@qq.com)
+// -----------------------------------------------------------------------
+//
+//   Don't edit edit file unless you know what you are doing.
+//   fgd file name format: "ckf3_<language>.fgd".
+//
+// -----------------------------------------------------------------------
+// History
+// Jun. 3rd 2015 - hzqst (0.0.0.3)
+// May. 24th 2015 - stay (0.0.0.2)
+// Dec. 25th 2010 - hzqst (0.0.0.1)
+//
+// --------------------------------------------------------------------------------
+
+@BaseClass color(0 255 0) = color_player []
+@BaseClass color(64 128 0) = color_cs []
+@BaseClass color(255 255 0) = color_light []
+@BaseClass color(255 255 255) = color_env []
+@BaseClass color(192 192 192) = color_wall []
+@BaseClass color(64 64 64) = color_point []
+@BaseClass color(255 128 0) = color_door []
+@BaseClass color(192 64 0) = color_effect []
+@BaseClass color(255 32 0) = color_func []
+@BaseClass color(255 0 0) = color_compile []
+@BaseClass color(255 0 128) = color_trigger []
+@BaseClass color(255 64 128) = color_game []
+
+@SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_resupplyroom : "Resupply room" 
+[
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
+]
+
+@SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_resupplycase : "Resupply case" 
+[
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
+	subentity(string) : "Model entity to link to" : ""
+]
+
+@SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_controlpoint : "Control Point" 
+[
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
+	capname(string) : "Control point name" : ""
+	caprate(string) : "capture rate(/s)" : "0"
+	trigonredcap(string) : "Triggered when red captured" : ""
+	trigonblucap(string) : "Triggered when blue captured" : ""
+	trigoncap(string) : "Triggered when captured" : ""
+	subentity(string) : "Model entity to link to" : ""
+	hudpos(integer) : "HUD icon position(0~5)" : 2
+	timeadded(string) : "RoundTime added when captured" : ""
+	startlock(choices) : "Locked when round start" : 0 =
+	[
+		0: "no"
+		1: "yes"
+	]
+]
+
+@SolidClass base(color_wall) base(Targetname, Global, SolidVisible) = func_nobuildzone : "No Buildable Zone" 
+[
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
+	spawnflags(flags) =
+	[
+		1 : "Off when round start" : 0
+	]
+]
+
+@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cplocker : "Control Point Locker"
+[
+	lockstate(choices) : "Action" : 0 = 
+	[
+		0 : "Switch"
+		1 : "Lock"
+		2 : "Unlock"
+	]
+]
+
+@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundterminator : "Round Terminator"
+[
+	winstatus(choices) : "Winner" : 0 = 
+	[
+		0 : "Stalemate"
+		1 : "Red"
+		2 : "Blue"
+	]
+	endtime(integer) : "Custom humiliation time(sec.)" : 0
+]
+
+// all items will respawn after 30s in a multiplayer game.
+
+@PointClass base(color_func) size(-16 -16 0, 16 16 16) base(Targetname, Angles, RenderFields, Effects, Appearflags) Studio("models/CKF_III/w_health.mdl")= item_healthbox : "Health Box" 
+[
+	givehealth(string) : "*Give health(%)" : "0"
+	type(Choices) : "type" : "" = 
+	[
+		"0" : "tiny"
+		"1" : "middle"
+		"2" : "large"
+	]
+]
+
+@PointClass base(color_func) size(-16 -16 0, 16 16 16) base(Targetname, Angles, RenderFields, Effects, Appearflags) Studio("models/CKF_III/w_ammo.mdl") = item_ammobox : "Ammo Box" 
+[
+ 	giveammo(string) : "*Give ammo(%)" : "0"
+	type(Choices) : "type" : "" = 
+	[
+		"0" : "tiny"
+		"1" : "mid"
+		"2" : "large"
+	]
+]
+
+@PointClass base(color_light) iconsprite("sprites/CS/lightbulb.spr") base(Targetname, Target, Angles, Light, Appearflags) = shadow_manager : "Shadow Manager" [
+	pitch(integer) : "pitch (-90=down 90=up)" : -90
+	radius(integer) : "distance" : "100"
+	fardist(integer) : "fade distance" : "50"
+	scale(integer) : "depth texture scale" : "16"
+	texsize(integer) : "depth texture size" : "512"
+	affectmodel(string) : "which model to apply to" : ""
+]
+
+@SolidClass base(color_func) base() = sky_box : "3D SkyBox Zone" [
+]
+
+@PointClass base(color_trigger) base() = sky_camera : "3DSky Camera" [
+]
+
+@PointClass base(color_trigger) base() = sky_center : "3DSky World Center" [
+]
+
+@PointClass base(color_game) base(Targetname, Appearflags) iconsprite("sprites/CS/MapParams.spr") = info_map_settings : "CKF3 GameRules Settings"
+[
+	setupcondition(choices)  : "Round status when round start" : 0 =
+	[
+		0: "Normal(Default)"
+		1: "Setup Stage"
+		2: "End Stage"
+		3: "Overtime Stage"
+		4: "Wait for Players"
+	]
+	endaction(choices)  : "Action when time is out" : 0 =
+	[
+		0: "No Action(Default)"
+		1: "Stalemate"
+		2: "Red Win"
+		3: "Blue Win"
+		4: "Sudden Death(Not done yet)"
+	]
+	waittime(integer) : "Wait for players time(sec.)" : 30
+	freezetime(integer) : "Freeze time(sec.)" : 3
+	setuptime(integer) : "Setup time(sec.)" : 60
+	roundtime(integer) : "Round time(sec.)" : 300
+	endtime(integer) : "Humiliation time(sec.)" : 15
+]
