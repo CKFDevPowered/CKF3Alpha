@@ -4,5 +4,3 @@
 项目组成员：
 hzqst
 goodman3
-Deliay
-stay
