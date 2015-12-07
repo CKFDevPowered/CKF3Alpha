@@ -78,7 +78,7 @@ int GL_LoadTexture2(char *identifier, GL_TEXTURETYPE textureType, int width, int
 {
 	if (!mipmap || textureType != GLT_WORLD)
 	{
-		if(qglTexParameterf)
+		if(qglTexParameterf)//just in case of crashing when called before initalize QGL
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1);
 		return gRefFuncs.GL_LoadTexture2(identifier, textureType, width, height, data, mipmap, iType, pPal, filter);
 	}
@@ -116,30 +116,30 @@ void Draw_TextureMode_f(void)
 {
 	int i;
 
-	if (g_pMetaSave->pEngineFuncs->Cmd_Argc() == 1)
+	if (gEngfuncs.Cmd_Argc() == 1)
 	{
 		for (i = 0; i < 6; i++)
 		{
 			if (gl_filter_min == modes[i].minimize)
 			{
-				g_pMetaSave->pEngineFuncs->Con_Printf("%s\n", modes[i].name);
+				gEngfuncs.Con_Printf("%s\n", modes[i].name);
 				return;
 			}
 		}
 
-		g_pMetaSave->pEngineFuncs->Con_Printf("current filter is unknown???\n");
+		gEngfuncs.Con_Printf("current filter is unknown???\n");
 		return;
 	}
 
 	for (i = 0; i < 6; i++)
 	{
-		if (!stricmp(modes[i].name, g_pMetaSave->pEngineFuncs->Cmd_Argv(1)))
+		if (!stricmp(modes[i].name, gEngfuncs.Cmd_Argv(1)))
 			break;
 	}
 
 	if (i == 6)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("bad filter name\n");
+		gEngfuncs.Con_Printf("bad filter name\n");
 		return;
 	}
 
@@ -159,7 +159,7 @@ void Draw_UpdateAnsios(void)
 			{
 				char cmd[64];
 				sprintf(cmd, "gl_texturemode %s\n", modes[i].name);
-				g_pMetaSave->pEngineFuncs->pfnClientCmd(cmd);
+				gEngfuncs.pfnClientCmd(cmd);
 				break;
 			}
 		}
@@ -448,13 +448,13 @@ int GL_AllocTexture(const char *identifier, GL_TEXTURETYPE textureType, int widt
 					slot->servercount = *gHostSpawnCount;
 
 				currentglt = slot;
-				return -slot->texnum;
+				return slot->texnum;
 			}
 		}
 	}
 	else
 	{
-		g_pMetaSave->pEngineFuncs->Con_DPrintf("NULL Texture\n");
+		gEngfuncs.Con_DPrintf("NULL Texture\n");
 		return 0;
 	}
 
@@ -465,7 +465,7 @@ int GL_AllocTexture(const char *identifier, GL_TEXTURETYPE textureType, int widt
 
 		if (*numgltextures >= MAX_GLTEXTURES)
 		{
-			g_pMetaSave->pEngineFuncs->Con_Printf("Texture Overflow: MAX_GLTEXTURES\n");
+			gEngfuncs.Con_Printf("Texture Overflow: MAX_GLTEXTURES\n");
 			return 0;
 		}
 	}
@@ -500,15 +500,13 @@ int GL_LoadTextureEx(const char *identifier, GL_TEXTURETYPE textureType, int wid
 
 	texnum = GL_AllocTexture(identifier, textureType, width, height, mipmap);
 
-	if(texnum < 0)
-		return -texnum;
-	if(texnum == 0)
+	if(!texnum)
 		return 0;
 
 	GL_Bind(texnum);
 	(*currenttexture) = -1;
 
-	if(gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT || gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT || gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
+	if(gl_s3tc_compression_support && (gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT || gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT || gl_loadtexture_format == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT))
 	{
 		GL_UploadDXT(data, width, height, mipmap, ansio);
 		return texnum;
@@ -606,7 +604,7 @@ int LoadDDS(const char *filename, byte *buf, int bufsize, int *width, int *heigh
 
 	if(!g_pFileSystem->Read((void *)&header, sizeof(dds_header_t), fileHandle))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
@@ -623,49 +621,49 @@ int LoadDDS(const char *filename, byte *buf, int bufsize, int *width, int *heigh
 
 	if(iMagic != DDS_MAGIC)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(iSize != 124)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_PIXELFORMAT))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iFlags & DDSD_CAPS))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(!(iPFFlags & DDPF_FOURCC))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is not a DXT image.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if(iFourCC != D3DFMT_DXT1 && iFourCC != D3DFMT_DXT3 && iFourCC != D3DFMT_DXT5)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is not DXT1/3/5 format!\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: Texture %s is not DXT1/3/5 format!\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
 
 	if((int)iLinSize > bufsize)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: Texture %s is too large!\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: Texture %s is too large!\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
@@ -674,7 +672,7 @@ int LoadDDS(const char *filename, byte *buf, int bufsize, int *width, int *heigh
 
 	if(!g_pFileSystem->Read((void *)buf, iLinSize, fileHandle))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadDDS: File %s is corrupted.\n", filename);
+		gEngfuncs.Con_Printf("LoadDDS: File %s is corrupted.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		return FALSE;
 	}
@@ -763,13 +761,13 @@ int LoadImageGeneric(const char *filename, byte *buf, int bufSize, int *width, i
 
 	if(fiFormat == FIF_UNKNOWN)
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
+		gEngfuncs.Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
 		return FALSE;
     }
 
 	if(!FreeImage_FIFSupportsReading(fiFormat))
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
+		gEngfuncs.Con_Printf("LoadImageGeneric: %s Unsupported format.\n", filename);
 		return FALSE;
     }
 
@@ -828,13 +826,13 @@ int SaveImageGeneric(const char *filename, int width, int height, byte *data)
 
 	if(fiFormat == FIF_UNKNOWN)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
+		gEngfuncs.Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
 		return FALSE;  
 	}
 
 	if(!FreeImage_FIFSupportsWriting(fiFormat))
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
+		gEngfuncs.Con_Printf("SaveImageGeneric: %s Unsupported format.\n", filename);
 		return FALSE;
     }
 
@@ -842,7 +840,7 @@ int SaveImageGeneric(const char *filename, int width, int height, byte *data)
 
 	if(!fileHandle)
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: Cannot open %s for writing.\n", filename);
+		gEngfuncs.Con_Printf("SaveImageGeneric: Cannot open %s for writing.\n", filename);
 		return FALSE;  
     }
 
@@ -871,7 +869,7 @@ int SaveImageGeneric(const char *filename, int width, int height, byte *data)
 
 	if(FALSE == FreeImage_SaveToHandle(fiFormat, fiB, &fiIO, (fi_handle)fileHandle))
     {
-		g_pMetaSave->pEngineFuncs->Con_Printf("SaveImageGeneric: Cannot save %s.\n", filename);
+		gEngfuncs.Con_Printf("SaveImageGeneric: Cannot save %s.\n", filename);
 		g_pFileSystem->Close(fileHandle);
 		FreeImage_Unload(fiB);
         return FALSE;
@@ -890,7 +888,7 @@ int R_LoadTextureEx(const char *filepath, const char *name, int *width, int *hei
 
 	if(!extension)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: File %s has no extension.\n", filepath);
+		gEngfuncs.Con_Printf("R_LoadTextureEx: File %s has no extension.\n", filepath);
 		return 0;
 	}
 
@@ -914,6 +912,6 @@ int R_LoadTextureEx(const char *filepath, const char *name, int *width, int *hei
 		return GL_LoadTextureEx(name, type, w, h, texloader_buffer, mipmap, ansio);
 	}
 
-	g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadTextureEx: Cannot load texture %s.\n", filepath);
+	gEngfuncs.Con_Printf("R_LoadTextureEx: Cannot load texture %s.\n", filepath);
 	return 0;
 }

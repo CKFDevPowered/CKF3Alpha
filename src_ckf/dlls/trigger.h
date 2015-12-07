@@ -34,6 +34,16 @@ public:
 		m_flCaptureRate = 0;
 		m_bStartLock = FALSE;
 		m_iIndex = 0;
+		m_iState = 0;
+		m_iCapTeam = 0;
+		m_iCapPlayers = 0;		
+		m_flProgress = 0;
+		m_flCapRate = 0;
+		m_iClientState = 0;
+		m_iClientCapTeam = 0;
+		m_iClientCapPlayers = 0;
+		m_flClientCapRate = 0;
+		m_flClientSendState = 0;
 	}
 public:
 	void Spawn(void);

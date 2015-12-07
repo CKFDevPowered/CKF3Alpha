@@ -37,10 +37,10 @@ qboolean GL_IsShaderError(GLuint shader, const char *filename)
 		qglGetInfoLogARB(shader, 1000, &slen, compiler_log);
 		if(!strstr(compiler_log, "error"))
 		{
-			g_pMetaSave->pEngineFuncs->Con_Printf("Shader %s compiled with warning: %s\n", filename, compiler_log);
+			gEngfuncs.Con_Printf("Shader %s compiled with warning: %s\n", filename, compiler_log);
 			return false;
 		}
-		g_pMetaSave->pEngineFuncs->Con_Printf("Shader %s compiled with error: %s\n", filename, compiler_log);
+		gEngfuncs.Con_Printf("Shader %s compiled with error: %s\n", filename, compiler_log);
 		return true;
 	}
 

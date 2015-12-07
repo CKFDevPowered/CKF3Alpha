@@ -7,6 +7,7 @@
 #include "cvar.h"
 #include "event.h"
 
+
 extern bool g_bGameUIActivate;
 
 vec3_t g_vecZero = {0,0,0};
@@ -21,8 +22,13 @@ PlayerInfo g_PlayerInfo[33];
 WeaponInfo g_WeaponInfo[MAX_WEAPONS];
 BuildInfo g_Build;
 PlayerStats g_PlayerStats;
-zonevector g_NoBuildZones;
-cpvector g_ControlPoints;
+CUtlVector<physent_t> g_NoBuildZones;
+CUtlVector<controlpoint_t> g_ControlPoints;
+
+CClientSentry g_Sentry;
+CClientDispenser g_Dispenser;
+CClientTeleporter g_TeleEntrance;
+CClientTeleporter g_TeleExit;
 
 int g_iHealth;
 int g_iMaxHealth;
@@ -114,10 +120,26 @@ void CL_InitVars(void)
 	memset(g_PlayerInfo, 0, sizeof(g_PlayerInfo));
 	memset(&g_PlayerStats, 0, sizeof(g_PlayerStats));
 	memset(&g_Build, 0, sizeof(g_Build));
-	g_NoBuildZones.clear();
-	g_ControlPoints.clear();
+	g_NoBuildZones.RemoveAll();
+	g_ControlPoints.RemoveAll();
 
 	HUD_InitWeapons();
+}
+
+void CClientBuildable::Init(void)
+{
+	m_iLevel = 0;
+	m_iFlags = 0;
+	m_iHealth = 0;
+	m_iMaxHealth = 0;
+	m_iUpgrade = 0;
+	m_flProgress = 0;
+	m_flUpdateTime = 0;
+}
+
+bool CClientBuildable::IsBuilt(void)
+{
+	return (m_iLevel > 0);
 }
 
 void CL_BottleBroken(cl_entity_t *pEntity)
@@ -157,14 +179,14 @@ qboolean CL_IsFirstPersonSpec(void)
 
 qboolean CL_IsThirdPerson(void)
 {
-	if(gExportfuncs.CL_IsThirdPerson() || chase_active->value != 0 || *envmap || refparams.viewentity > refparams.maxclients)
+	if(gExportfuncs.CL_IsThirdPerson() || chase_active->value != 0 || refparams.viewentity > refparams.maxclients)
 		return true;
 	return false;
 }
 
 qboolean CL_CanDrawViewModel(void)
 {
-	if(gExportfuncs.CL_IsThirdPerson() || chase_active->value != 0 || *envmap || !r_drawentities->value || refparams.health <= 0 || refparams.viewentity > refparams.maxclients)
+	if(gExportfuncs.CL_IsThirdPerson() || chase_active->value != 0 || !r_drawentities->value || refparams.health <= 0 || refparams.viewentity > refparams.maxclients)
 		return false;
 	if(gRefExports.R_GetDrawPass() != r_draw_normal)
 		return false;
@@ -318,14 +340,18 @@ extern "C"
 				return 1;
 			return 0;
 		}
-		if(pEnt->curstate.solid == SOLID_SLIDEBOX && pEnt->model)
+		if(pEnt->curstate.playerclass == CLASS_BUILDABLE && pEnt->model)
 		{
 			if(pEnt->curstate.team == g_iTeam && pEnt->curstate.iuser1 != gEngfuncs.GetLocalPlayer()->index)
 			{
-				if(!strncmp(&pEnt->model->name[15], "w_dis", 3) || !strncmp(&pEnt->model->name[15], "w_sen", 3))
+				if(pEnt->curstate.iuser3 == BUILDABLE_SENTRY || pEnt->curstate.iuser3 == BUILDABLE_DISPENSER)
 					return 1;
 			}
 			return 0;
+		}
+		if(pEnt->curstate.playerclass == CLASS_PROJECTILE)
+		{
+			return 1;
 		}
 		return 0;
 	}
@@ -339,4 +365,14 @@ void pfnGetPlayerInfo( int ent_num, struct hud_player_info_s *pinfo )
 		strncpy(pinfo->name, UnicodeToANSI(UTF8ToUnicode(pinfo->name)), 31);
 		pinfo->name[31] = 0;
 	}
+}
+
+controlpoint_t *ICKFClient::GetControlPoint(int iIndex)
+{
+	return &g_ControlPoints[iIndex];
+}
+
+int ICKFClient::GetControlPointCount(void)
+{
+	return g_ControlPoints.Count();
 }

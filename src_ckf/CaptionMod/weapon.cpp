@@ -122,6 +122,19 @@ void HUD_InitWeapons(void)
 	g_Player.m_iHealth = 0;
 	g_Player.m_iClass = 0;
 	g_Player.m_szAnimExtention[0] = 0;
+
+	//default
+	g_Player.m_bAutoReload = true;
+
+	const char *cl_autoreload = gEngfuncs.LocalPlayerInfo_ValueForKey("_cl_autoreload");
+	if (cl_autoreload && strlen(cl_autoreload) && atoi(cl_autoreload) == 0)
+		g_Player.m_bAutoReload = false;
+
+	g_Player.m_bHitDamage = true;
+
+	const char *cl_hitdamage = gEngfuncs.LocalPlayerInfo_ValueForKey("_cl_hitdamage");
+	if (cl_hitdamage && strlen(cl_hitdamage) && atoi(cl_hitdamage) == 0)
+		g_Player.m_bHitDamage = false;
 }
 
 float UTIL_WeaponTimeBase(void)
@@ -139,9 +152,10 @@ void HUD_PlaybackEvent(int flags, const edict_t *pInvoker, unsigned short eventi
 	{
 		VectorCopy(g_finalstate->playerstate.origin, new_origin);
 		gEngfuncs.pEventAPI->EV_LocalPlayerViewheight(view_ofs);
-
 		VectorAdd(new_origin, view_ofs, new_origin);
-		VectorCopy(gEngfuncs.GetLocalPlayer()->angles, new_angles);
+
+		VectorCopy(g_finalstate->playerstate.angles, new_angles);
+		new_angles[0] = -new_angles[0];
 	}
 	else
 	{
@@ -222,7 +236,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		g_Player.m_pLastItem->Holster();
 		if(pCurWeapon)
 		{
+			int runfuncs = g_runfuncs;
+			g_runfuncs = 1;
 			pCurWeapon->Deploy();
+			g_runfuncs = runfuncs;
 		}
 	}
 
@@ -453,10 +470,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		}
 	}
 
-	if ( g_runfuncs && ( (*cls_viewmodel_sequence) != to->client.weaponanim ) )
-	{
-		//HudWeaponAnim(to->client.weaponanim);
-	}
+	//if ( g_runfuncs && ( (*cls_viewmodel_sequence) != to->client.weaponanim ) )
+	//{
+	//	HudWeaponAnim(to->client.weaponanim);
+	//}
 
 	//copy weapon data back
 	for ( i = 0; i < MAX_WEAPON_SLOTS; i++ )
@@ -670,18 +687,23 @@ void CClientWeapon::SendWeaponAnim(int iAnim)
 	HUD_SendWeaponAnim(iAnim);
 }
 
+void CClientWeapon::Reloaded(void)
+{
+	int j = min( m_iMaxClip - m_iClip, m_iAmmo);	
+
+	m_iClip += j;
+	m_iAmmo -= j;
+
+	m_fInReload = false;
+}
+
 void CClientWeapon::ItemPostFrame(void)
 {
-	ResetEmptySound();
+	//ResetEmptySound();
 
-	if (m_fInReload && g_Player.m_flNextAttack <= 0.0)
+	if ((m_fInReload || m_fInSpecialReload) && m_flNextReload <= UTIL_WeaponTimeBase())
 	{
-		int j = min( m_iMaxClip - m_iClip, m_iAmmo);	
-
-		m_iClip += j;
-		m_iAmmo -= j;
-
-		m_fInReload = FALSE;
+		Reloaded();
 	}
 
 	if(m_bMeleeAttack && m_flMeleeAttack <= UTIL_WeaponTimeBase())
@@ -708,7 +730,7 @@ void CClientWeapon::ItemPostFrame(void)
 
 		PrimaryAttack();
 	}
-	else if ( g_Player.pev.button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload ) 
+	else if ( (g_Player.pev.button & IN_RELOAD) && iMaxClip() != WEAPON_NOCLIP && !m_fInReload && !m_fInSpecialReload ) 
 	{
 		// reload when reload is pressed, or if no buttons are down and weapon is empty.
 		Reload();
@@ -721,19 +743,11 @@ void CClientWeapon::ItemPostFrame(void)
 		m_bDelayedFire = FALSE;
 
 		// weapon is useable. Reload if empty and weapon has waited as long as it has to after firing
-		if ( m_iClip == 0 && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < 0.0 )
+		if ( IsUseable() && m_iAmmo > 0 && (!m_iClip || (m_iClip < m_iMaxClip && g_Player.m_bAutoReload)) && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack <= UTIL_WeaponTimeBase())
 		{
 			Reload();
-			return;
 		}
 
-		WeaponIdle();
-		return;
-	}
-	
-	// catch all
-	if ( ShouldWeaponIdle() )
-	{
 		WeaponIdle();
 	}
 }
@@ -752,6 +766,21 @@ BOOL CClientWeapon::PlayEmptySound(void)
 		return 0;
 	}
 	return 0;
+}
+
+BOOL CClientWeapon::IsUseable(void)
+{
+	//// If I don't use ammo of any kind, I can always fire
+	//if ( m_iMaxClip <= 0 && m_iMaxAmmo <= 0 )
+	//	return TRUE;
+
+	//// Otherwise, I need ammo of either type
+	//return ( (m_iClip > 0) || (m_iMaxAmmo > 0 && m_iAmmo > 0) );
+	if (m_iClip <= 0)
+		if (m_iAmmo <= 0 && m_iMaxAmmo > 0)
+			return FALSE;
+
+	return TRUE;
 }
 
 static unsigned int glSeed = 0; 
@@ -881,20 +910,20 @@ BOOL CClientWeapon::DefaultReload( int iClipSize, int iAnim, float fDelay )
 	if (m_iAmmo <= 0)
 		return FALSE;
 
+	if(m_fInReload)
+		return FALSE;
+
 	int j = min(iClipSize - m_iClip, m_iAmmo);	
 
 	if (j == 0)
 		return FALSE;
 
-	g_Player.m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
-
 	m_flNextReload = UTIL_WeaponTimeBase() + fDelay;
+	m_flTimeWeaponIdle = m_flNextReload + 0.5;
 
 	SendWeaponAnim(iAnim);
 
 	m_fInReload = TRUE;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
 	return TRUE;
 }
 

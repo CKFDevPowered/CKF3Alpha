@@ -38,7 +38,7 @@ GLuint R_GLGenTexture(int w, int h)
 	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	return texid;
 }
 
@@ -46,7 +46,7 @@ void R_PushRefDef(void)
 {
 	if(save_refdefstack == MAX_SAVEREFDEF_STACK)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_PushRefDef: MAX_SAVEREFDEF_STACK exceed\n");
+		gEngfuncs.Con_Printf("R_PushRefDef: MAX_SAVEREFDEF_STACK exceed\n");
 		return;
 	}
 	VectorCopy(r_refdef->vieworg, save_vieworg[save_refdefstack]);
@@ -69,7 +69,7 @@ void R_PopRefDef(void)
 {
 	if(save_refdefstack == 0)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_PushRefDef: no refdef is pushed\n");
+		gEngfuncs.Con_Printf("R_PushRefDef: no refdef is pushed\n");
 		return;
 	}
 	-- save_refdefstack;
@@ -100,8 +100,8 @@ void R_NewMap(void)
 {
 	int i;
 
-	r_worldentity = g_pMetaSave->pEngineFuncs->GetEntityByIndex(0);
-	r_worldmodel = r_worldentity->model;//IEngineStudio.GetModelByIndex(1);
+	r_worldentity = gEngfuncs.GetEntityByIndex(0);
+	r_worldmodel = r_worldentity->model;
 
 	GL_BuildLightmaps();
 
@@ -125,7 +125,6 @@ void R_NewMap(void)
 	gRefFuncs.R_NewMap();
 
 	R_VidInitWSurf();
-	//R_LoadRendererEntities();
 }
 
 mleaf_t *Mod_PointInLeaf(vec3_t p, model_t *model)
@@ -160,7 +159,7 @@ float *R_GetAttachmentPoint(int entity, int attachment)
 {
 	cl_entity_t *pEntity;
 
-	pEntity = g_pMetaSave->pEngineFuncs->GetEntityByIndex(entity);
+	pEntity = gEngfuncs.GetEntityByIndex(entity);
 
 	if (attachment)
 		return pEntity->attachment[attachment - 1];

@@ -6,18 +6,21 @@
 
 #define CHAN_WEAPON	1
 
-#define STATE_FLAMETHROWER_IDLE 0
-#define STATE_FLAMETHROWER_START 1
-#define STATE_FLAMETHROWER_LOOP 2
-#define STATE_FLAMETHROWER_LOOP_CRIT 3
-#define STATE_FLAMETHROWER_AIRBLAST 4
-
 enum flamethrower_e
 {
 	FLAMETHROWER_IDLE,
 	FLAMETHROWER_FIRE,
 	FLAMETHROWER_AIRBLAST,
 	FLAMETHROWER_DRAW
+};
+
+enum flamethrower_state_e
+{
+	STATE_FLAMETHROWER_IDLE,
+	STATE_FLAMETHROWER_START,
+	STATE_FLAMETHROWER_LOOP,
+	STATE_FLAMETHROWER_LOOP_CRIT,
+	STATE_FLAMETHROWER_AIRBLAST
 };
 
 LINK_ENTITY_TO_CLASS(weapon_flamethrower, CFlamethrower);
@@ -77,7 +80,7 @@ void CFlamethrower::Holster(int skiplocal)
 {
 	m_iState = STATE_FLAMETHROWER_IDLE;
 
-	PLAYBACK_EVENT_FULL(FEV_GLOBAL | FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_IDLE, 0, 0, 0);
+	PLAYBACK_EVENT_FULL(FEV_GLOBAL, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_IDLE, 0, 0, 0);
 }
 
 void CFlamethrower::PrimaryAttack(void)
@@ -98,8 +101,8 @@ void CFlamethrower::FlamethrowerFire(void)
 		if(m_iState != STATE_FLAMETHROWER_IDLE)
 		{
 			m_iState = STATE_FLAMETHROWER_IDLE;
-			PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
-			SendWeaponAnim(FLAMETHROWER_IDLE, UseDecrement() != FALSE);
+			PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
+			SendWeaponAnim(FLAMETHROWER_IDLE, false);
 		}
 		return;
 	}
@@ -117,8 +120,8 @@ void CFlamethrower::FlamethrowerFire(void)
 		if(m_iState != STATE_FLAMETHROWER_IDLE)
 		{
 			m_iState = STATE_FLAMETHROWER_IDLE;
-			PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
-			SendWeaponAnim(FLAMETHROWER_IDLE, UseDecrement() != FALSE);
+			PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
+			SendWeaponAnim(FLAMETHROWER_IDLE, false);
 		}
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.1;
 		return;
@@ -145,29 +148,25 @@ void CFlamethrower::FlamethrowerFire(void)
 	{
 		m_iState = STATE_FLAMETHROWER_START;
 		m_flState = UTIL_WeaponTimeBase() + 1.0;
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
-		SendWeaponAnim(FLAMETHROWER_FIRE, UseDecrement() != FALSE);
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
 	}
 	else if(m_iState >= STATE_FLAMETHROWER_START && UTIL_WeaponTimeBase() > m_flState)
 	{
 		m_iState = (iCrit >= 2) ? STATE_FLAMETHROWER_LOOP_CRIT : STATE_FLAMETHROWER_LOOP;
 		m_flState = UTIL_WeaponTimeBase() + 3.5;
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, m_pPlayer->m_iTeam, 0, 0);
-		SendWeaponAnim(FLAMETHROWER_FIRE, UseDecrement() != FALSE);
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, m_pPlayer->m_iTeam, 0, 0);
 	}
 	else if(iCrit >= 2 && m_iState == STATE_FLAMETHROWER_LOOP)
 	{
 		m_iState = STATE_FLAMETHROWER_LOOP_CRIT;
 		m_flState = UTIL_WeaponTimeBase() + 3.5;
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, m_pPlayer->m_iTeam, 0, 0);
-		SendWeaponAnim(FLAMETHROWER_FIRE, UseDecrement() != FALSE);
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, m_pPlayer->m_iTeam, 0, 0);
 	}
 	else if(iCrit < 2 && m_iState == STATE_FLAMETHROWER_LOOP_CRIT)
 	{
 		m_iState = STATE_FLAMETHROWER_LOOP;
 		m_flState = UTIL_WeaponTimeBase() + 3.5;
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
-		SendWeaponAnim(FLAMETHROWER_FIRE, UseDecrement() != FALSE);
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iState, 0, 0, 0);
 	}
 }
 
@@ -192,35 +191,27 @@ void CFlamethrower::FlamethrowerAirblast(void)
 
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.75;
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.75;
-
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.75;
 
 	m_iState = STATE_FLAMETHROWER_IDLE;
-	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_AIRBLAST, 0, 0, 0);
-	SendWeaponAnim(FLAMETHROWER_AIRBLAST, UseDecrement() != FALSE);
+	PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_AIRBLAST, 0, 0, 0);
+	SendWeaponAnim(FLAMETHROWER_AIRBLAST, false);
 }
 
 void CFlamethrower::WeaponIdle(void)
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
 	if(m_iState != STATE_FLAMETHROWER_IDLE)
 	{
 		m_iState = STATE_FLAMETHROWER_IDLE;
-		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_IDLE, 0, 0, 0);
-		SendWeaponAnim(FLAMETHROWER_IDLE, UseDecrement() != FALSE);
-	}
-}
 
-void CFlamethrower::ItemPostFrame(void)
-{
-	CBasePlayerWeapon::ItemPostFrame();
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_FLAMETHROWER_IDLE, 0, 0, 0);
+		SendWeaponAnim(0, false);
+
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1;
+		m_iAmmoConsumption = 0;
+	}
 }
 
 LINK_ENTITY_TO_CLASS(pj_flame, CFlame);
@@ -237,10 +228,10 @@ CFlame *CFlame::CreateFlame(Vector vecOrigin, Vector vecAngles, CBaseEntity *pOw
 	pFlame->SetTouch(&CFlame::FlameTouch);
 	pFlame->pev->owner = pOwner->edict();
 
-	pFlame->pev->velocity = gpGlobals->v_forward * 400 + pOwner->pev->velocity;
+	pFlame->pev->velocity = gpGlobals->v_forward * 400 + gpGlobals->v_right * RANDOM_FLOAT(-32, 32) + gpGlobals->v_up * RANDOM_FLOAT(-24, 24) + pOwner->pev->velocity;
 
 	pFlame->SetThink(&CFlame::FlameThink);
-	pFlame->pev->nextthink = gpGlobals->time + 0.01;
+	pFlame->pev->nextthink = gpGlobals->time;
 	pFlame->m_fFireTime = gpGlobals->time;
 	pFlame->m_fDmgTime = gpGlobals->time;
 
@@ -252,7 +243,7 @@ void CFlame::Spawn( void )
 	Precache();
 
 	UTIL_SetSize(pev, Vector(-1,-1,-1), Vector(1,1,1));
-	pev->movetype = MOVETYPE_FLY;
+	pev->movetype = MOVETYPE_TOSS;
 	pev->solid = SOLID_TRIGGER;
 	pev->takedamage = DAMAGE_NO;
 	pev->effects |= EF_NODRAW;
@@ -262,6 +253,8 @@ void CFlame::Spawn( void )
 	pev->health = 99999;
 
 	pev->classname = MAKE_STRING("pj_flame");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	m_fDmg = 6.2;
 	m_fDmgRadius = 64;
@@ -285,12 +278,11 @@ void CFlame::FlameThink(void)
 		CKFRadiusDamage(pev->origin, NULL, pev, pevOwner, max(m_fDmg-0.4*(gpGlobals->time-m_fFireTime)/0.4,m_fDmg*0.6) , m_fDmgRadius, 0, DMG_NEVERGIB|DMG_NOSELFDMG|DMG_FLAME, 0, 0, m_iCrit);
 		m_fDmgTime = gpGlobals->time + 0.1;
 	}
-	if( pev->velocity.Length() > 100 )
+	if( pev->velocity.Length() > 240 )
 	{
-		float flAcclerate = pev->velocity.Length()/20;
-		pev->velocity = pev->velocity - pev->velocity.Normalize() * flAcclerate;
+		pev->velocity = pev->velocity - pev->velocity.Normalize() * 100 * 0.01f;
 	}
-	pev->nextthink = gpGlobals->time + 0.01;
+	pev->nextthink = gpGlobals->time + 0.01f;
 }
 
 void CFlame::FlameTouch(CBaseEntity *pOther)

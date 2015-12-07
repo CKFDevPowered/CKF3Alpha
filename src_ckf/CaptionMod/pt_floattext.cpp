@@ -99,7 +99,7 @@ public:
 		VectorCopy(org, ent.origin);
 		ent.angles[2] = 0;
 
-		R_DrawTGASprite(&ent, &g_texCritHit);
+		R_DrawTGASprite(&ent, &g_texMiniCritHit);
 	}
 	void AddParticle(float *src)
 	{
@@ -155,8 +155,8 @@ public:
 		m_frame.texcoord[3][0] = 1;
 		m_frame.texcoord[3][1] = 0;
 		m_sprite.frame = &m_frame;
-		m_sprite.w = ScreenWidth;
-		m_sprite.h = ScreenHeight;
+		m_sprite.w = 320;
+		m_sprite.h = 240;
 		m_sprite.numframes = 1;
 		m_sprite.tex = g_texFloatText;
 	}
@@ -169,14 +169,17 @@ public:
 		if(gRefExports.R_GetDrawPass() != r_draw_normal)
 			return;
 
+		if(!(g_RefSupportExt & r_ext_fbo))
+			return;
+
 		CALC_FRACTION(p);
 
 		ent.curstate.rendermode = kRenderTransAlphaNoDepth;
 
 		if(frac2 < 0.2)
-			ent.curstate.scale = (1 + (frac - 0.8) / 0.2) * 0.05;
+			ent.curstate.scale = (1 + (frac - 0.8) / 0.2) * 0.05 * p->scale;
 		else
-			ent.curstate.scale = 0.05;
+			ent.curstate.scale = 0.05 * p->scale;
 
 		COLOR_FADE(255, 255, 0);
 		ALPHA_FADE_OUT(0.75);
@@ -199,7 +202,7 @@ public:
 
 		R_DrawTGASprite(&ent, &m_sprite);
 	}
-	void AddParticle(int damage, float *src)
+	void AddParticle(int damage, float *src, int crit)
 	{
 		part_t *p = AllocParticle();
 		if(!p) return;
@@ -214,6 +217,8 @@ public:
 		p->col[2] = 0;
 		p->col[3] = 255;
 
+		p->scale = (crit >= 2) ? 3.0f : (float)(crit+1);
+
 		p->die = p->life + g_flClientTime;
 
 		wsprintfW(m_text, L"%d", damage);
@@ -225,7 +230,7 @@ public:
 	wchar_t m_text[64];	
 };
 
-void R_HitDamageText(int damage, vec3_t vecSrc)
+void R_HitDamageText(int damage, vec3_t vecSrc, int crit)
 {
 	if(!(g_RefSupportExt & r_ext_fbo))
 		return;
@@ -233,6 +238,6 @@ void R_HitDamageText(int damage, vec3_t vecSrc)
 	CPSHitDamageText *pText = new CPSHitDamageText;
 	pText->Init();
 	pText->SetDie(2.0);
-	pText->AddParticle(damage, vecSrc);
+	pText->AddParticle(damage, vecSrc, crit);
 	R_AddPartSystem(pText);
 }

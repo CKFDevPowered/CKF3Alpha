@@ -24,7 +24,7 @@ void CClientMinigun::Holster(void)
 	g_Player.pev.flags &= ~FL_LOCK_DUCK;
 	g_Player.pev.flags &= ~FL_LOCK_JUMP;
 
-	PLAYBACK_EVENT_FULL(FEV_GLOBAL | FEV_NOTHOST, NULL, m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_NONE, 0, 0, 0);
+	PLAYBACK_EVENT_FULL(FEV_GLOBAL, NULL, m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_NONE, 0, 0, 0);
 }
 
 BOOL CClientMinigun::CanHolster(void)
@@ -39,7 +39,7 @@ void CClientMinigun::PrimaryAttack(void)
 	if(m_iSpin < STATE_MINIGUN_SPIN || m_iSpin > STATE_MINIGUN_FIRECRIT)
 		return;
 
-	float flSpread = 0.10;
+	float flSpread = 0.06;
 	if(m_iShotsFired)
 		flSpread *= min(1.0+m_iShotsFired/20.0f, 1.5);
 
@@ -89,7 +89,7 @@ void CClientMinigun::ItemPostFrame(void)
 	int iButton = g_Player.pev.button;
 	int iOldButtons = g_Player.pev.oldbuttons;
 
-	if((m_iSpin == STATE_MINIGUN_FIRE || m_iSpin == STATE_MINIGUN_FIRECRIT) && !(iButton & IN_ATTACK))
+	if((m_iSpin == STATE_MINIGUN_FIRE || m_iSpin == STATE_MINIGUN_FIRECRIT) && (!(iButton & IN_ATTACK) || m_iAmmo <= 0))
 	{
 		m_iSpin = STATE_MINIGUN_SPIN;
 		SendWeaponAnim(MINIGUN_SPIN_IDLE1);

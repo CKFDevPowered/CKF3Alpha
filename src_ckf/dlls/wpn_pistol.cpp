@@ -76,10 +76,10 @@ void CPistol::SecondaryAttack(void)
 
 void CPistol::PistolFire()
 {
-	float flSpread = 0.05;
+	float flSpread = 0.03;
 
 	if(m_iShotsFired)
-		flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
+		flSpread *= min(1.0+m_iShotsFired/12.0f, 1.5);
 
 	if (m_iClip <= 0)
 	{
@@ -111,24 +111,23 @@ void CPistol::PistolFire()
 	m_pPlayer->m_iWeaponVolume = NORMAL_GUN_VOLUME;
 	m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
 
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0f/6;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.167f;
 
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.9;
 
-	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 1.0f/6;
+	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 0.2f;
 
 	if(m_iShotsFired < 5) m_iShotsFired ++;
 
 	SendWeaponAnim(PISTOL_FIRE, UseDecrement() != FALSE);
 
 	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+	m_fInReload = false;
 }
 
 void CPistol::Reload(void)
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		return;
-
 	if (DefaultReload(PISTOL_MAX_CLIP, PISTOL_RELOAD, (!m_bForEngineer) ? 1.25 : 1.36))
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
@@ -138,7 +137,6 @@ void CPistol::Reload(void)
 void CPistol::WeaponIdle(void)
 {
 	ResetEmptySound();
-	//m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
 	if(m_iShotsFired && UTIL_WeaponTimeBase() > m_flDecreaseShotsFired)
 	{
@@ -146,11 +144,11 @@ void CPistol::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.25;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(PISTOL_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(PISTOL_IDLE1, UseDecrement() != FALSE);
+	}
 }
 
 void CPistol::PreAttachPlayer(CBasePlayer *pPlayer)

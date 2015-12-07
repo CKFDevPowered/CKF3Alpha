@@ -105,5 +105,4 @@ int studiointerface_StudioDrawModel(int flags);
 int studiointerface_StudioDrawPlayer(int flags, entity_state_t *pplayer);
 
 extern engine_studio_api_t IEngineStudio;
-extern r_studio_interface_t StudioInterface;
-extern r_studio_interface_t *gpStudioInterface;
+extern r_studio_interface_t **gpStudioInterface;

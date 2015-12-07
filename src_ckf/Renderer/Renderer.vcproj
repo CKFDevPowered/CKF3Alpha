@@ -184,175 +184,6 @@
 				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\test\ckf3\renderer.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\renderer.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
-		<Configuration
-			Name="4554 debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;RENDERER_EXPORTS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				EnableEnhancedInstructionSet="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="0"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4311;4312;4819;4996"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				OutputFile="F:\CSBTE\Test\csbte\$(ProjectName).dll"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
-				IgnoreDefaultLibraryNames="libcmt.lib"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release EN|Win32"
-			OutputDirectory="$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="2"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP"
-				FavorSizeOrSpeed="1"
-				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="..\metahook;..\metahook\Interface;..\metahook\HLSDK\cl_dll;..\metahook\HLSDK\common;..\metahook\HLSDK\engine;..\metahook\HLSDK\pm_shared;..\metahook\HLSDK\public;VGUI\;SourceSDK\;..\common;.\;SourceSDK\tier1"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;RENDERER_EXPORTS;LANG_EN"
-				RuntimeLibrary="0"
-				EnableEnhancedInstructionSet="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-				DisableSpecificWarnings="4244;4267;4305;4311;4312;4819;4996"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories=""
-				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="false"
-				GenerateMapFile="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
-				Profile="true"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\..\ckf3\ckf3\metahook\renderer.dll&quot;"
-			/>
-		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -364,10 +195,6 @@
 			>
 			<File
 				RelativePath=".\cJSON.c"
-				>
-			</File>
-			<File
-				RelativePath=".\client.cpp"
 				>
 			</File>
 			<File
@@ -459,7 +286,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\screen.cpp"
+				RelativePath=".\zone.cpp"
 				>
 			</File>
 		</Filter>
@@ -565,11 +392,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\screen.h"
+				RelativePath=".\spritegn.h"
 				>
 			</File>
 			<File
-				RelativePath=".\spritegn.h"
+				RelativePath=".\zone.h"
 				>
 			</File>
 		</Filter>

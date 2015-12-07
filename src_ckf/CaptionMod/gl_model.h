@@ -16,7 +16,8 @@ typedef struct
 enum
 {
 	kRenderAddColor = 6,
-	kRenderTransAlphaNoDepth
+	kRenderTransAlphaNoDepth,
+	kRenderShaderConc
 };
 
 #define SPR_VP_PARALLEL_UPRIGHT 0

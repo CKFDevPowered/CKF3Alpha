@@ -64,6 +64,7 @@ typedef struct
 	float end;
 	float density;
 	float fresnel;
+	qboolean active;
 }water_parm_t;
 
 extern water_parm_t water_parm;

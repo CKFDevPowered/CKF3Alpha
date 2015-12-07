@@ -1,5 +1,4 @@
 #include "gl_local.h"
-#include "screen.h"
 
 //renderer
 qboolean drawreflect;
@@ -22,19 +21,12 @@ water_attrib_t water_attrib;
 int water_normalmap;
 int water_normalmap_default;
 
-//water fog
-int waterfog;
-vec4_t waterfog_col;
-float waterfog_start;
-float waterfog_end;
-float waterfog_den;
-float water_fresnel;
-
 int save_userfogon;
 int waterfog_on;
 int *g_bUserFogOn;
 
 water_parm_t water_parm;
+water_parm_t default_water_parm = { true, {64.0f/255, 80.0f/255, 90.0f/255, 51.0f/255}, 100, 3000, 1, 1, false };
 
 //cvar
 cvar_t *r_water = NULL;
@@ -54,6 +46,7 @@ void R_SetWaterParm(water_parm_t *parm)
 	water_parm.color[1] = clamp(parm->color[1], 0, 1);
 	water_parm.color[2] = clamp(parm->color[2], 0, 1);
 	water_parm.color[3] = clamp(parm->color[3], 0, 1);
+	water_parm.active = parm->active;
 }
 
 void R_RenderWaterFog(void) 
@@ -69,7 +62,7 @@ void R_RenderWaterFog(void)
 		qglHint(GL_FOG_HINT, GL_NICEST);
 
 		qglFogf(GL_FOG_START, water_parm.start);
-		qglFogf(GL_FOG_END, (r_params.waterlevel > 2) ? water_parm.end / 4 : water_parm.end);
+		qglFogf(GL_FOG_END, (*cl_waterlevel > 2) ? water_parm.end / 4 : water_parm.end);
 		qglFogfv(GL_FOG_COLOR, water_parm.color);
 
 		qglFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV);
@@ -97,14 +90,16 @@ void R_ClearWater(void)
 	waters[MAX_WATERS-1].next = NULL;
 	waters_free = &waters[0];
 	waters_active = NULL;
+
+	memcpy(&water_parm, &default_water_parm, sizeof(water_parm));
 }
 
 void R_InitWater(void)
 {
 	if(gl_shader_support)
 	{
-		const char *water_vscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\water_shader.vsh", 5, 0);
-		const char *water_fscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\water_shader.fsh", 5, 0);
+		const char *water_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\water_shader.vsh", 5, 0);
+		const char *water_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\water_shader.fsh", 5, 0);
 		if(water_vscode && water_fscode)
 		{
 			water_program = R_CompileShader(water_vscode, water_fscode, "water_shader.vsh", "water_shader.fsh");
@@ -121,8 +116,8 @@ void R_InitWater(void)
 				SHADER_UNIFORM_INIT(water, reflectmap, "reflectmap");
 			}
 		}
-		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)water_vscode);
-		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)water_fscode);
+		gEngfuncs.COM_FreeFile((void *)water_vscode);
+		gEngfuncs.COM_FreeFile((void *)water_fscode);
 	}
 
 	water_normalmap_default = R_LoadTextureEx("resource\\tga\\water_normalmap.tga", "resource\\tga\\water_normalmap.tga", NULL, NULL, GLT_SYSTEM, false, false);
@@ -131,19 +126,9 @@ void R_InitWater(void)
 	if(!water_texture_size)//don't support FBO?
 		water_texture_size = 512;
 
-	r_water = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-	r_water_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water_debug", "0", FCVAR_CLIENTDLL);
-	r_water_fresnel = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_water_fresnel", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
-
-	water_parm.fog = 1;
-	water_parm.start = 100;
-	water_parm.end = 3000;
-	water_parm.density = 1;
-	water_parm.color[0] = 64.0f/255;
-	water_parm.color[1] = 80.0f/255;
-	water_parm.color[2] = 90.0f/255;
-	water_parm.color[3] = 51.0f/255;
-	water_parm.fresnel = 1;
+	r_water = gEngfuncs.pfnRegisterVariable("r_water", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_water_debug = gEngfuncs.pfnRegisterVariable("r_water_debug", "0", FCVAR_CLIENTDLL);
+	r_water_fresnel = gEngfuncs.pfnRegisterVariable("r_water_fresnel", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 
 	water_update_counter = 0;
 	curwater = NULL;
@@ -404,7 +389,7 @@ void R_UpdateWater(void)
 	int currentframebuffer = 0;
 	if(s_WaterFBO.s_hBackBufferFBO)
 	{
-		qglGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &currentframebuffer);
+		qglGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentframebuffer);
 		qglBindFramebufferEXT(GL_FRAMEBUFFER, s_WaterFBO.s_hBackBufferFBO);
 	}
 

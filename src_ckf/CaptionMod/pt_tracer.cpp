@@ -11,77 +11,92 @@ extern cl_entity_t ent;
 int CL_TraceEntity_Ignore(physent_t *pe);
 void PerpendicularVector(vec3_t dst, vec3_t src);
 int VectorCompare (const float *v1, const float *v2);
+void EV_GetGunPosition(int idx, int attachment, float *origin);
+
 //tracer
 
-class CPSTracer : public CPartSystemAttachment
+class CBaseTracer : public CParticleSystem
 {
 public:
-	CPSTracer(){}
-	void Init(int type, int parts, int team, cl_entity_t *entity, int attachindex, float delay)
+	CBaseTracer(){}
+	void Init(int type, int parts, int team, float delay, float speed)
 	{
-		CPartSystemAttachment::Init(type, parts, 0, entity);
-		SetDie(0);//default life
+		CParticleSystem::Init(type, parts, 0);
+		SetDie(1.5);
 		m_team = team;
 		m_cull = false;
 		m_sort = false;
-		m_attachindex = attachindex;
 
 		m_curdelay = 0;
 		m_delay = delay;
+		m_speed = speed;
 	}
 	virtual void Render(part_t *p, float *org)
 	{
-		vec3_t	linedir, viewdir, cross;
-		vec3_t	start, end, dir;
-		float sd, ed, td;
+		vec3_t	viewdir, cross;
+		vec3_t	start, end, dir, tmp;
+		float sd, ed;
+		float sv, ev;
+		float frac;
+
 		float width = 1.25f;
 
-		if(m_entity)
-			VectorCopy(m_attachment[m_attachindex], p->org);
-
-		if(p->modn != 0)
+		if(m_team != 0)
 			width = 1.75f;
 
-		float frac;
-		vec3_t	tmp;
-
 		// calculate distance
-		VectorCopy(p->vel, dir);
+		VectorSubtract(p->vel, p->org, dir);
+		float dist = VectorLength(dir);
+		float distadd = min(5000, dist);
+		float fulldist = dist + distadd;
 
-		// calculate fraction
-		frac = p->life - ( p->die - g_flClientTime ) + g_flFrameTime;
+		float life = fulldist / m_speed;
 
-		if(frac <= g_flFrameTime)//delayed
+		//start time
+		frac = (g_flClientTime - p->scale) / life;
+
+		if(frac < 0)
 			return;
 
-		// calculate our distance along our path
-		sd = p->scale * frac;
-		ed = sd - p->rot;
-
-		// clip to start
-		sd = max( 0.0f, sd );
-		ed = max( 0.0f, ed );
-
-		if(( sd == 0.0f ) && ( ed == 0.0f ))
-			return;
-
-		// clip it
-		td = p->rot;
-		if( td != 0.0f )
+		//go die
+		if(frac > 1)
 		{
-			sd = min( sd, td );
-			ed = min( ed, td );
+			p->die = 0;
+			return;
 		}
 
-		VectorCopy(p->org, start);
+		// calculate our distance along our path
+		ed = fulldist * frac;
+		sd = ed - 5000;
 
-		VectorMA(start, sd, dir, end );
-		VectorMA(start, ed, dir, start );
+		ev = min( 1.0f, 1.0f - (ed - dist) / distadd );
+		sv = 0.0f;
 
-		VectorSubtract( end, start, linedir );
+		// clip start V to end V
+		sv = min(ev, sv);
+
+		// clip to start
+		ed = max( 0.0f, ed );
+		sd = max( 0.0f, sd );
+
+		// clip to end
+		ed = min( dist, ed );
+		sd = min( dist, sd );
+
+		if( sd == ed )
+			return;
+
+		//VectorCopy(p->org, start);
+
+		VectorNormalize(dir);
+
+		VectorMA(p->org, ed, dir, end );
+		VectorMA(p->org, sd, dir, start );
+
+		//VectorSubtract( end, start, linedir );
 		VectorSubtract( end, refdef->vieworg, viewdir );
 
-		CrossProduct( linedir, viewdir, cross );
+		CrossProduct( dir, viewdir, cross );
 		VectorNormalize( cross );
 
 		qglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -101,28 +116,24 @@ public:
 			gRefExports.RefAPI.GL_Bind(g_texTracer[m_team].tex);
 		}
 
-		int cullOff = (gRefExports.R_GetDrawPass() == r_draw_reflect);
-
-		if(cullOff)
-			qglDisable(GL_CULL_FACE);
+		qglDisable(GL_CULL_FACE);
 
 		qglBegin( GL_QUADS );
 		VectorMA( start, -width, cross, tmp );
-		qglTexCoord2f( 0.0f, 0.0f );
+		qglTexCoord2f( 0.0f, sv );
 		qglVertex3fv( tmp );
 		VectorMA( start, width, cross, tmp );
-		qglTexCoord2f( 1.0f, 0.0f );
+		qglTexCoord2f( 1.0f, sv );
 		qglVertex3fv( tmp );
 		VectorMA( end, width, cross, tmp );
-		qglTexCoord2f( 1.0f, 1.0f );
+		qglTexCoord2f( 1.0f, ev );
 		qglVertex3fv( tmp );
 		VectorMA( end, -width, cross, tmp );
-		qglTexCoord2f( 0.0f, 1.0f );
+		qglTexCoord2f( 0.0f, ev );
 		qglVertex3fv( tmp );
 		qglEnd();
 
-		if(cullOff)
-			qglEnable(GL_CULL_FACE);
+		qglEnable(GL_CULL_FACE);
 
 		if(gl_wireframe->value != 0)
 		{
@@ -130,16 +141,12 @@ public:
 			qglDisable(GL_TEXTURE_2D);
 			qglBegin(GL_LINE_LOOP);
 			VectorMA( start, -width, cross, tmp );
-			qglTexCoord2f( 0.0f, 0.0f );
 			qglVertex3fv( tmp );
 			VectorMA( start, width, cross, tmp );
-			qglTexCoord2f( 1.0f, 0.0f );
 			qglVertex3fv( tmp );
 			VectorMA( end, width, cross, tmp );
-			qglTexCoord2f( 1.0f, 1.0f );
 			qglVertex3fv( tmp );
 			VectorMA( end, -width, cross, tmp );
-			qglTexCoord2f( 0.0f, 1.0f );
 			qglVertex3fv( tmp );
 			qglEnd();
 			qglEnable(GL_TEXTURE_2D);
@@ -147,25 +154,12 @@ public:
 
 		qglDepthMask(1);
 	}
-	void AddParticle(float *src, float *dst)
+	void AddParticle(vec3_t src, vec3_t dst)
 	{
-		vec3_t dir;
-
 		part_t *p = AllocParticle();
-		if(!p) return;
-
-		VectorSubtract(dst, src, dir);
-
-		p->rot = VectorLength(dir);//length
-		p->scale = min(max(p->rot * 10.0f, 2000), 12000);
-		p->life = p->rot / p->scale;
-
-		if(m_die < g_flClientTime + p->life + 0.5)
-			SetDie(p->life + 0.5);//make it longer
 
 		VectorCopy(src, p->org);
-		VectorNormalize(dir);
-		VectorCopy(dir, p->vel);
+		VectorCopy(dst, p->vel);
 
 		switch(m_team)
 		{
@@ -188,57 +182,102 @@ public:
 			p->col[3] = 255;
 			break;
 		}
-		p->modn = m_team;
-		p->die = p->life + g_flClientTime + m_curdelay;
+		p->scale = g_flClientTime + m_curdelay;
+		p->life = 99999;
+		p->die = g_flClientTime + p->life;
 		m_curdelay += m_delay;
 	}
-public:
+	virtual void EmitParticle(vec3_t dst){}
+protected:
 	int m_team;
-	int m_attachindex;
 	float m_delay;
 	float m_curdelay;
+	float m_speed;
 };
 
-static CPSTracer *g_pCurTracer;
-
-void R_BeginTracer(int iTracerColor, int iNumTracer)
+class CCoordTracer : public CBaseTracer
 {
-	g_pCurTracer = new CPSTracer;
-	g_pCurTracer->Init(PS_DefaultTracer, iNumTracer, iTracerColor, NULL, 0, 0);
+public:
+	CCoordTracer(){}
+	void Init(int type, int parts, int team, float delay, float speed, vec3_t src)
+	{
+		CBaseTracer::Init(type, parts, team, delay, speed);
 
-	R_AddPartSystem(g_pCurTracer);
+		VectorCopy(src, m_src);
+	}
+	virtual void EmitParticle(vec3_t dst)
+	{
+		AddParticle(m_src, dst);
+	}
+private:
+	vec3_t m_src;
+};
+
+class CEntityTracer : public CBaseTracer
+{
+public:
+	CEntityTracer(){}
+	void Init(int type, int parts, int team, float delay, float speed, int entindex, int attachment)
+	{
+		CBaseTracer::Init(type, parts, team, delay, speed);
+
+		m_entindex = entindex;
+		m_attachment = attachment;
+	}
+	virtual void Render(part_t *p, float *org)
+	{
+		EV_GetGunPosition(m_entindex, m_attachment, p->org);
+
+		CBaseTracer::Render(p, org);
+	}
+	virtual void EmitParticle(vec3_t dst)
+	{
+		vec3_t src;
+		EV_GetGunPosition(m_entindex, m_attachment, src);
+
+		AddParticle(src, dst);
+
+		//gEngfuncs.Con_Printf("EmitParticle: src(%.2f,%.2f,%.2f) dst(%.2f,%.2f,%.2f)\n", src[0], src[1], src[2], dst[0], dst[1], dst[2]);
+	}
+private:
+	int m_entindex;
+	int m_attachment;
+};
+
+static CBaseTracer *g_pCurTracer;
+
+void R_BeginCoordTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, vec3_t vecSrc)
+{
+	CCoordTracer *pTracer = new CCoordTracer;
+	pTracer->Init(PS_CoordTracer, iNumTracer, iTracerColor, flDelay, flSpeed, vecSrc);
+
+	R_AddPartSystem(pTracer);
+
+	g_pCurTracer = (CBaseTracer *)pTracer;
 }
 
-void R_BeginTracerDelayed(int iTracerColor, int iNumTracer, float flDelay)
+void R_BeginEntityTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, int iEntityIndex, int iAttachIndex)
 {
-	g_pCurTracer = new CPSTracer;
-	g_pCurTracer->Init(PS_DefaultTracer, iNumTracer, iTracerColor, NULL, 0, flDelay);
+	CEntityTracer *pTracer = new CEntityTracer;
+	pTracer->Init(PS_EntityTracer, iNumTracer, iTracerColor, flDelay, flSpeed, iEntityIndex, iAttachIndex);
 
-	R_AddPartSystem(g_pCurTracer);
+	R_AddPartSystem(pTracer);
+
+	g_pCurTracer = (CBaseTracer *)pTracer;
 }
 
-void R_BeginTracerAttachment(int iTracerColor, int iNumTracer, cl_entity_t *pEntity, int iAttachIndex)
-{
-	g_pCurTracer = new CPSTracer;
-	g_pCurTracer->Init(PS_DefaultTracer, iNumTracer, iTracerColor, pEntity, iAttachIndex, 0);
-
-	R_AddPartSystem(g_pCurTracer);
-}
-
-void R_EmitTracer(vec3_t vecSrc, vec3_t vecDst)
+void R_EmitTracer(vec3_t vecDst)
 {
 	if(g_pCurTracer)
-	{
-		g_pCurTracer->AddParticle(vecSrc, vecDst);
-	}
+		g_pCurTracer->EmitParticle(vecDst);
 }
 
 //impact
 
-class CPSBulletImpact : public CPartSystemCoord
+class CBulletImpact : public CPartSystemCoord
 {
 public:
-	CPSBulletImpact(){}
+	CBulletImpact(){}
 	void Init(int type, int parts, float *org, float *vel, float *right, float *up)
 	{
 		CPartSystemCoord::Init(type, parts, 0, org, vel);
@@ -250,13 +289,13 @@ public:
 	vec3_t m_up;
 };
 
-class CPSBulletImpactDebris : public CPSBulletImpact
+class CBulletImpactDebris : public CBulletImpact
 {
 public:
-	CPSBulletImpactDebris(){}
+	CBulletImpactDebris(){}
 	void Init(int parts, float *org, float *vel, float *right, float *up)
 	{
-		CPSBulletImpact::Init(PS_BulletImpactDebris, parts, org, vel, right, up);
+		CBulletImpact::Init(PS_BulletImpactDebris, parts, org, vel, right, up);
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
@@ -319,13 +358,13 @@ public:
 	}
 };
 
-class CPSBulletImpactSpark : public CPSBulletImpact
+class CBulletImpactSpark : public CBulletImpact
 {
 public:
-	CPSBulletImpactSpark(){}
+	CBulletImpactSpark(){}
 	void Init(int parts, float *org, float *vel, float *right, float *up)
 	{
-		CPSBulletImpact::Init(PS_BulletImpactSprak, parts, org, vel, right, up);
+		CBulletImpact::Init(PS_BulletImpactSprak, parts, org, vel, right, up);
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
@@ -369,7 +408,6 @@ public:
 		float rnd;
 
 		part_t *p = AllocParticle();
-		if(!p) return;
 
 		VectorCopy(m_org, p->org);
 
@@ -413,12 +451,12 @@ void R_BulletImpact(vec3_t vecStart, vec3_t vecNormal)
 	pCore->Init(PS_BulletImpact, 0, 2);
 	pCore->SetDie(1.5);
 
-	CPSBulletImpactSpark *pSpark = new CPSBulletImpactSpark;
+	CBulletImpactSpark *pSpark = new CBulletImpactSpark;
 	pSpark->Init(8, vecStart, vecNormal, vecRight, vecUp);
 	for(i = 0; i < 8; ++i)
 		pSpark->AddParticle();
 
-	CPSBulletImpactDebris *pDebris = new CPSBulletImpactDebris;
+	CBulletImpactDebris *pDebris = new CBulletImpactDebris;
 	pDebris->Init(8, vecStart, vecNormal, vecRight, vecUp);
 	for(i = 0; i < 8; ++i)
 		pDebris->AddParticle();

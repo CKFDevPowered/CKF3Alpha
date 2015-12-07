@@ -43,7 +43,7 @@ void R_MultiJumpTrail(cl_entity_t *pEntity);
 void R_RocketTrail(cl_entity_t *pEntity);
 void R_ExplosionMidAir(vec3_t vecStart);
 void R_ExplosionWall(vec3_t vecStart, vec3_t vecNormal);
-void R_StickyKill(cl_entity_t *pEntity);
+void R_StickyKill(vec3_t origin, int skin);
 void R_MediBeam(cl_entity_t *pEntity, cl_entity_t *pTarget, int iColor);
 void R_KillMediBeam(cl_entity_t *pStart, cl_entity_t *pTarget);
 void CL_BluePrint(int bp);
@@ -51,18 +51,22 @@ void R_DisguiseSmoke(cl_entity_t *pEntity, int iTeam);
 void CL_SpyWatch(int action);
 void R_FlameThrow(cl_entity_t *pEntity, int iTeam);
 void HudDeathMsg_AddPanel(const char *killer, const char *assister, int killerteam, const char *victim, int victimteam, const char *iconname, int relative, int critkill);
-void R_BeginTracer(int iTracerColor, int iNumTracer);
-void R_BeginTracerAttachment(int iTracerColor, int iNumTracer, cl_entity_t *pEntity, int iAttachIndex);
-void R_EmitTracer(vec3_t vecSrc, vec3_t vecDst);
+
+void R_BeginEntityTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, int iEntityIndex, int iAttachIndex);
+void R_BeginCoordTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, vec3_t vecSrc);
+void R_EmitTracer(vec3_t vecDst);
+
 void R_CritText(vec3_t vecSrc);
 void R_MiniCritText(vec3_t vecSrc);
-void R_HitDamageText(int damage, vec3_t vecSrc);
+void R_HitDamageText(int damage, vec3_t vecSrc, int crit);
 void ShowHudMenu(int type, int keys);
 void HudFloatText_AddHealth(int iHealth);
 void HudFloatText_AddMetal(int iMetal);
 void R_BurningPlayer(cl_entity_t *pEntity, int iTeam, float flDuration);
 void R_KillAllEntityPartSystem(int instant);
 void R_CritPlayerWeapon(cl_entity_t *pEntity, int iTeam, float flDuration);
+void R_AirBlast(cl_entity_t *pEntity);
+qboolean EV_IsLocal( int idx );
 
 int MsgFunc_HideWeapon(const char *pszName, int iSize, void *pbuf)
 {
@@ -257,7 +261,7 @@ int MsgFunc_DeathMsg(const char *pszName, int iSize, void *pbuf)
 
 int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 {
-	BEGIN_READ(pbuf, iSize);
+	/*BEGIN_READ(pbuf, iSize);
 	int killerindex = READ_BYTE();
 	int assisterindex = READ_BYTE();
 	int victimindex = READ_BYTE();
@@ -348,12 +352,13 @@ int MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 
 	HudDeathMsg_AddPanel(killer_name, assister_name, killerteam, victim_name, victimteam, iconname, relative, 0);
 
+	return 1;*/
 	return 1;
 }
 
 int MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf)
 {
-	BEGIN_READ(pbuf, iSize);
+	/*BEGIN_READ(pbuf, iSize);
 
 	int killerteam = READ_BYTE();
 	int killerindex = READ_BYTE();
@@ -409,6 +414,7 @@ int MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf)
 
 	HudDeathMsg_AddPanel(killer_name, NULL, killerteam, victim_name, victimteam, iconname.c_str(), relative, 0);
 
+	return 1;*/
 	return 1;
 }
 
@@ -434,19 +440,18 @@ int MsgFunc_MapObject(const char *pszName, int iSize, void *pbuf)
 
 		model_t *mod = IEngineStudio.Mod_ForName(modelname, true);
 
-		physent_t physent;
-		memset(&physent, 0, sizeof(physent_t));
+		physent_t *physent = &g_NoBuildZones[g_NoBuildZones.AddToTail()];
+		memset(physent, 0, sizeof(physent_t));
 
-		VectorCopy(maxs, physent.maxs);
-		VectorCopy(mins, physent.mins);
-		VectorAdd(physent.maxs, physent.mins, physent.origin);
-		VectorMultiply(physent.origin, 0.5, physent.origin);
-		physent.team = team;
-		physent.model = mod;
-		physent.solid = SOLID_TRIGGER;
-		physent.movetype = MOVETYPE_NONE;
-		physent.skin = CONTENT_SOLID;
-		g_NoBuildZones.push_back(physent);
+		VectorCopy(maxs, physent->maxs);
+		VectorCopy(mins, physent->mins);
+		VectorAdd(physent->maxs, physent->mins, physent->origin);
+		VectorMultiply(physent->origin, 0.5, physent->origin);
+		physent->team = team;
+		physent->model = mod;
+		physent->solid = SOLID_TRIGGER;
+		physent->movetype = MOVETYPE_NONE;
+		physent->skin = CONTENT_SOLID;
 	}
 	return 1;
 }
@@ -526,8 +531,12 @@ int MF_DrawFX_ExplosionWall(void)
 
 int MF_DrawFX_StickyKill(void)
 {
-	READ_ENTITY();
-	R_StickyKill(pEntity);
+	vec3_t vecSrc;
+	vecSrc[0] = READ_COORD();
+	vecSrc[1] = READ_COORD();
+	vecSrc[2] = READ_COORD();
+	int iSkin = READ_BYTE();
+	R_StickyKill(vecSrc, iSkin);
 	return 1;
 }
 
@@ -541,29 +550,27 @@ int MF_DrawFX_CoordTracer(void)
 	vecDst[1] = READ_COORD();
 	vecDst[2] = READ_COORD();
 	int col = READ_BYTE();
-	R_BeginTracer(col, 1);
-	R_EmitTracer(vecSrc, vecDst);
+	R_BeginCoordTracer(col, 1, 0.0f, 5000, vecSrc);
+	R_EmitTracer(vecDst);
 	return 1;
 }
 
 int MF_DrawFX_AttachTracer(void)
 {
-	vec3_t vecSrc, vecDst;
+	vec3_t vecDst;
 
 	READ_ENTITY();
 
-	int attach = READ_BYTE();
-	if(attach < 0 || attach > 3)
+	int attachment = READ_BYTE();
+	if(attachment < 0 || attachment > 3)
 		return 1;
-	
-	VectorCopy(pEntity->attachment[attach], vecSrc);
 
 	vecDst[0] = READ_COORD();
 	vecDst[1] = READ_COORD();
 	vecDst[2] = READ_COORD();
 	int col = READ_BYTE();
-	R_BeginTracerAttachment(col, 1, pEntity, attach);
-	R_EmitTracer(vecSrc, vecDst);
+	R_BeginEntityTracer(col, 1, 0.0f, 5000, entindex, attachment);
+	R_EmitTracer(vecDst);
 	return 1;
 }
 
@@ -618,25 +625,61 @@ int MF_DrawFX_FlameThrow(void)
 
 int MF_DrawFX_CritHit(void)
 {
+	READ_ENTITY();
+
 	vec3_t vecSrc;
 
-	vecSrc[0] = READ_COORD();
-	vecSrc[1] = READ_COORD();
-	vecSrc[2] = READ_COORD();
+	VectorCopy(pEntity->origin, vecSrc);
+	vecSrc[2] += 32;
 
-	R_CritText(vecSrc);
+	int bPackedInt = READ_BYTE();
+	int bShowEffect = (bPackedInt & 1);
+	int bShowSound = (bPackedInt >> 1) & 1;
+
+	if(bShowEffect)
+		R_CritText(vecSrc);
+
+	char sound[64];
+
+	if(EV_IsLocal(entindex))
+	{
+		sprintf(sound, "CKF_III/crit_received%d.wav", RANDOM_LONG(1, 3));
+		gEngfuncs.pfnPlaySoundByName(sound, 1);
+	}
+
+	if(bShowSound)
+	{
+		sprintf(sound, "CKF_III/crit_hit%d.wav", RANDOM_LONG(1, 5));
+		gEngfuncs.pEventAPI->EV_PlaySound(refparams.viewentity, vecSrc, CHAN_STATIC, sound, 1, 1, 0, 100);
+	}
+
 	return 1;
 }
 
 int MF_DrawFX_MiniCritHit(void)
 {
+	READ_ENTITY();
+
 	vec3_t vecSrc;
 
-	vecSrc[0] = READ_COORD();
-	vecSrc[1] = READ_COORD();
-	vecSrc[2] = READ_COORD();
+	VectorCopy(pEntity->origin, vecSrc);
+	vecSrc[2] += 32;
 
-	R_MiniCritText(vecSrc);
+	int bPackedInt = READ_BYTE();
+	int bShowEffect = (bPackedInt & 1);
+	int bShowSound = (bPackedInt >> 1) & 1;
+
+	if(bShowEffect)
+		R_MiniCritText(vecSrc);
+
+	char sound[64];
+
+	if(bShowSound)
+	{
+		sprintf(sound, "CKF_III/crit_hit_mini%d.wav", RANDOM_LONG(1, 5));
+		gEngfuncs.pEventAPI->EV_PlaySound(refparams.viewentity, vecSrc, CHAN_STATIC, sound, 1, 1, 0, 100);
+	}
+
 	return 1;
 }
 
@@ -644,15 +687,20 @@ int MF_DrawFX_HitDamage(void)
 {
 	READ_ENTITY();
 
+	if(!g_Player.m_bHitDamage)
+		return 1;
+
 	int damage = READ_SHORT();
 	vec3_t vecSrc;
 
 	VectorCopy(pEntity->origin, vecSrc);
 	vecSrc[2] += 32;
 
-	R_HitDamageText(damage, vecSrc);
+	int crit = READ_BYTE();
 
-	gEngfuncs.pfnPlaySoundByName("sound/CKF_III/hitsound.wav", 1);
+	R_HitDamageText(damage, vecSrc, crit);
+
+	gEngfuncs.pfnPlaySoundByName("CKF_III/hitsound.wav", 1);
 
 	return 1;
 }
@@ -727,6 +775,15 @@ int MF_DrawFX_CritPlayerWeapon(void)
 	return 1;
 }
 
+int MF_DrawFX_AirBlast(void)
+{
+	READ_ENTITY();
+
+	R_AirBlast(pEntity);
+
+	return 1;
+}
+
 pfnMF_DrawFX gDrawFXList[] = {
 	MF_DrawFX_StickyTrail,
 	MF_DrawFX_RocketTrail,
@@ -757,7 +814,9 @@ pfnMF_DrawFX gDrawFXList[] = {
 	MF_DrawFX_CloakStop,
 	MF_DrawFX_DisguiseHint,
 	MF_DrawFX_KillAllTrail,
-	MF_DrawFX_CritPlayerWeapon
+	MF_DrawFX_CritPlayerWeapon,
+	NULL,
+	MF_DrawFX_AirBlast
 };
 
 int MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
@@ -771,7 +830,10 @@ int MsgFunc_DrawFX(const char *pszName, int iSize, void *pbuf)
 
 	int fxtype = READ_BYTE();
 	if(fxtype >= 0 && fxtype < ARRAYSIZE(gDrawFXList) )
-		return (gDrawFXList[fxtype])();
+	{
+		if(gDrawFXList[fxtype] != NULL)
+			return (gDrawFXList[fxtype])();
+	}
 
 	return 1;
 }
@@ -1177,7 +1239,7 @@ int MsgFunc_CPState(const char *pszName, int iSize, void *pbuf)
 
 	int iIndex = READ_BYTE();
 
-	if(iIndex <= g_ControlPoints.size())
+	if(iIndex >= 0 && iIndex <= g_ControlPoints.Count())
 	{
 		g_ControlPoints[iIndex].iState = READ_BYTE();
 		int iTeam = READ_BYTE();
@@ -1198,16 +1260,18 @@ int MsgFunc_CPInit(const char *pszName, int iSize, void *pbuf)
 
 	int iNumPoints = READ_BYTE();
 
-	g_ControlPoints.resize(iNumPoints);
+	g_ControlPoints.RemoveAll();
+	g_ControlPoints.AddMultipleToTail(iNumPoints);
 
 	for(int i = 0; i < iNumPoints; ++i)
 	{
 		g_ControlPoints[i].iHudPosition = READ_CHAR();
 		strncpy(g_ControlPoints[i].szName, READ_STRING(), 31);
-		g_ControlPoints[i].szName[0] = 0;
+		g_ControlPoints[i].szName[31] = '\0';
 
-		char modelname[16];
-		strcpy(modelname, READ_STRING());
+		char modelname[32];
+		strncpy(modelname, READ_STRING(), 31);
+		modelname[31] = '\0';
 
 		model_t *mod = IEngineStudio.Mod_ForName(modelname, true);
 
@@ -1269,6 +1333,8 @@ int MsgFunc_SpawnInit(const char *pszName, int iSize, void *pbuf)
 
 	//remove the blueprint
 	CL_BluePrint(0);
+
+	R_KillPartSystem(gEngfuncs.GetLocalPlayer(), true);
 	
 	return 1;
 }
@@ -1297,15 +1363,15 @@ void UserMsg_InstallHook(void)
 	pfnMsgFunc_DrawFX = HOOK_USERMSG(DrawFX);
 	HOOK_USERMSG(WeaponAnimEx);
 	HOOK_USERMSG(MapObject);
-	HOOK_USERMSG(BuildDeath);
+	//HOOK_USERMSG(BuildDeath);
 	HOOK_USERMSG(HUDBuild);
-	HOOK_USERMSG(ObjectMsg);
+	//HOOK_USERMSG(ObjectMsg);
 	HOOK_USERMSG(StatsInfo);
 	HOOK_USERMSG(CPState);
 	HOOK_USERMSG(CPInit);
 	//HOOK_USERMSG(CPZone);
 	HOOK_USERMSG(SpawnInit);
 	HOOK_USERMSG(PlayerVars);
-	HOOK_USERMSG(Dominate);
-	HOOK_USERMSG(Revenge);
+	//HOOK_USERMSG(Dominate);
+	//HOOK_USERMSG(Revenge);
 }

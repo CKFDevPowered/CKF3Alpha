@@ -63,8 +63,8 @@ void CSMG::PrimaryAttack(void)
 
 void CSMG::SMGFire(void)
 {
-	float flSpread = 0.05;
-	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
+	float flSpread = 0.03;
+	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/20.0f, 1.5);
 
 	if (m_iClip <= 0)
 	{
@@ -104,13 +104,12 @@ void CSMG::SMGFire(void)
 	SendWeaponAnim(SMG_FIRE, UseDecrement() != FALSE);
 
 	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+	m_fInReload = false;
 }
 
 void CSMG::Reload(void)
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		return;
-
 	if (DefaultReload(SMG_MAX_CLIP, SMG_RELOAD, 1.4))
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
@@ -120,7 +119,6 @@ void CSMG::Reload(void)
 void CSMG::WeaponIdle(void)
 {
 	ResetEmptySound();
-	m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
 	if(m_iShotsFired && UTIL_WeaponTimeBase() > m_flDecreaseShotsFired)
 	{
@@ -128,9 +126,9 @@ void CSMG::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.25;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(SMG_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SMG_IDLE1, UseDecrement() != FALSE);
+	}
 }

@@ -590,10 +590,9 @@ void DrawControlPoint_Fans(controlpoint_t *cp, int x, int y, int w, int h, float
 
 void DrawControlPoints(void)
 {
-	int size = g_ControlPoints.size();
 	int x, y, w, h;
 	int brightAlpha;
-	for(int i = 0; i < size; ++i)
+	for(int i = 0; i < g_ControlPoints.Count(); ++i)
 	{
 		controlpoint_t *cp = &g_ControlPoints[i];
 		g_pSurface->DrawSetColor(255,255,255,255);
@@ -608,7 +607,6 @@ void DrawControlPoints(void)
 		h = g_whControlPoint.h;
 		g_pSurface->DrawTexturedRect(x, y, x+w, y+h);
 
-		
 		if(cp->iState == CP_CAPTURING)
 		{
 			brightAlpha = 100 + 50 * sin(g_flClientTime - cp->flMessageTime);

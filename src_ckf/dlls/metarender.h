@@ -17,6 +17,6 @@ typedef struct
 {
 	qboolean enable;
 	vec3_t origin;
-	vec3_t center;
-	char model[32];
 }skycamera_t;
+
+extern skycamera_t g_SkyCamera;

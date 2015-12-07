@@ -43,10 +43,10 @@ void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engines
 	g_pInterface->CommandLine->RemoveParm("-d3d");
 	g_pInterface->CommandLine->AppendParm("-gl", NULL);
 	g_pInterface->CommandLine->AppendParm("-32bpp", NULL);
-	g_pInterface->CommandLine->AppendParm("-nocdaudio", NULL);
-	g_pInterface->CommandLine->AppendParm("-nomaster", NULL);
-	g_pInterface->CommandLine->AppendParm("-insecure", NULL);
-	g_pInterface->CommandLine->AppendParm("-forcevalve", NULL);
+	//g_pInterface->CommandLine->AppendParm("-nocdaudio", NULL);
+	//g_pInterface->CommandLine->AppendParm("-nomaster", NULL);
+	//g_pInterface->CommandLine->AppendParm("-insecure", NULL);
+	//g_pInterface->CommandLine->AppendParm("-forcevalve", NULL);
 }
 
 void IPlugins::Shutdown(void)

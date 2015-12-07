@@ -1,7 +1,3 @@
-//Declare funcs called when commands are executed
-//在这里声明指令执行时调用的函数
-
-//for private usage
 typedef void (*xcommand_t) (void);
 
 typedef struct cmd_function_s

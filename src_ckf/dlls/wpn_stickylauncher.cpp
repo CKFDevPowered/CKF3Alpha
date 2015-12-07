@@ -259,10 +259,7 @@ void CStickyLauncher::StickyLauncherFire(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6f;
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase();
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
 	m_fInSpecialReload = 0;
 
@@ -287,32 +284,38 @@ void CStickyLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
+
 		SendWeaponAnim(STICKYLAUNCHER_START_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.42;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.42;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.42;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.42;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.42;
 	}
+}
 
-	else if (m_fInSpecialReload == 1)
+void CStickyLauncher::Reloaded(void)
+{
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == STICKY_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(STICKYLAUNCHER_RELOAD, UseDecrement() != FALSE);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.67;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.67;
+		SendWeaponAnim(STICKYLAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(STICKYLAUNCHER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.67;		
 	}
 }
 
@@ -322,24 +325,8 @@ void CStickyLauncher::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == STICKY_MAX_CLIP || !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-			{
-				SendWeaponAnim(STICKYLAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(STICKYLAUNCHER_IDLE, UseDecrement() != FALSE);
+		SendWeaponAnim(STICKYLAUNCHER_IDLE, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
 	}
 }
 
@@ -375,7 +362,9 @@ void CSticky::Spawn(void)
 	pev->takedamage = DAMAGE_YES;
 	pev->health = 50;
 	
-	pev->classname = MAKE_STRING("pj_sticky");	
+	pev->classname = MAKE_STRING("pj_sticky");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	SetTouch(&CSticky::StickyTouch);
 	SetThink(&CSticky::StickyThink);
@@ -443,12 +432,17 @@ void CSticky::Precache( void )
 
 void CSticky::Killed(entvars_t *pevAttacker, int iGib)
 {
-	MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
+	MESSAGE_BEGIN(MSG_PVS, gmsgDrawFX, pev->origin);
 	WRITE_BYTE(FX_STICKYKILL);
 	WRITE_COORD(pev->origin.x);
 	WRITE_COORD(pev->origin.y);
 	WRITE_COORD(pev->origin.z);
 	WRITE_BYTE(pev->skin);
+	MESSAGE_END();
+
+	MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
+	WRITE_BYTE(FX_KILLTRAIL);
+	WRITE_SHORT(ENTINDEX(edict()));
 	MESSAGE_END();
 
 	pev->takedamage = DAMAGE_NO;
@@ -480,7 +474,9 @@ void CSticky::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flF
 	if(pAttacker->IsPlayer()) pPlayer = (CBasePlayer *)pAttacker;
 
 	if(pev->movetype != MOVETYPE_NONE)
+	{
 		pev->velocity = vecDirShooting.Normalize() * (pev->velocity.Length());
+	}
 	else
 	{
 		pev->movetype = MOVETYPE_TOSS;
@@ -490,7 +486,11 @@ void CSticky::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flF
 	}
 	pev->avelocity = Vector(RANDOM_FLOAT(-720, 720), RANDOM_FLOAT(-720, 720), RANDOM_FLOAT(-720, 720));
 
-	if(pPlayer) m_pDeflecter = pPlayer;
+	if(pPlayer)
+	{
+		m_pDeflecter = pPlayer;
+	}
+
 	m_iPjFlags |= PJ_AIRBLAST_DEFLECTED;
 
 	SetThink(&CSticky::CKFDeflectReset);

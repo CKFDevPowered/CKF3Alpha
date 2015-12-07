@@ -60,7 +60,7 @@ BOOL CClientBuildPDA::CanHolster(void)
 	if(g_iHudMenu == HUDMENU_DEMOLISH || g_Player.m_iCarryBluePrint)
 		return FALSE;
 
-	return TRUE;
+	return CClientWeapon::CanDeploy();
 }
 
 void CClientBuildPDA::WeaponIdle(void)

@@ -34,7 +34,7 @@ typedef struct
 #define MOVE_MISSILE 2
 
 #define GetCallAddress(addr) (addr + (*(DWORD *)(addr+1)) + 5)
-
+#pragma once
 extern model_t **sv_models;
 extern model_t **sv_worldmodel;
 

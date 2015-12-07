@@ -636,7 +636,6 @@ public:
 	}
 	void AddParticle(void)
 	{
-	
 		part_t *p = AllocParticle();
 		if(!p) return;
 
@@ -644,13 +643,66 @@ public:
 
 		COLOR_RANDOM_LERP(253, 228, 169, 224, 185, 153);
 		p->col[3] = 212;
-		p->life = 0.15;
+		p->life = 0.1;
 		p->die = g_flClientTime + p->life;
 	}
-	void AddParticleMA(void)
+};
+
+class CPSExplosionShockwave : public CPSExplosion
+{
+public:
+	CPSExplosionShockwave(){}
+	void Init(int parts, float *org, float *vel, float *right, float *up)
 	{
-		AddParticle();
+		CPSExplosion::Init(PS_ExplosionShockwave, parts, org, vel, right, up);
+
+		m_emit = false;
+		m_delay = g_flClientTime + 0.1f;
 	}
+	virtual void Movement(part_t *p, float *org)
+	{
+		R_ParticleMovementNone(p, org);
+	}
+	virtual void Render(part_t *p, float *org)
+	{
+		CALC_FRACTION(p);
+
+		ent.curstate.rendermode = kRenderTransAlpha;
+		COLOR_FADE_IN2(0.1, 0.5, 82, 80, 80);
+		ALPHA_FADE_OUT(0.5);
+
+		ent.curstate.scale = (frac2 * 14 + 10) * 0.04;
+		ent.curstate.fuser1 = 1;
+		ent.curstate.frame = 0;
+
+		VectorCopy(org, ent.origin);
+		ent.angles[2] = 0;
+
+		R_DrawTGASprite(&ent, &g_texCircle4);
+	}
+	virtual void Update(void)
+	{
+		if(!m_emit && m_delay > g_flClientTime)
+		{
+			AddParticle();
+			m_emit = true;
+		}
+	}
+	void AddParticle(void)
+	{
+		part_t *p = AllocParticle();
+		if(!p) return;
+
+		VectorCopy(m_org, p->org);
+
+		COLOR_RANDOM_LERP(255, 171, 28, 228, 74, 6);
+		p->col[3] = RANDOM_LONG(70, 150);
+		p->life = 0.2;
+		p->die = g_flClientTime + p->life;
+	}
+private:
+	qboolean m_emit;
+	float m_delay;
 };
 
 void R_ExplosionWall(vec3_t vecStart, vec3_t vecNormal)
@@ -782,7 +834,10 @@ void R_ExplosionMidAir(vec3_t vecStart)
 
 	CPSExplosionFlash *pFlash = new CPSExplosionFlash;
 	pFlash->Init(1, vecStart, g_vecZero, g_vecZero, g_vecZero);
-	pFlash->AddParticleMA();
+	pFlash->AddParticle();
+
+	CPSExplosionShockwave *pShockwave = new CPSExplosionShockwave;
+	pShockwave->Init(1, vecStart, g_vecZero, g_vecZero, g_vecZero);
 
 	pExplosionCore->AddChild(pDebris);
 	pExplosionCore->AddChild(pDustup);
@@ -792,6 +847,7 @@ void R_ExplosionMidAir(vec3_t vecStart)
 	pExplosionCore->AddChild(pFloatieEmbers);
 	pExplosionCore->AddChild(pFlyingEmbers);
 	pExplosionCore->AddChild(pFlash);
+	pExplosionCore->AddChild(pShockwave);	
 
 	R_AddPartSystem(pExplosionCore);
 }

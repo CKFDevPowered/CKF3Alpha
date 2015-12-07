@@ -6,8 +6,8 @@
 #include "decals.h"
 #include "gamerules.h"
 #include "game.h"
-
-#include "enghack.h"
+#include "MemPool.h"
+#include "enginedef.h"
 
 sv_funcs_t gSVFuncs;
 
@@ -20,6 +20,12 @@ DWORD g_dwEngineBuildnum = 0;
 
 int ShouldCollide(edict_t *pentTouched, edict_t *pentOther);
 
+#define SIG_NOT_FOUND(name) Sys_ErrorEx("无法定位: %s\n引擎版本：%d", name, g_dwEngineBuildnum);
+
+void InitExceptionFilter(void);
+void InitCrashHandler(void);
+void InitPrefCounter(void);
+
 void EntvarsKeyvalue(entvars_t *pev, KeyValueData *pkvd);
 
 extern "C" void PM_Move(struct playermove_s *ppmove, int server);
@@ -29,6 +35,225 @@ extern "C" char PM_FindTextureType(char *name);
 Vector VecBModelOrigin(entvars_t *pevBModel);
 extern DLL_GLOBAL Vector g_vecAttackDir;
 extern DLL_GLOBAL int g_iSkillLevel;
+
+//cs16nd start
+
+CUtlVector<hash_item_t> stringsHashTable;
+CMemoryPool hashItemMemPool(sizeof(hash_item_t), 64);
+
+int CaseInsensitiveHash(const char *string, int iBounds)
+{
+	unsigned int hash = 0;
+
+	if (!*string)
+		return 0;
+
+	while (*string)
+	{
+		if (*string < 'A' || *string > 'Z')
+			hash = *string + 2 * hash;
+		else
+			hash = *string + 2 * hash + ' ';
+
+		string++;
+	}
+
+	return (hash % iBounds);
+}
+
+void EmptyEntityHashTable(void)
+{
+	int i;
+	hash_item_t *item;
+	hash_item_t *temp;
+	hash_item_t *free;
+
+	for (i = 0; i < stringsHashTable.Count(); i++)
+	{
+		item = &stringsHashTable[i];
+		temp = item->next;
+		item->pev = NULL;
+		item->pevIndex = 0;
+		item->lastHash = NULL;
+		item->next = NULL;
+
+		while (temp)
+		{
+			free = temp;
+			temp = temp->next;
+			hashItemMemPool.Free(free);
+		}
+	}
+}
+
+void AddEntityHashValue(struct entvars_s *pev, const char *value, hash_types_e fieldType)
+{
+	int count;
+	hash_item_t *item;
+	hash_item_t *next;
+	hash_item_t *temp;
+	hash_item_t *newp;
+	unsigned int hash = 0;
+	int pevIndex;
+	entvars_t *pevtemp;
+
+	if (fieldType == CLASSNAME)
+	{
+		if (!FStringNull(pev->classname))
+		{
+			count = stringsHashTable.Count();
+			hash = CaseInsensitiveHash(value, count);
+			pevIndex = ENTINDEX(ENT(pev));
+			item = &stringsHashTable[hash];
+
+			while (item->pev)
+			{
+				if (!strcmp(STRING(item->pev->classname), STRING(pev->classname)))
+					break;
+
+				hash = (hash + 1) % count;
+				item = &stringsHashTable[hash];
+			}
+
+			if (item->pev)
+			{
+				next = item->next;
+
+				while (next)
+				{
+					if (item->pev == pev)
+						break;
+
+					if (item->pevIndex >= pevIndex)
+						break;
+
+					item = next;
+					next = next->next;
+				}
+
+				if (pevIndex < item->pevIndex)
+				{
+					pevtemp = item->pev;
+					item->pev = pev;
+					item->lastHash = NULL;
+					item->pevIndex = pevIndex;
+					pevIndex = ENTINDEX(ENT(pevtemp));
+				}
+				else
+					pevtemp = pev;
+
+				if (item->pev != pevtemp)
+				{
+					temp = item->next;
+					newp = (hash_item_t *)hashItemMemPool.Alloc(sizeof(hash_item_t));
+					item->next = newp;
+					newp->pev = pevtemp;
+					newp->lastHash = NULL;
+					newp->pevIndex = pevIndex;
+
+					if (temp)
+						newp->next = temp;
+					else
+						newp->next = NULL;
+				}
+			}
+			else
+			{
+				item->pev = pev;
+				item->lastHash = NULL;
+				item->pevIndex = ENTINDEX(ENT(pev));
+			}
+		}
+	}
+}
+
+void RemoveEntityHashValue(struct entvars_s *pev, const char *value, hash_types_e fieldType)
+{
+	int hash = 0;
+	hash_item_t *item;
+	hash_item_t *last;
+	int pevIndex;
+	int count;
+
+	count = stringsHashTable.Count();
+	hash = CaseInsensitiveHash(value, count);
+	pevIndex = ENTINDEX(ENT(pev));
+
+	if (fieldType == CLASSNAME)
+	{
+		hash = hash % count;
+		item = &stringsHashTable[hash];
+
+		while (item->pev)
+		{
+			if (!strcmp(STRING(item->pev->classname), STRING(pev->classname)))
+				break;
+
+			hash = (hash + 1) % count;
+			item = &stringsHashTable[hash];
+		}
+
+		if (item->pev)
+		{
+			last = item;
+
+			while (item->next)
+			{
+				if (item->pev == pev)
+					break;
+
+				last = item;
+				item = item->next;
+			}
+
+			if (item->pev == pev)
+			{
+				if (last == item)
+				{
+					if (item->next)
+					{
+						item->pev = item->next->pev;
+						item->pevIndex = item->next->pevIndex;
+						item->lastHash = NULL;
+						item->next = item->next->next;
+					}
+					else
+					{
+						item->pev = NULL;
+						item->lastHash = NULL;
+						item->pevIndex = 0;
+					}
+				}
+				else
+				{
+					if (stringsHashTable[hash].lastHash == item)
+						stringsHashTable[hash].lastHash = NULL;
+
+					last->next = item->next;
+					hashItemMemPool.Free(item);
+				}
+			}
+		}
+	}
+}
+
+edict_t *CREATE_NAMED_ENTITY(int iClass)
+{
+	edict_t *named = g_engfuncs.pfnCreateNamedEntity(iClass);
+
+	if (named)
+		AddEntityHashValue(&named->v, STRING(iClass), CLASSNAME);
+
+	return named;
+}
+
+void REMOVE_ENTITY(edict_t *e)
+{
+	if (e)
+		g_engfuncs.pfnRemoveEntity(e);
+}
+
+//cs16nd finished
 
 static DLL_FUNCTIONS gFunctionTable =
 {
@@ -90,29 +315,54 @@ int GetEntityAPI(DLL_FUNCTIONS *pFunctionTable, int interfaceVersion)
 		return 0;
 
 	memcpy(pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS));
+
+	//cs16nd added
+	stringsHashTable.SetSize(2048);
+
+	for (int i = 0; i < stringsHashTable.Count(); i++)
+		stringsHashTable[i].next = NULL;
+
+	EmptyEntityHashTable();
+	//cs16nd added
+
 	return 1;
 }
 
+//cs16nd added
+void OnFreeEntPrivateData(edict_t *pEnt)
+{
+	CBaseEntity *pEntity = CBaseEntity::Instance(pEnt);
+
+	if (!pEntity)
+		return;
+
+	pEntity->UpdateOnRemove();
+	RemoveEntityHashValue(pEntity->pev, STRING(pEntity->pev->classname), CLASSNAME);
+}
+//cs16nd added
+
 static NEW_DLL_FUNCTIONS gNewDLLFunctions = 
 {
-	NULL,
+	OnFreeEntPrivateData,
 	NULL,
 	ShouldCollide
 };
 
 //error when sig not found
-void Sys_ErrorEx(const char *error)
+void Sys_ErrorEx(const char *fmt, ...)
 {
-	MessageBox(NULL, error, "错误", MB_ICONERROR);
+	va_list argptr;
+	char msg[1024];
+
+	va_start(argptr, fmt);
+	_vsnprintf(msg, sizeof(msg), fmt, argptr);
+	va_end(argptr);
+
+	MessageBox(NULL, msg, "错误", MB_ICONERROR);
 	exit(0);
 }
 
-#define SIG_NOT_FOUND(name) Sys_ErrorEx(UTIL_VarArgs("无法定位: %s\n引擎版本：%d", name, g_dwEngineBuildnum));
-
-#define	STRUCT_FROM_LINK(l,t,m) ((t *)((byte *)l - (int)&(((t *)0)->m)))
-#define	EDICT_FROM_AREA(l) STRUCT_FROM_LINK(l,edict_t,area)
-
-void Engine_InstallHook(void)
+void InstallHook(void)
 {
 	DWORD addr;
 	HMODULE hEngine;
@@ -138,12 +388,18 @@ void Engine_InstallHook(void)
 #define BUILD_NUMBER_SIG "\xA1\x2A\x2A\x2A\x2A\x83\xEC\x08\x2A\x33\x2A\x85\xC0"
 #define BUILD_NUMBER_SIG_NEW "\x55\x8B\xEC\x83\xEC\x08\xA1\x2A\x2A\x2A\x2A\x56\x33\xF6\x85\xC0\x0F\x85\x2A\x2A\x2A\x2A\x53\x33\xDB\x8B\x04\x9D"
 
-	gSVFuncs.buildnum = (int (*)(void))MH_SIGFind(g_dwEngineBase, g_dwEngineSize, BUILD_NUMBER_SIG, sizeof(BUILD_NUMBER_SIG)-1);
-	if(!gSVFuncs.buildnum)
-		gSVFuncs.buildnum = (int (*)(void))MH_SIGFind(g_dwEngineBase, g_dwEngineSize, BUILD_NUMBER_SIG_NEW, sizeof(BUILD_NUMBER_SIG_NEW)-1);
-	if(!gSVFuncs.buildnum)
+	addr = MH_SIGFind(g_dwEngineBase, g_dwEngineSize, "Protocol version %i\nExe version %s", sizeof("Protocol version %i\nExe version %s")-1);
+	if(!addr)
 		SIG_NOT_FOUND("buildnum");
 
+	byte sig_buildnum[] = "\x68\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x50";
+	*(DWORD *)(sig_buildnum+1) = addr;
+
+	addr = MH_SIGFind(g_dwEngineBase, g_dwEngineSize, (char *)sig_buildnum, sizeof(sig_buildnum)-1);
+	if(!addr)
+		SIG_NOT_FOUND("buildnum");
+
+	gSVFuncs.buildnum = (int (*)(void))GetCallAddress(addr + 5);
 	g_dwEngineBuildnum = gSVFuncs.buildnum();
 
 	//Here is a bug in engine so we can not only just hook FM_ShouldCollide but need to fix some bug in engine:
@@ -292,6 +548,7 @@ void Engine_InstallHook(void)
 	if(!addr)
 		SIG_NOT_FOUND("sv_models");
 	sv_models = *(model_t ***)(addr + 3);
+
 }
 
 int GetNewDLLFunctions(NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion)
@@ -306,7 +563,10 @@ int GetNewDLLFunctions(NEW_DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion)
 	pFunctionTable->pfnGameShutdown = gNewDLLFunctions.pfnGameShutdown;
 	pFunctionTable->pfnShouldCollide = gNewDLLFunctions.pfnShouldCollide;
 
-	Engine_InstallHook();
+	//InitPrefCounter();
+	//InitExceptionFilter();
+	//InitCrashHandler();
+	InstallHook();
 
 	return 1;
 }

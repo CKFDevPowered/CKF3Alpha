@@ -109,7 +109,6 @@ ckf_vars_t gCKFVars =
 cl_enginefunc_t gEngfuncs;
 engine_studio_api_t *gpEngineStudio;
 engine_studio_api_t IEngineStudio;
-r_studio_interface_t StudioInterface;
 ref_params_t refparams;
 cl_entity_t **CurrentEntity;
 studiohdr_t **StudioHeader;
@@ -210,16 +209,6 @@ r_studio_interface_t studio_interface =
 	R_StudioDrawPlayer,
 };
 
-void Sys_Error(const char *fmt, ...)
-{
-	if(strstr(fmt, "Mod_Extradata"))
-	{
-		return;
-	}
-
-	return gHookFuncs.Sys_Error(fmt);
-}
-
 model_t *Mod_LoadModel(model_t *mod, qboolean crash, qboolean trackCRC)
 {
 	int needload = mod->needload;
@@ -257,7 +246,6 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 	gpEngineStudio = pstudio;
 	
 	*ppinterface = &studio_interface;
-	memcpy(&StudioInterface, &studio_interface, sizeof(studio_interface));
 
 	R_StudioInit();
 
@@ -268,15 +256,7 @@ int HUD_GetStudioModelInterface( int version, struct r_studio_interface_s **ppin
 		SIG_NOT_FOUND("Mod_LoadModel");
 	gHookFuncs.Mod_LoadModel = (model_t *(*)(model_t *, qboolean, qboolean))GetCallAddress(addr+3);
 
-//#define SYS_ERROR_SIG "\x68\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x83\xC4\x04"
-//	addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)pstudio->Mod_Extradata, 0x100, SYS_ERROR_SIG, sizeof(SYS_ERROR_SIG)-1);
-//	if(!addr)
-//		SIG_NOT_FOUND("Sys_Error");
-//	gHookFuncs.Sys_Error = (void (*)(const char *, ...))GetCallAddress(addr+5);
-
-	//g_pMetaHookAPI->InlineHook((void *)gHookFuncs.Sys_Error, Sys_Error,(void *&)gHookFuncs.Sys_Error);
 	g_pMetaHookAPI->InlineHook((void *)gHookFuncs.Mod_LoadModel, Mod_LoadModel,(void *&)gHookFuncs.Mod_LoadModel);
-
 
 	return 1;
 }
@@ -302,7 +282,6 @@ void HUD_TempEntUpdate(double frametime, double client_time, double cl_gravity, 
 	g_flFrameTime = frametime;
 
 	UpdateBuildables();
-	R_UpdateParticles();
 	T_UpdateTEnts();
 }
 
@@ -313,6 +292,8 @@ void HUD_DrawNormalTriangles(void)
 
 void HUD_DrawTransparentTriangles(void)
 {
+	if(gRefExports.R_GetDrawPass() == r_draw_normal)
+		R_UpdateParticles();
 	R_DrawParticles();
 }
 

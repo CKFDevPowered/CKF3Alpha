@@ -793,7 +793,4 @@ void GameDLLInit(void)
 	CVAR_REGISTER(&sk_player_leg3);
 
 	SERVER_COMMAND("exec skill.cfg\n");
-
-	//init network
-	//NET_Init();
 }

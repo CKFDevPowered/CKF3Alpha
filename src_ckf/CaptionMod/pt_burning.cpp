@@ -11,6 +11,8 @@
 
 extern cl_entity_t ent;
 
+qboolean EV_IsLocal( int idx );
+
 class CPSBurningPlayer : public CPartSystemEntity
 {
 public:
@@ -19,6 +21,8 @@ public:
 	{
 		CPartSystemEntity::Init(PS_BurningPlayer, parts, childs, entity);
 		Reset(team);
+
+		m_mod = entity->model;
 	}
 	void Reset(int team)
 	{
@@ -32,14 +36,16 @@ public:
 		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
 		if(bones)
 		{
-			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+			VectorTransform(p->org, bones->m_bonetransform[p->bone], org);
 			VectorMA(org, frac2, p->vel, org);
 		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
-		CALC_FRACTION(p);
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
 
+		CALC_FRACTION(p);
 		ent.curstate.rendermode = kRenderAddColor;
 		ent.curstate.renderfx = kRenderFxNone;
 
@@ -57,6 +63,12 @@ public:
 	}
 	virtual void Update(void)
 	{
+		if(m_entity->model != m_mod)
+		{
+			RemoveInvalid();
+			m_mod = m_entity->model;
+		}
+
 		if(!m_dead && m_entity->model)
 		{
 			if(!(m_entity->curstate.effects & EF_AFTERBURN))
@@ -67,10 +79,28 @@ public:
 			AddParticle();
 		}
 	}
+	void RemoveInvalid(void)
+	{
+		if(!m_entity->model)
+			return;
+
+		studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
+
+		for(int i = 0;i < m_part.size(); ++i)
+		{
+			if(!m_part[i].free)
+			{
+				if(m_part[i].bone > pstudiohdr->numbones)
+					m_part[i].die = 0;
+			}
+		}
+	}
 	void AddParticle(void)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		part_t *p = AllocParticle();
-		if(!p) return;
 
 		COLOR_RANDOM_LERP(231, 143, 81, 252, 158, 118);
 		p->col[3] = RANDOM_LONG(128, 200);
@@ -103,6 +133,7 @@ public:
 	}
 public:
 	int m_team;
+	model_t *m_mod;
 };
 
 class CPSBurningPlayerGlow : public CPartSystemEntity
@@ -121,11 +152,14 @@ public:
 		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
 		if(bones)
 		{
-			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+			VectorTransform(p->org, bones->m_bonetransform[p->bone], org);
 		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		CALC_FRACTION(p);
 		CPSBurningPlayer *parent = (CPSBurningPlayer *)m_parent;
 
@@ -158,8 +192,10 @@ public:
 	}
 	void AddParticle(void)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		part_t *p = AllocParticle();
-		if(!p) return;
 
 		CPSBurningPlayer *parent = (CPSBurningPlayer *)m_parent;
 		if(parent->m_team == 0)

@@ -63,7 +63,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CompileAs="0"
-				DisableSpecificWarnings="4819;4996"
+				DisableSpecificWarnings="4819;4996;4005"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -152,6 +152,7 @@
 				AdditionalIncludeDirectories="..\dlls;..\engine;..\common;..\pm_shared;..\game_shared;Detours"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;VALVE_DLL;CLIENT_WEAPONS;DETOURS_X86;DETOURS_32BIT"
 				StringPooling="true"
+				ExceptionHandling="1"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="true"
@@ -164,7 +165,7 @@
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
 				CompileAs="0"
-				DisableSpecificWarnings="4819;4996"
+				DisableSpecificWarnings="4819;4996;4005"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -450,6 +451,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MemPool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\metarender.cpp"
 				>
 			</File>
@@ -471,6 +476,10 @@
 			</File>
 			<File
 				RelativePath=".\pathcorner.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\perf_counter.cpp"
 				>
 			</File>
 			<File
@@ -661,6 +670,38 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="crashhandler"
+				>
+				<File
+					RelativePath=".\crashhandler.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\minidump.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\minidump.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -711,11 +752,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\enghack.h"
+				RelativePath=".\enginecallback.h"
 				>
 			</File>
 			<File
-				RelativePath=".\enginecallback.h"
+				RelativePath=".\enginedef.h"
 				>
 			</File>
 			<File
@@ -763,6 +804,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MemPool.h"
+				>
+			</File>
+			<File
 				RelativePath=".\metarender.h"
 				>
 			</File>
@@ -776,6 +821,10 @@
 			</File>
 			<File
 				RelativePath=".\nodes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\perf_counter.h"
 				>
 			</File>
 			<File

@@ -182,10 +182,10 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_iMaxRounds = (int)CVAR_GET_FLOAT("mp_maxrounds");
 	//CP init
 	m_iRedLocal = m_iBluLocal = 0;
-	m_ControlPoints.clear();
+	m_ControlPoints.RemoveAll();
 	//NoBuildZone init
-	m_NoBuildZone.clear();
-	m_ShadowManager.clear();
+	m_NoBuildZone.RemoveAll();
+	m_ShadowManager.RemoveAll();
 	m_iSetupCondition = ROUND_NORMAL;
 	m_iEndAction = END_NOTHING;
 	m_iWaitTime = 30;
@@ -197,7 +197,7 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_flFreezeTimer = 0;
 	m_iRespawnDisabled = 0;
 	m_bMapHasControlPoint = false;
-	m_SkyCamera.enable = false;
+	g_SkyCamera.enable = false;
 
 	if (m_iMaxRounds < 0)
 	{
@@ -1791,55 +1791,36 @@ void CHalfLifeMultiplay::InitHUD(CBasePlayer *pl)
 			plr->SetScoreboardAttributes(pl);
 		}
 	}
-	if(!m_NoBuildZone.empty())
+
+	for(i = 0; i < m_NoBuildZone.Count(); ++i)
 	{
-		int size = m_NoBuildZone.size();
-		for(i = 0; i < size; ++i)
-		{
-			edict_t *ed = m_NoBuildZone[i];
-			MESSAGE_BEGIN(MSG_ONE, gmsgMapObject, NULL, pl->edict());
-			WRITE_BYTE(MAP_NOBUILDABLE);
-			WRITE_BYTE(ed->v.team);
-			WRITE_COORD(ed->v.origin.x + ed->v.mins.x);
-			WRITE_COORD(ed->v.origin.y + ed->v.mins.y);
-			WRITE_COORD(ed->v.origin.z + ed->v.mins.z);
-			WRITE_COORD(ed->v.origin.x + ed->v.maxs.x);
-			WRITE_COORD(ed->v.origin.y + ed->v.maxs.y);
-			WRITE_COORD(ed->v.origin.z + ed->v.maxs.z);
-			WRITE_STRING(STRING(ed->v.model));
-			MESSAGE_END();
-		}
+		edict_t *ed = m_NoBuildZone[i];
+		MESSAGE_BEGIN(MSG_ONE, gmsgMapObject, NULL, pl->edict());
+		WRITE_BYTE(MAP_NOBUILDABLE);
+		WRITE_BYTE(ed->v.team);
+		WRITE_COORD(ed->v.origin.x + ed->v.mins.x);
+		WRITE_COORD(ed->v.origin.y + ed->v.mins.y);
+		WRITE_COORD(ed->v.origin.z + ed->v.mins.z);
+		WRITE_COORD(ed->v.origin.x + ed->v.maxs.x);
+		WRITE_COORD(ed->v.origin.y + ed->v.maxs.y);
+		WRITE_COORD(ed->v.origin.z + ed->v.maxs.z);
+		WRITE_STRING(STRING(ed->v.model));
+		MESSAGE_END();
 	}
-	if(!m_ShadowManager.empty())
+
+	for(i = 0; i < m_ShadowManager.Count(); ++i)
 	{
-		int size = m_ShadowManager.size();
-		for(i = 0; i < size; ++i)
-		{
-			shadow_manager_t *mgr = &m_ShadowManager[i];
-			MESSAGE_BEGIN(MSG_ONE, gmsgMetaRender, NULL, pl->edict());
-			WRITE_BYTE(METARENDER_SHADOWMGR);
-			WRITE_COORD(mgr->angles.x);
-			WRITE_COORD(mgr->angles.y);
-			WRITE_COORD(mgr->angles.z);
-			WRITE_COORD(mgr->radius);
-			WRITE_COORD(mgr->fard);
-			WRITE_COORD(mgr->scale);
-			WRITE_SHORT(mgr->texsize);
-			WRITE_STRING(mgr->affectmodel);
-			MESSAGE_END();
-		}
-	}
-	if(m_SkyCamera.enable)
-	{
+		shadow_manager_t *mgr = &m_ShadowManager[i];
 		MESSAGE_BEGIN(MSG_ONE, gmsgMetaRender, NULL, pl->edict());
-		WRITE_BYTE(METARENDER_SKYCAMERA);
-		WRITE_COORD(m_SkyCamera.origin.x);
-		WRITE_COORD(m_SkyCamera.origin.y);
-		WRITE_COORD(m_SkyCamera.origin.z);
-		WRITE_COORD(m_SkyCamera.center.x);
-		WRITE_COORD(m_SkyCamera.center.y);
-		WRITE_COORD(m_SkyCamera.center.z);
-		WRITE_STRING(m_SkyCamera.model);
+		WRITE_BYTE(METARENDER_SHADOWMGR);
+		WRITE_COORD(mgr->angles.x);
+		WRITE_COORD(mgr->angles.y);
+		WRITE_COORD(mgr->angles.z);
+		WRITE_COORD(mgr->radius);
+		WRITE_COORD(mgr->fard);
+		WRITE_COORD(mgr->scale);
+		WRITE_SHORT(mgr->texsize);
+		WRITE_STRING(mgr->affectmodel);
 		MESSAGE_END();
 	}
 
@@ -2161,20 +2142,24 @@ void CHalfLifeMultiplay::BuildDeathNotice(CBaseEntity *pVictim, entvars_t *pevKi
 	else if (!strncmp(killer_weapon_name, "pj_", 3))
 	{
 		killer_weapon_name += 3;
-		CGrenade *pGrenade = (CGrenade *)CBaseEntity::Instance(pevInflictor);
-		if(pGrenade->IsDeflected())
+		CBaseEntity *pInflictor = CBaseEntity::Instance(pevInflictor);
+		if(pInflictor && pInflictor->Classify() == CLASS_PROJECTILE)
 		{
-			if(!strncmp(killer_weapon_name, "rocket", 6) || !strncmp(killer_weapon_name, "senrocket", 9))
+			CGrenade *pGrenade = (CGrenade *)pInflictor;
+			if(pGrenade->IsDeflected())
 			{
-				killer_weapon_name = "defrocket";
-			}
-			else if(!strncmp(killer_weapon_name, "grenade", 7))
-			{
-				killer_weapon_name = "defgrenade";
-			}
-			else if(!strncmp(killer_weapon_name, "sticky", 6))
-			{
-				killer_weapon_name = "defsticky";
+				if(!strncmp(killer_weapon_name, "rocket", 6) || !strncmp(killer_weapon_name, "senrocket", 9))
+				{
+					killer_weapon_name = "defrocket";
+				}
+				else if(!strncmp(killer_weapon_name, "grenade", 7))
+				{
+					killer_weapon_name = "defgrenade";
+				}
+				else if(!strncmp(killer_weapon_name, "sticky", 6))
+				{
+					killer_weapon_name = "defsticky";
+				}
 			}
 		}
 	}
@@ -2329,22 +2314,7 @@ CBasePlayer *CHalfLifeMultiplay::GetAssister(CBasePlayer *pKiller, CBasePlayer *
 	int iAmount;
 	int iHighest;
 	
-	pAssister = NULL;
-
-	for(int i = 1; i <= gpGlobals->maxClients; ++i)
-	{
-		pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
-		if (!pPlayer || !FNullEnt(pPlayer->pev)) continue;
-		if(pPlayer->m_iClass != CLASS_MEDIC) continue;
-		if(!pPlayer->m_pActiveItem) continue;
-		if(pPlayer->m_pActiveItem->iItemSlot() != WEAPON_SLOT_SECONDARY) continue;
-		CMedigun *gun = (CMedigun *)pPlayer->m_pActiveItem;
-		if(gun->m_bHealing && gun->m_pTarget == pKiller)
-		{
-			pAssister = pPlayer;
-			break;
-		}
-	}
+	pAssister = pKiller->m_pHealer;
 
 	iAmount = 0;
 	iHighest = -1;
@@ -2358,7 +2328,9 @@ CBasePlayer *CHalfLifeMultiplay::GetAssister(CBasePlayer *pKiller, CBasePlayer *
 			if (!pPlayer || !FNullEnt(pPlayer->pev)) continue;
 			if(pPlayer->m_iTeam != pKiller->m_iTeam) continue;
 			if(pPlayer == pKiller) continue;
-			if(pPlayer->pev == pVictim->pev) continue;
+			if(pPlayer == pVictim) continue;
+
+			//find the teammate the highest damage done by which
 			iAmount = pVictim->DmgRecord_Get(pPlayer, 30.0f);
 			if(iHighest < 0 || iHighest < iAmount)
 			{
@@ -2376,14 +2348,14 @@ void CHalfLifeMultiplay::DominateNemesis(CBasePlayer *pKiller, CBasePlayer *pVic
 	if(pVictim->m_Dominate[pKiller->entindex()] >= 4)//Revenge
 	{
 		pVictim->m_Dominate[pKiller->entindex()] = 0;
-		UTIL_PlayWAV(pKiller, "CKF_III/tf_revenge.wav");
+		//UTIL_PlayWAV(pKiller, "CKF_III/tf_revenge.wav");
 		pKiller->m_Stats.iRevenge ++;
 		pKiller->SendStatsInfo(STATS_REVENGE);
 
-		pVictim->m_iDominates --;
+		pVictim->UpdateDominate();
 		pVictim->SendScoreInfo();
 
-		UTIL_PlayWAV(pVictim, "CKF_III/tf_revenge.wav");
+		//UTIL_PlayWAV(pVictim, "CKF_III/tf_revenge.wav");
 		MESSAGE_BEGIN(MSG_ALL, gmsgRevenge);
 		WRITE_BYTE(pKiller->entindex());
 		WRITE_BYTE(pVictim->entindex());
@@ -2397,17 +2369,21 @@ void CHalfLifeMultiplay::DominateNemesis(CBasePlayer *pKiller, CBasePlayer *pVic
 
 	if(pKiller->m_Dominate[pVictim->entindex()] >= 4)
 	{
-		UTIL_PlayWAV(pKiller, "CKF_III/tf_domination.wav");
-		pKiller->m_Stats.iDominate ++;
-		pKiller->SendStatsInfo(STATS_DOMINATE);
-		pKiller->m_iDominates ++;
-		pKiller->SendScoreInfo();
+		if(pKiller->m_Dominate[pVictim->entindex()] == 4)
+		{
+			//UTIL_PlayWAV(pKiller, "CKF_III/tf_domination.wav");
+			pKiller->UpdateDominate();
+			pKiller->SendScoreInfo();
 
-		UTIL_PlayWAV(pVictim, "CKF_III/tf_nemesis.wav");
-		MESSAGE_BEGIN(MSG_ALL, gmsgDominate);
-		WRITE_BYTE(pKiller->entindex());
-		WRITE_BYTE(pVictim->entindex());
-		MESSAGE_END();
+			//UTIL_PlayWAV(pVictim, "CKF_III/tf_nemesis.wav");
+			MESSAGE_BEGIN(MSG_ALL, gmsgDominate);
+			WRITE_BYTE(pKiller->entindex());
+			WRITE_BYTE(pVictim->entindex());
+			MESSAGE_END();
+		}
+
+		pKiller->m_Stats.iDominate ++;
+		pKiller->SendStatsInfo(STATS_DOMINATE);		
 	}
 }
 
@@ -2458,24 +2434,24 @@ void CHalfLifeMultiplay::CalcPoints(CBasePlayer *pAttacker, entvars_t *pevInflic
 	}
 }
 
-void CHalfLifeMultiplay::DeathNotice(CBasePlayer *pVictim, entvars_t *pKiller, entvars_t *pevInflictor, entvars_t *pevAssister)
+void CHalfLifeMultiplay::DeathNotice(CBasePlayer *pVictim, entvars_t *pevKiller, entvars_t *pevInflictor, entvars_t *pevAssister)
 {
-	CBaseEntity::Instance(pKiller);
+	CBaseEntity *pKiller = CBaseEntity::Instance(pevKiller);
 
 	const char *killer_weapon_name = "world";
 	int killer_index = 0;
 
-	if (pKiller->flags & FL_CLIENT)
+	if (pevKiller->flags & FL_CLIENT)
 	{
-		killer_index = ENTINDEX(ENT(pKiller));
+		killer_index = ENTINDEX(ENT(pevKiller));
 
 		if (pevInflictor)
 		{
-			if (pevInflictor == pKiller)
+			if (pevInflictor == pevKiller)
 			{
-				CBasePlayer *pPlayer = (CBasePlayer *)CBaseEntity::Instance(pKiller);
-				if (pPlayer->m_pActiveItem)
-					killer_weapon_name = pPlayer->m_pActiveItem->pszName();
+				CBasePlayer *plKiller = (CBasePlayer *)pKiller;
+				if (plKiller->m_pActiveItem)
+					killer_weapon_name = plKiller->m_pActiveItem->pszName();
 			}
 			else
 				killer_weapon_name = STRING(pevInflictor->classname);
@@ -2493,20 +2469,24 @@ void CHalfLifeMultiplay::DeathNotice(CBasePlayer *pVictim, entvars_t *pKiller, e
 	else if (!strncmp(killer_weapon_name, "pj_", 3))
 	{
 		killer_weapon_name += 3;
-		CGrenade *pGrenade = (CGrenade *)CBaseEntity::Instance(pevInflictor);
-		if(pGrenade->IsDeflected())
+		CBaseEntity *pInflictor = CBaseEntity::Instance(pevInflictor);
+		if(pInflictor && pInflictor->Classify() == CLASS_PROJECTILE)
 		{
-			if(!strncmp(killer_weapon_name, "rocket", 6) || !strncmp(killer_weapon_name, "senrocket", 9))
+			CGrenade *pGrenade = (CGrenade *)pInflictor;
+			if(pGrenade->IsDeflected())
 			{
-				killer_weapon_name = "defrocket";
-			}
-			else if(!strncmp(killer_weapon_name, "grenade", 7))
-			{
-				killer_weapon_name = "defgrenade";
-			}
-			else if(!strncmp(killer_weapon_name, "sticky", 6))
-			{
-				killer_weapon_name = "defsticky";
+				if(!strncmp(killer_weapon_name, "rocket", 6) || !strncmp(killer_weapon_name, "senrocket", 9))
+				{
+					killer_weapon_name = "defrocket";
+				}
+				else if(!strncmp(killer_weapon_name, "grenade", 7))
+				{
+					killer_weapon_name = "defgrenade";
+				}
+				else if(!strncmp(killer_weapon_name, "sticky", 6))
+				{
+					killer_weapon_name = "defsticky";
+				}
 			}
 		}
 	}
@@ -2550,14 +2530,14 @@ void CHalfLifeMultiplay::DeathNotice(CBasePlayer *pVictim, entvars_t *pKiller, e
 	WRITE_STRING(killer_weapon_name);
 	MESSAGE_END();
 
-	if (pVictim->pev == pKiller)
+	if (pVictim->pev == pevKiller)
 	{
 		UTIL_LogPrintf("\"%s<%i><%s><%s>\" committed suicide with \"%s\"\n", STRING(pVictim->pev->netname), GETPLAYERUSERID(pVictim->edict()), GETPLAYERAUTHID(pVictim->edict()), GetTeam(pVictim->m_iTeam), killer_weapon_name);
 	}
-	else if (pKiller->flags & FL_CLIENT)
+	else if (pevKiller->flags & FL_CLIENT)
 	{
-		CBasePlayer *peKiller = (CBasePlayer *)CBaseEntity::Instance(pKiller);
-		UTIL_LogPrintf("\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\"\n", STRING(pKiller->netname), GETPLAYERUSERID(ENT(pKiller)), GETPLAYERAUTHID(ENT(pKiller)), GetTeam(peKiller->m_iTeam), STRING(pVictim->pev->netname), GETPLAYERUSERID(pVictim->edict()), GETPLAYERAUTHID(pVictim->edict()), GetTeam(pVictim->m_iTeam), killer_weapon_name);
+		CBasePlayer *plKiller = (CBasePlayer *)pKiller;
+		UTIL_LogPrintf("\"%s<%i><%s><%s>\" killed \"%s<%i><%s><%s>\" with \"%s\"\n", STRING(pevKiller->netname), GETPLAYERUSERID(ENT(pevKiller)), GETPLAYERAUTHID(ENT(pevKiller)), GetTeam(plKiller->m_iTeam), STRING(pVictim->pev->netname), GETPLAYERUSERID(pVictim->edict()), GETPLAYERAUTHID(pVictim->edict()), GetTeam(pVictim->m_iTeam), killer_weapon_name);
 	}
 	else
 		UTIL_LogPrintf("\"%s<%i><%s><%s>\" committed suicide with \"%s\" (world)\n", STRING(pVictim->pev->netname), GETPLAYERUSERID(pVictim->edict()), GETPLAYERAUTHID(pVictim->edict()), GetTeam(pVictim->m_iTeam), killer_weapon_name);
@@ -2570,7 +2550,7 @@ void CHalfLifeMultiplay::DeathNotice(CBasePlayer *pVictim, entvars_t *pKiller, e
 	if (pevInflictor)
 		WRITE_SHORT(ENTINDEX(ENT(pevInflictor)));
 	else
-		WRITE_SHORT(ENTINDEX(ENT(pKiller)));
+		WRITE_SHORT(ENTINDEX(ENT(pevKiller)));
 
 	if (bCritKill)
 		WRITE_LONG(15 | DRC_FLAG_DRAMATIC | DRC_FLAG_SLOWMOTION);
@@ -3379,7 +3359,7 @@ BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 {
 	if (m_bMapHasControlPoint)
 	{
-		if(CPCountPoints(TEAM_RED) == m_ControlPoints.size())
+		if(CPCountPoints(TEAM_RED) == m_ControlPoints.Count())
 		{
 			if (!bNeededPlayers)
 			{
@@ -3390,7 +3370,7 @@ BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 			TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
 			return TRUE;
 		}
-		if(CPCountPoints(TEAM_BLU) == m_ControlPoints.size())
+		if(CPCountPoints(TEAM_BLU) == m_ControlPoints.Count())
 		{
 			if (!bNeededPlayers)
 			{
@@ -3418,14 +3398,11 @@ BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 
 int CHalfLifeMultiplay::CPCountPoints(int iTeam)
 {
-	if(m_ControlPoints.empty())
-		return 0;
-
 	int iCount = 0;
 	
-	for(entvector::iterator it = m_ControlPoints.begin(); it != m_ControlPoints.end(); it++)
+	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
-		if(iTeam == (*it)->v.team)
+		if(iTeam == m_ControlPoints[i]->v.team)
 			iCount ++;
 	}
 	return iCount;
@@ -3440,15 +3417,16 @@ void CHalfLifeMultiplay::CPSendState(entvars_t *pevPoint)
 		return;
 
 	CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(pevPoint);
-	int size = m_ControlPoints.size();
 
 	int i;
-	for(i = 0; i < size; ++i)
+
+	for(i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		if(m_ControlPoints[i] == pevPoint->pContainingEntity)
 			break;
 	}
-	if(i == size)
+
+	if(i == m_ControlPoints.Count())
 		return;
 
 	MESSAGE_BEGIN(MSG_ALL, gmsgCPState);
@@ -3463,10 +3441,7 @@ void CHalfLifeMultiplay::CPSendState(entvars_t *pevPoint)
 
 void CHalfLifeMultiplay::CPSendState(void)
 {
-	if(m_ControlPoints.empty()) return;
-
-	int size = m_ControlPoints.size();
-	for(int i = 0; i < size; ++i)
+	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		MESSAGE_BEGIN(MSG_ALL, gmsgCPState);		
@@ -3482,10 +3457,7 @@ void CHalfLifeMultiplay::CPSendState(void)
 
 void CHalfLifeMultiplay::CPSendState(CBasePlayer *pPlayer)
 {
-	if(m_ControlPoints.empty()) return;
-
-	int size = m_ControlPoints.size();
-	for(int i = 0; i < size; ++i)
+	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		MESSAGE_BEGIN(MSG_ONE, gmsgCPState, NULL, pPlayer->pev);
@@ -3501,12 +3473,12 @@ void CHalfLifeMultiplay::CPSendState(CBasePlayer *pPlayer)
 
 void CHalfLifeMultiplay::CPSendInit(CBasePlayer *pPlayer)
 {
-	if(m_ControlPoints.empty()) return;
+	if(!m_ControlPoints.Count()) return;
 
-	int size = m_ControlPoints.size();
+	int count = m_ControlPoints.Count();
 	MESSAGE_BEGIN(MSG_ONE, gmsgCPInit, NULL, pPlayer->pev);
-	WRITE_BYTE(size);
-	for(int i = 0; i < size; ++i)
+	WRITE_BYTE(count);
+	for(int i = 0; i < count; ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		WRITE_CHAR(pPoint->m_iHUDPosition);
@@ -3518,10 +3490,7 @@ void CHalfLifeMultiplay::CPSendInit(CBasePlayer *pPlayer)
 
 void CHalfLifeMultiplay::CPResetAll(void)
 {
-	if(m_ControlPoints.empty()) return;
-
-	int size = m_ControlPoints.size();
-	for(int i = 0; i < size; ++i)
+	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		pPoint->Restart();		
@@ -3530,10 +3499,7 @@ void CHalfLifeMultiplay::CPResetAll(void)
 
 BOOL CHalfLifeMultiplay::CPCheckOvertime(void)
 {
-	if(m_ControlPoints.empty()) return FALSE;
-
-	int size = m_ControlPoints.size();
-	for(int i = 0; i < size; ++i)
+	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		if(pPoint->m_flProgress > 0)
@@ -3544,27 +3510,17 @@ BOOL CHalfLifeMultiplay::CPCheckOvertime(void)
 
 extern int gmsgObjectMsg;
 
-void CHalfLifeMultiplay::ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, CBasePlayer *plKiller)
-{
-	if(!plKiller) return;
-	int killer_index = plKiller->entindex();
-
-	MESSAGE_BEGIN(MSG_ALL, gmsgObjectMsg);
-	WRITE_BYTE(plKiller->m_iTeam);
-	WRITE_BYTE(killer_index);	
-
-	WRITE_BYTE(iVictimTeam);
-	WRITE_STRING(szIcon);	
-	WRITE_STRING(szName);
-	MESSAGE_END();
-}
-
-//Overloaded
-void CHalfLifeMultiplay::ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, int iKillerTeam, CBasePlayer *plAssister[], int iAssister)
+void CHalfLifeMultiplay::ObjectNotice(int iObjectIndex, int iObjectAction, int iKillerTeam, int iVictimTeam, CBasePlayer *plAssister[], int iAssister)
 {
 	MESSAGE_BEGIN(MSG_ALL, gmsgObjectMsg);
+	WRITE_BYTE(iObjectIndex);
+	WRITE_BYTE(iObjectAction);
 	WRITE_BYTE(iKillerTeam);
-	WRITE_BYTE(0);	
+	WRITE_BYTE(iVictimTeam);
+
+	//display maximum to 5 assister in object notice
+	if(iAssister > 5)
+		iAssister = 5;
 
 	WRITE_BYTE(iAssister);	
 	int assister_index = 0;
@@ -3573,10 +3529,6 @@ void CHalfLifeMultiplay::ObjectNotice(const char *szName, const char *szIcon, in
 		assister_index = plAssister[i]->entindex();
 		WRITE_BYTE(assister_index);
 	}
-
-	WRITE_BYTE(iVictimTeam);
-	WRITE_STRING(szIcon);
-	WRITE_STRING(szName);
 
 	MESSAGE_END();
 }

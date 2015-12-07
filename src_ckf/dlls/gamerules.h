@@ -1,6 +1,7 @@
 #pragma once
 
 #include "metarender.h"
+#include <tier1\UtlVector.h>
 
 class CBasePlayerItem;
 class CBasePlayer;
@@ -8,10 +9,6 @@ class CItem;
 class CBasePlayerAmmo;
 class CBaseBuildable;//hz extern here
 class CBuildSapper;//hz extern here
-
-#include <vector>
-
-typedef std::vector<edict_t *> entvector;
 
 enum
 {
@@ -304,8 +301,8 @@ public:
 	void CPSendState(CBasePlayer *pPlayer);
 	void CPSendInit(CBasePlayer *pPlayer);
 	void CPResetAll(void);
-	void ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, CBasePlayer *plKiller);
-	void ObjectNotice(const char *szName, const char *szIcon, int iVictimTeam, int iKillerTeam, CBasePlayer *pevAssister[], int iAssister);//Multiple assister
+	void ObjectNotice(int iObjectIndex, int iObjectAction, int iKillerTeam, int iVictimTeam, CBasePlayer *plKiller);
+	void ObjectNotice(int iObjectIndex, int iObjectAction, int iKillerTeam, int iVictimTeam, CBasePlayer *pevAssister[], int iAssister);//Multiple assister
 	void SyncRoundTimer(void);
 	void SetRoundStatus(int iStatus);
 	void SetRoundStatus(int iStatus, float flMaxTime);
@@ -387,13 +384,11 @@ public:
 	int m_iRedLocal;
 	int m_iBluLocal;
 	//for control points
-	std::vector<edict_t *> m_ControlPoints;
+	CUtlVector<edict_t *> m_ControlPoints;
 	//For nobuild zone
-	std::vector<edict_t *> m_NoBuildZone;
+	CUtlVector<edict_t *> m_NoBuildZone;
 	//For light_shadow
-	std::vector<shadow_manager_t> m_ShadowManager;
-	//For sky_camera
-	skycamera_t m_SkyCamera;
+	CUtlVector<shadow_manager_t> m_ShadowManager;
 };
 
 extern DLL_GLOBAL CHalfLifeMultiplay *g_pGameRules;

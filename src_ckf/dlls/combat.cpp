@@ -930,7 +930,8 @@ void CKFAirblast(Vector vecSrc, Vector vecDirShooting, entvars_t *pevInflictor, 
 
 	int iTeam = 0;
 
-	BOOL bIsPlayer = FALSE;
+	bool bIsPlayer = false;
+	bool bDeflected = false;
 
 	CBaseEntity *pAttacker = CBaseEntity::Instance( pevAttacker );
 
@@ -956,7 +957,7 @@ void CKFAirblast(Vector vecSrc, Vector vecDirShooting, entvars_t *pevInflictor, 
 		if(pEntity->IsBSPModel())
 			continue;
 
-		bIsPlayer = (pEntity->IsPlayer() && pEntity->IsAlive()) ? TRUE : FALSE;
+		bIsPlayer = (pEntity->IsPlayer() && pEntity->IsAlive()) ? true : false;
 
 		if(bIsPlayer)
 		{
@@ -969,7 +970,9 @@ void CKFAirblast(Vector vecSrc, Vector vecDirShooting, entvars_t *pevInflictor, 
 			if(pProj->m_iTeam == iTeam) continue;
 		}
 		else
+		{
 			continue;
+		}
 
 		TraceResult tr;
 		Vector vecSpot = pEntity->BodyTarget(vecSrc);
@@ -986,6 +989,7 @@ void CKFAirblast(Vector vecSrc, Vector vecDirShooting, entvars_t *pevInflictor, 
 
 			if(bIsPlayer)
 			{
+				//put out friendly player's fire
 				if(pPlayer->m_iTeam == iTeam)
 				{
 					pPlayer->m_Cond.AfterBurn.Remove();
@@ -1002,64 +1006,20 @@ void CKFAirblast(Vector vecSrc, Vector vecDirShooting, entvars_t *pevInflictor, 
 				CGrenade *pProj = (CGrenade *)pEntity;
 				if(!( pProj->m_iPjFlags & PJ_AIRBLAST_DEFLECTABLE))
 					continue;
+
 				pProj->Deflected(pAttacker, vecDirShooting, flForce);
 
-				//Wav
-				EMIT_SOUND(ENT(pevAttacker) , CHAN_STATIC, "CKF_III/flamethrower_redirect.wav", 1.0, 0.80);
+				bDeflected = true;
 			}
 		}
+	}
+
+	//only play once
+	if(bDeflected)
+	{
+		EMIT_SOUND(ENT(pevAttacker) , CHAN_STATIC, "CKF_III/flamethrower_redirect.wav", 1.0, 0.80);
 	}
 }
-
-/*void CKFBulletDamageProj(Vector vecSrc, entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, float flRadius)
-{
-	CBaseEntity *pEntity = NULL;
-
-	if (!pevAttacker) pevAttacker = pevInflictor;
-
-	int iTeam = 0;
-
-	int iIsPlayer = 0;
-
-	CBaseEntity *pAttacker = CBaseEntity::Instance( pevAttacker );
-
-	if(pAttacker->IsPlayer())
-	{
-		iTeam = ((CBasePlayer *)pAttacker)->m_iTeam;
-	}
-
-	CBaseEntity *pOwner = NULL;
-
-	while ((pEntity = UTIL_FindEntityInSphere(pEntity, vecSrc, flRadius)) != NULL)
-	{
-		if (pEntity->pev->takedamage == DAMAGE_NO)
-			continue;
-
-		if (pEntity->Classify() != CLASS_PROJECTILE)
-			continue;
-
-		if(pEntity->IsBSPModel())
-			continue;
-
-		TraceResult tr;
-		Vector vecSpot = pEntity->BodyTarget(vecSrc);
-		UTIL_TraceLine(vecSrc, vecSpot, dont_ignore_monsters, ENT(pevInflictor), &tr);
-
-		if (tr.flFraction == 1 || tr.pHit == pEntity->edict())
-		{
-			if (tr.fStartSolid)
-			{
-				tr.vecEndPos = vecSrc;
-				tr.flFraction = 0;
-			}
-
-			if( ((CGrenade *)pEntity)->m_iTeam == iTeam ) continue;
-
-			pEntity->TakeDamage(pevInflictor, pevAttacker, flDamage, DMG_BULLET | DMG_NEVERGIB);
-			
-		}
-	}
-}*/
 
 void CBaseMonster::RadiusDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, float flDamage, int iClassIgnore, int bitsDamageType)
 {

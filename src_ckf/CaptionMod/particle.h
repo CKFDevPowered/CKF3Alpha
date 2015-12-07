@@ -15,13 +15,14 @@ extern tgasprite_t g_texSoftGlowTrans;
 extern tgasprite_t g_texMultiJumpSmoke[5];
 extern tgasprite_t g_texCircle1;
 extern tgasprite_t g_texCircle2;
+extern tgasprite_t g_texCircle4;
 extern tgasprite_t g_texSingleFlame;
 extern tgasprite_t g_texDebris[6];
 extern tgasprite_t g_texStarFlash;
 extern tgasprite_t g_texCritHit;
 extern tgasprite_t g_texMiniCritHit;
 extern tgasprite_t g_texElectric1;
-
+extern tgasprite_t g_texConcNormal;
 //add new particle system here
 enum PartSysEnum
 {
@@ -31,12 +32,13 @@ enum PartSysEnum
 	PS_RocketCritGlow,
 	PS_RocketCritSpark,
 	PS_StickyTrail,
+	PS_StickyKill,
+	PS_StickyTimer,
 	PS_GrenadeTrail,
 	PS_GrenadeTimer,
 	PS_GrenadeCritTrail,
 	PS_GrenadeCritGlow,
 	PS_GrenadeCritSpark,
-	PS_StickyTimer,
 	PS_MultiJumpTrail,
 	PS_MultiJumpSmoke,
 	PS_MultiJumpSpark,
@@ -60,7 +62,9 @@ enum PartSysEnum
 	PS_ExplosionFloatieEmbers,
 	PS_ExplosionFlyingEmbers,
 	PS_ExplosionFlash,
-	PS_DefaultTracer,
+	PS_ExplosionShockwave,
+	PS_CoordTracer,
+	PS_EntityTracer,
 	PS_MinigunMuzzle,
 	PS_ShotgunMuzzle,
 	PS_PistolMuzzle,
@@ -77,7 +81,8 @@ enum PartSysEnum
 	PS_BulletImpactSprak,
 	PS_CritPlayerWeapon,
 	PS_CritFirstWeaponGlow,
-	PS_CritFirstWeapon
+	PS_CritFirstWeapon,
+	PS_AirBlast
 };
 
 typedef struct
@@ -128,9 +133,11 @@ public:
 	int GetCull(void ){ return m_cull;}
 	int GetSort(void ){ return m_sort;}
 	int GetType(void){return m_type;}
+	int GetChildNum(void){return m_child.size();}
 	CParticleSystem *GetChild(int i){return m_child[i];}
 	void Init(int type, int numpart, int numchild);
 	int GetActivePartCount(void);
+	void KillAllParticles(void);
 
 public:
 	virtual void Movement(part_t *p, float *org){};

@@ -30,9 +30,9 @@ void CClientMedigun::PrimaryAttack(void)
 
 void CClientMedigun::WeaponIdle(void)
 {
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(MEDIGUN_IDLE1);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(MEDIGUN_IDLE1);
+	}
 }

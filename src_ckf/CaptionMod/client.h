@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <tier1/UtlVector.h>
 
 typedef struct
 {
@@ -132,24 +132,7 @@ typedef struct
 	int numphysent;
 }customzone_t;
 
-typedef struct
-{
-	int iHudPosition;
-	char szName[32];
-	int iState;
-	int iCapTeam;
-	int iTeam;
-	int iCapPlayers;
-	float flProgress;
-	float flCapRate;
-	float flMessageTime;
-	physent_t physent;
-}controlpoint_t;
-
 typedef vec_t matrix3x4[3][4];
-
-typedef std::vector<physent_t> zonevector;
-typedef std::vector<controlpoint_t> cpvector;
 
 int CL_GetViewBody(void);
 int CL_GetViewSkin(void);
@@ -320,7 +303,9 @@ enum fx_e
 	FX_CLOAKSTOP,
 	FX_DISGUISEHINT,
 	FX_KILLALLTRAIL,
-	FX_CRITPLAYERWEAPON
+	FX_CRITPLAYERWEAPON,
+	FX_INVULNPLAYER,
+	FX_AIRBLAST
 };
 
 enum
@@ -402,8 +387,13 @@ extern PlayerInfo g_PlayerInfo[33];
 extern WeaponInfo g_WeaponInfo[MAX_WEAPONS];
 extern BuildInfo g_Build;
 extern PlayerStats g_PlayerStats;
-extern zonevector g_NoBuildZones;
-extern cpvector g_ControlPoints;
+extern CUtlVector<physent_t> g_NoBuildZones;
+extern CUtlVector<controlpoint_t> g_ControlPoints;
+
+extern CClientSentry g_Sentry;
+extern CClientDispenser g_Dispenser;
+extern CClientTeleporter g_TeleEntrance;
+extern CClientTeleporter g_TeleExit;
 
 extern int g_iClass;
 extern int g_iDesiredClass;

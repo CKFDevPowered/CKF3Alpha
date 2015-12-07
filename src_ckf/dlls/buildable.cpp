@@ -235,6 +235,9 @@ void CBuildSentry::Spawn(void)
 
 	//These follow the steps of turrent
 	pev->classname = MAKE_STRING("buildable_sentry");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
+
 	pev->view_ofs.z = 18;
 
 	//Model
@@ -553,6 +556,9 @@ void CBuildSentry::ShootRocket(Vector &vecSrc, Vector &vecAngles)
 	CRocket *pRocket = CRocket::CreatePjRocket(vecSrc, vecAngles, m_pPlayer);
 
 	pRocket->pev->classname = MAKE_STRING("pj_senrocket");
+	//fix for cs16nd
+	AddEntityHashValue(pRocket->pev, STRING(pRocket->pev->classname), CLASSNAME);
+
 	pRocket->m_iCrit = 0;
 	pRocket->m_iTeam = m_iTeam;
 	pRocket->pev->frame = 0;
@@ -964,6 +970,8 @@ void CBuildDispenser::Spawn(void)
 	CBaseBuildable::Spawn();
 
 	pev->classname = MAKE_STRING("buildable_dispenser");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	//Model
 	SET_MODEL(ENT(pev), "models/CKF_III/w_dispenser.mdl");
@@ -1559,6 +1567,8 @@ void CBuildTeleporter::Spawn(void)
 	CBaseBuildable::Spawn();
 
 	pev->classname = MAKE_STRING("buildable_teleporter");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	//Model
 	SET_MODEL(ENT(pev), "models/CKF_III/w_teleporter.mdl");
@@ -1925,7 +1935,7 @@ void CBuildTeleporter::TelePlayer(void)
 		CBasePlayer *pVictim = (CBasePlayer *)pEntity;
 		if(pVictim->m_iTeam != m_pTelePlayer->m_iTeam)
 		{
-			pVictim->TakeDamage(pev, m_pTelePlayer->pev, 9999, DMG_GENERIC | DMG_NEVERGIB, 0);
+			pVictim->TakeDamage(pev, m_pTelePlayer->pev, pev->max_health * 6, DMG_GENERIC | DMG_NEVERGIB, 0);
 		}
 	}
 

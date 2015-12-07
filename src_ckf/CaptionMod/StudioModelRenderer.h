@@ -58,7 +58,7 @@ public:
 	entity_bones_t *GetEntityBones(void);
 	void RestoreEntityBones(entity_bones_t *bones);
 	void StudioSpecialLight(alight_t *plight);
-	int StudioDrawBodyPart(void);
+	int StudioDrawBody(void);
 
 public:
 	double m_clTime;

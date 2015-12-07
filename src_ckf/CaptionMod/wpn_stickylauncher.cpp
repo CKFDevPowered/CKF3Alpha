@@ -102,10 +102,7 @@ void CClientStickyLauncher::StickyLauncherFire(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.6;
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase();
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
 	m_fInSpecialReload = 0;
 
@@ -134,30 +131,36 @@ void CClientStickyLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		SendWeaponAnim(STICKYLAUNCHER_START_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		g_Player.m_flNextAttack = UTIL_WeaponTimeBase() + 0.42;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.42;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.42;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.42;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.42;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CClientStickyLauncher::Reloaded(void)
+{
+	if (m_iAmmo <= 0 || m_iClip == STICKY_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(STICKYLAUNCHER_RELOAD);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.67;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.67;
+		SendWeaponAnim(STICKYLAUNCHER_AFTER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_iAmmo--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(STICKYLAUNCHER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.67;		
 	}
 }
 
@@ -167,23 +170,7 @@ void CClientStickyLauncher::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_iAmmo)
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == STICKY_MAX_CLIP || !m_iAmmo)
-			{
-				SendWeaponAnim(STICKYLAUNCHER_AFTER_RELOAD);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(STICKYLAUNCHER_IDLE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(STICKYLAUNCHER_IDLE);
 	}
 }

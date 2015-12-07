@@ -103,7 +103,7 @@ BOOL CShotgun::Deploy(void)
 
 void CShotgun::PrimaryAttack(void)
 {
-	float flSpread = 0.10;
+	float flSpread = 0.06;
 	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
 
 	if (m_iClip <= 0)
@@ -148,10 +148,7 @@ void CShotgun::PrimaryAttack(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.625;
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.625;
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.625;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.8;
 
 	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 0.2;
 	if(m_iShotsFired < 5) m_iShotsFired ++;
@@ -183,33 +180,40 @@ void CShotgun::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
+
 		SendWeaponAnim(SHOTGUN_START_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.50;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.50;
 	}
-	else if (m_fInSpecialReload == 1)
-	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
+}
 
-		m_fInSpecialReload = 2;
+void CShotgun::Reloaded(void)
+{
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == SHOTGUN_MAX_CLIP)//out of ammo or full of clip, stop reloading
+	{
+		SendWeaponAnim(SHOTGUN_AFTER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
+	}
+	else if (m_fInSpecialReload == 2)
+	{
+		m_iClip++;
+		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
 
 		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "CKF_III/shotgun_reload.wav", VOL_NORM, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 31));
 
 		SendWeaponAnim(SHOTGUN_RELOAD, UseDecrement() != FALSE);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.50;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
-	}
-	else
-	{
-		m_iClip++;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-		m_fInSpecialReload = 1;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.50;		
 	}
 }
 
@@ -224,33 +228,12 @@ void CShotgun::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.25;
 	}
 
-	//if (m_flPumpTime && m_flPumpTime < UTIL_WeaponTimeBase())
-	//	m_flPumpTime = 0;
-
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == SHOTGUN_MAX_CLIP || !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-			{
-				SendWeaponAnim(SHOTGUN_AFTER_RELOAD, UseDecrement() != FALSE);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(SHOTGUN_IDLE1, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SHOTGUN_IDLE1, UseDecrement() != FALSE);
 	}
 }
-
-extern int gmsgWeaponList;
 
 void CShotgun::PreAttachPlayer(CBasePlayer *pPlayer)
 {

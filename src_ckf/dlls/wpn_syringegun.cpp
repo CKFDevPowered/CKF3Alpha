@@ -112,13 +112,12 @@ void CSyringeGun::SyringeGunFire(void)
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
 	else
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+
+	m_fInReload = false;
 }
 
 void CSyringeGun::Reload(void)
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		return;
-
 	if (DefaultReload(SYRINGE_MAX_CLIP, SYRINGEGUN_RELOAD, 1.6))
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
@@ -129,11 +128,11 @@ void CSyringeGun::WeaponIdle(void)
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(SYRINGEGUN_IDLE, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SYRINGEGUN_IDLE, UseDecrement() != FALSE);
+	}
 }
 
 LINK_ENTITY_TO_CLASS( pj_syringe, CSyringe );
@@ -167,6 +166,8 @@ void CSyringe::Spawn( void )
 	UTIL_SetOrigin( pev, pev->origin );
 
 	pev->classname = MAKE_STRING("pj_syringe");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	SetTouch(&CSyringe::SyringeTouch);
 	SetThink(&CSyringe::SyringeThink);

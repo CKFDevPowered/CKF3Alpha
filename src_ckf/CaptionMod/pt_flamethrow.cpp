@@ -9,12 +9,14 @@
 
 extern cl_entity_t ent;
 
+void PerpendicularVector(vec3_t dst, vec3_t src);
 void ClipVelocity(vec_t *in, vec_t *normal, vec_t *out, float overbounce);
+qboolean EV_IsLocal( int idx );
 
-class CPSFlameThrow : public CPartSystemAttachment
+class CFlameThrowCore : public CPartSystemAttachment
 {
 public:
-	CPSFlameThrow(){}
+	CFlameThrowCore(){}
 	void Init(int parts, int childs, cl_entity_t *entity, int team)
 	{
 		CPartSystemAttachment::Init(PS_FlameThrow, parts, childs, entity);
@@ -91,23 +93,26 @@ public:
 		pmtrace_t pmtrace;	
 		float rnd;
 		vec3_t vecSrc, vecDst, vecVel;
-		if(m_entity == gEngfuncs.GetLocalPlayer() && !CL_IsThirdPerson())
+		if(EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
 		{
 			VectorCopy(refparams.forward, m_fwd);
 			VectorCopy(refparams.right, m_right);
 			VectorCopy(refparams.up, m_up);
 			VectorCopy(cl_viewent->attachment[0], vecSrc);
-			m_firstview = TRUE;
+			m_firstview = true;
 		}
 		else
 		{
-			gEngfuncs.pfnAngleVectors(m_entity->angles, m_fwd, m_right, m_up);
-			VectorCopy(m_attachment[0], vecSrc);
-			m_firstview = FALSE;
-		}
-		VectorMA(vecSrc, 8, m_fwd, vecSrc);
+			VectorSubtract(m_attachment[0], m_attachment[1], m_fwd);
+			VectorNormalize(m_fwd);
+			PerpendicularVector(m_right, m_fwd);
+			CrossProduct(m_fwd, m_right, m_up);
 
-		VectorMultiply(m_fwd, 240, vecVel);
+			VectorCopy(m_attachment[0], vecSrc);
+			m_firstview = false;
+		}
+
+		VectorMultiply(m_fwd, 220, vecVel);
 		rnd = RANDOM_FLOAT(-10, 10);
 		VectorMA(vecVel, rnd, m_right, vecVel);
 		rnd = RANDOM_FLOAT(-10, 10);
@@ -173,18 +178,19 @@ public:
 	vec3_t m_up;
 };
 
-class CPSFlameThrowFire : public CPartSystemEntity
+class CFlameThrowFire : public CPartSystemEntity
 {
 public:
-	CPSFlameThrowFire(){}
+	CFlameThrowFire(){}
 	void Init (int parts, int childs, cl_entity_t *entity)
 	{
 		CPartSystemEntity::Init(PS_FlameThrowFire, parts, childs, entity);
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 		VectorMA(p->org, g_flFrameTime, p->vel, p->org);
-		VectorAdd(p->org, ((CPSFlameThrow *)m_parent)->m_pos, org);
+		VectorAdd(p->org, parent->m_pos, org);
 	}
 	virtual void Render(part_t *p, float *org)
 	{
@@ -194,14 +200,14 @@ public:
 		COLOR_FADE(255, 42, 0);
 		ALPHA_FADE_OUT(0.75);
 
-		ent.curstate.scale = (1+1*frac)*0.007;
+		ent.curstate.scale = (1+1*frac2)*0.008;
 		ent.curstate.fuser1 = 1;
 		ent.curstate.frame = 0;
 
 		VectorCopy(org, ent.origin);
 		ent.angles[2] = 0;
 
-		CPSFlameThrow *pParent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *pParent = (CFlameThrowCore *)m_parent;
 	
 		if(pParent->m_firstview)
 			qglDepthRange(0, 0.3);
@@ -220,9 +226,10 @@ public:
 	}
 	void AddParticle(void)
 	{
+		float rnd;
 		int i;
 		part_t *p;
-		float rnd;
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 
 		CALC_ADDCOUNT(2);
 		for(i = 0; i < count; ++i)
@@ -233,13 +240,12 @@ public:
 			p->col[2] = 0;
 			p->col[3] = RANDOM_LONG(200, 255);
 
-			rnd = RANDOM_FLOAT(200, 400);
-			VectorMultiply(((CPSFlameThrow *)m_parent)->m_fwd, rnd, p->vel);
+			rnd = RANDOM_FLOAT(150, 200);
+			VectorMultiply(parent->m_fwd, rnd, p->vel);
 			rnd = RANDOM_FLOAT(-12, 12);
-			VectorMA(p->vel, rnd, ((CPSFlameThrow *)m_parent)->m_right, p->vel);
+			VectorMA(p->vel, rnd, parent->m_right, p->vel);
 			rnd = RANDOM_FLOAT(-12, 12);
-			VectorMA(p->vel, rnd, ((CPSFlameThrow *)m_parent)->m_up, p->vel);
-
+			VectorMA(p->vel, rnd, parent->m_up, p->vel);
 			p->life = RANDOM_FLOAT(0.1, 0.6);
 			p->die = g_flClientTime + p->life;
 		}
@@ -247,19 +253,19 @@ public:
 protected:
 };
 
-class CPSFlameThrowPilot : public CPartSystemEntity
+class CFlameThrowPilot : public CPartSystemEntity
 {
 public:
-	CPSFlameThrowPilot(){}
+	CFlameThrowPilot(){}
 	void Init(int parts, int childs, cl_entity_t *entity)
 	{
 		CPartSystemEntity::Init(PS_FlameThrowPilot, parts, childs, entity);
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
-		p->vel[2] += 12 * g_flFrameTime;
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 		VectorMA(p->org, g_flFrameTime, p->vel, p->org);
-		VectorAdd(p->org, ((CPSFlameThrow *)m_parent)->m_pos, org);
+		VectorAdd(p->org, parent->m_pos, org);
 	}
 	virtual void Render(part_t *p, float *org)
 	{
@@ -269,18 +275,19 @@ public:
 		COLOR_FADE(243, 144, 27);
 		ALPHA_FADE_OUT(0.5);
 
-		if(frac2 > 0.5)
-			ent.curstate.scale = (1+3*frac/0.5)*0.06/4;
+		if(frac2 < 0.5)
+			ent.curstate.scale = (1+2*frac2 / 0.5) * p->scale;
 		else
-			ent.curstate.scale = 0.06;
-		ent.curstate.fuser1 = 1;
+			ent.curstate.scale = 3 * p->scale;
+		ent.curstate.fuser1 = 2;
 		ent.curstate.frame = 0;
 
 		VectorCopy(org, ent.origin);
 		VectorCopy(p->vel, ent.curstate.velocity);
+
 		ent.angles[2] = 0;
 
-		CPSFlameThrow *pParent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *pParent = (CFlameThrowCore *)m_parent;
 	
 		if(pParent->m_firstview)
 			qglDepthRange(0, 0.3);
@@ -299,36 +306,40 @@ public:
 	}
 	void AddParticle(void)
 	{
+		float rnd;
 		int i;
 		part_t *p;
-		float rnd;
-		CPSFlameThrow *parent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 
 		CALC_ADDCOUNT(3);
 		for(i = 0; i < count; ++i)
 		{
 			p = AllocParticle();
+			COLOR_RANDOM_LERP(0, 126, 255, 89, 85, 255);
 			p->col[0] = RANDOM_LONG(0, 40);
 			p->col[1] = RANDOM_LONG(40, 80);
 			p->col[2] = 255;
-			p->col[3] = 255;
-			rnd = RANDOM_FLOAT(100, 200);
+			p->col[3] = 64;
+
+			rnd = 100;
 			VectorMultiply(parent->m_fwd, rnd, p->vel);
 			rnd = RANDOM_FLOAT(-2, 2);
 			VectorMA(p->vel, rnd, parent->m_right, p->vel);
 			rnd = RANDOM_FLOAT(-2, 2);
 			VectorMA(p->vel, rnd, parent->m_up, p->vel);
-			p->life = 0.2;
+
+			p->life = RANDOM_FLOAT(0.2, 0.3);
 			p->die = g_flClientTime + p->life;
+			p->scale = 0.03;
 		}
 	}
 protected:
 };
 
-class CPSFlameThrowCritGlow : public CPartSystemEntity
+class CFlameThrowCritGlow : public CPartSystemEntity
 {
 public:
-	CPSFlameThrowCritGlow(){}
+	CFlameThrowCritGlow(){}
 	void Init(int parts, int childs, cl_entity_t *entity)
 	{
 		CPartSystemEntity::Init(PS_FlameThrowCritGlow, parts, childs, entity);
@@ -336,8 +347,10 @@ public:
 	virtual void Movement(part_t *p, float *org)
 	{
 		p->vel[2] += 48 * g_flFrameTime;
+		CALC_FRACTION(p);
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 		VectorMA(p->org, g_flFrameTime, p->vel, p->org);
-		VectorAdd(p->org, ((CPSFlameThrow *)m_parent)->m_pos, org);
+		VectorAdd(p->org, parent->m_pos, org);
 	}
 	virtual void Render(part_t *p, float *org)
 	{
@@ -365,7 +378,7 @@ public:
 		VectorCopy(org, ent.origin);
 		ent.angles[2] = 0;
 
-		CPSFlameThrow *pParent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *pParent = (CFlameThrowCore *)m_parent;
 	
 		if(pParent->m_firstview)
 			qglDepthRange(0, 0.3);
@@ -377,7 +390,7 @@ public:
 	}
 	virtual void Update(void)
 	{
-		CPSFlameThrow *parent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 		if(!m_dead && ( parent->m_team == 1 || parent->m_team == 2 ))
 		{
 			AddParticle();
@@ -385,10 +398,10 @@ public:
 	}
 	void AddParticle(void)
 	{
-		part_t *p;
 		float rnd;
+		part_t *p;
 
-		CPSFlameThrow *parent = (CPSFlameThrow *)m_parent;
+		CFlameThrowCore *parent = (CFlameThrowCore *)m_parent;
 
 		p = AllocParticle();
 
@@ -421,11 +434,11 @@ protected:
 
 void R_FlameThrow(cl_entity_t *pEntity, int iTeam)
 {
-	CPSFlameThrow *pOldFlame;
-	//gEngfuncs.Con_Printf("R_FlameThrow, team=%d\n", iTeam);
+	CFlameThrowCore *pOldFlame;
+
 	if(iTeam == 0)
 	{
-		pOldFlame = (CPSFlameThrow *)R_FindPartSystem(PS_FlameThrow, pEntity);
+		pOldFlame = (CFlameThrowCore *)R_FindPartSystem(PS_FlameThrow, pEntity);
 		if(pOldFlame && !pOldFlame->GetDead())
 		{
 			pOldFlame->SetDead(1);
@@ -435,7 +448,7 @@ void R_FlameThrow(cl_entity_t *pEntity, int iTeam)
 	}
 	else
 	{
-		pOldFlame = (CPSFlameThrow *)R_FindPartSystem(PS_FlameThrow, pEntity);
+		pOldFlame = (CFlameThrowCore *)R_FindPartSystem(PS_FlameThrow, pEntity);
 		if(pOldFlame)
 		{
 			pOldFlame->SetDead(0);
@@ -444,20 +457,129 @@ void R_FlameThrow(cl_entity_t *pEntity, int iTeam)
 		}
 	}
 
-	CPSFlameThrow *pFlame = new CPSFlameThrow;
+	CFlameThrowCore *pFlame = new CFlameThrowCore;
 	pFlame->Init(100, 3, pEntity, iTeam);
 
-	CPSFlameThrowFire *pFire = new CPSFlameThrowFire;
+	CFlameThrowFire *pFire = new CFlameThrowFire;
 	pFire->Init(150, 0, pEntity);
 
-	CPSFlameThrowPilot *pPilot = new CPSFlameThrowPilot;
+	CFlameThrowPilot *pPilot = new CFlameThrowPilot;
 	pPilot->Init(150, 0, pEntity);
 
-	CPSFlameThrowCritGlow *pCritGlow = new CPSFlameThrowCritGlow;
+	CFlameThrowCritGlow *pCritGlow = new CFlameThrowCritGlow;
 	pCritGlow->Init(50, 0, pEntity);
 
 	pFlame->AddChild(pFire);
 	pFlame->AddChild(pPilot);
 	pFlame->AddChild(pCritGlow);
 	R_AddPartSystem(pFlame);
+}
+
+class CAirBlast : public CPartSystemAttachment
+{
+public:
+	CAirBlast(){}
+	void Init (int parts, int childs, cl_entity_t *entity)
+	{
+		CPartSystemAttachment::Init(PS_AirBlast, parts, childs, entity);
+
+		m_emitted = false;
+	}
+	virtual void Movement(part_t *p, float *org)
+	{
+		CALC_FRACTION(p);
+
+		if(m_firstview)
+		{
+			VectorMA(cl_viewent->attachment[0], frac2 * 120, m_fwd, org);
+		}
+		else
+		{
+			vec3_t vecSub;
+			VectorSubtract(m_attachment[0], m_attachment[1], vecSub);
+			VectorNormalize(vecSub);
+			VectorMA(m_attachment[0], frac2 * (2 - frac2) * 80, vecSub, org);
+		}
+	}
+	virtual void Render(part_t *p, float *org)
+	{
+		CALC_FRACTION(p);
+
+		ent.curstate.rendermode = kRenderShaderConc;
+		ent.curstate.rendercolor.r = 255;
+		ent.curstate.rendercolor.g = 255;
+		ent.curstate.rendercolor.b = 255;
+		ALPHA_FADE_OUT(0.35);
+
+		ent.curstate.scale = (1.2+0.3*frac2)*0.36;
+		ent.curstate.fuser1 = 1;
+		ent.curstate.frame = 0;
+
+		VectorCopy(org, ent.origin);
+		ent.angles[2] = 0;
+	
+		if(m_firstview)
+			qglDepthRange(0, 0.3);
+
+		ent.curstate.fuser2 = 0.02 * frac2 * frac * 4;
+		ent.curstate.fuser3 = 0.2 * frac2 * frac * 4;
+
+		gRefExports.R_RenderCloakTexture();
+
+		R_DrawTGASprite(&ent, &g_texConcNormal);
+
+		if(m_firstview)
+			qglDepthRange(0, 1);
+	}
+	virtual void Update(void)
+	{
+		if(EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+		{
+			VectorCopy(refparams.forward, m_fwd);
+			VectorCopy(refparams.right, m_right);
+			VectorCopy(refparams.up, m_up);
+			m_firstview = true;
+		}
+		else
+		{
+			VectorSubtract(m_attachment[0], m_attachment[1], m_fwd);
+			VectorNormalize(m_fwd);
+			PerpendicularVector(m_right, m_fwd);
+			CrossProduct(m_fwd, m_right, m_up);
+			m_firstview = false;
+		}
+
+		if(!m_dead && !m_emitted)
+		{
+			AddParticle();
+			m_emitted = true;
+		}
+	}
+	void AddParticle(void)
+	{
+		part_t *p;
+
+		p = AllocParticle();
+		p->col[0] = 255;
+		p->col[1] = 255;
+		p->col[2] = 255;
+		p->col[3] = 166;
+
+		p->life = 0.4;
+		p->die = g_flClientTime + p->life;
+	}
+protected:
+	qboolean m_firstview, m_emitted;
+	vec3_t m_fwd, m_right, m_up;
+};
+
+void R_AirBlast(cl_entity_t *pEntity)
+{
+	R_FlameThrow(pEntity, 0);
+
+	CAirBlast *pBlast = new CAirBlast;
+	pBlast->Init(1, 3, pEntity);
+	pBlast->SetCull(false);
+
+	R_AddPartSystem(pBlast);
 }

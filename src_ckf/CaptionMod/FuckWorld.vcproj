@@ -187,10 +187,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\background.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\client.cpp"
 				>
 			</File>
@@ -632,6 +628,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\pt_burning.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\pt_critical.cpp"
 					>
 				</File>
@@ -641,10 +641,6 @@
 				</File>
 				<File
 					RelativePath=".\pt_explosion.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\pt_fire.cpp"
 					>
 				</File>
 				<File

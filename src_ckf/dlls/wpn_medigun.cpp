@@ -277,9 +277,9 @@ void CMedigun::ItemPostFrame(void)
 
 void CMedigun::WeaponIdle(void)
 {
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(MEDIGUN_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(MEDIGUN_IDLE1, UseDecrement() != FALSE);
+	}
 }

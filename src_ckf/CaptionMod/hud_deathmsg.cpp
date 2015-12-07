@@ -65,6 +65,8 @@ static deathicon_t *FindDeathIcon(const char *name)
 
 int HudDeathMsg_VidInit(void)
 {
+	return 1;
+
 	g_DeathIcons.clear();
 	g_DeathIcons.reserve(50);
 
@@ -131,6 +133,8 @@ void HudDeathMsg_Init(void)
 
 int HudDeathMsg_Redraw(float flTime, int iIntermission)
 {
+	return 0;
+
 	if(iIntermission)
 		return 0;
 
@@ -206,7 +210,7 @@ static void FillTeamColor(colorVec *col, int team)
 
 void HudDeathMsg_AddPanel(const char *killer, const char *assister, int killerteam, const char *victim, int victimteam, const char *iconname, int relative, int critkill)
 {
-	deathicon_t *icon;
+	/*deathicon_t *icon;
 	char iconname2[32];
 	bool iconcolored;
 	
@@ -290,5 +294,5 @@ void HudDeathMsg_AddPanel(const char *killer, const char *assister, int killerte
 	if(!g_DeathPanels.empty() && g_DeathPanels.size() > maxnum)
 		g_DeathPanels.pop_front();
 
-	g_flLastPanel = gEngfuncs.GetClientTime();
+	g_flLastPanel = gEngfuncs.GetClientTime();*/
 }

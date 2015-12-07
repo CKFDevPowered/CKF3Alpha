@@ -13,9 +13,6 @@ void CClientRevolver::Precache(void)
 
 BOOL CClientRevolver::Deploy(void)
 {
-	//Close disguise kit menu here
-	//ShowHudMenu(0, 0);
-
 	return GroupDeploy("models/CKF_III/v_revolver.mdl", "models/CKF_III/wp_group_rf.mdl", REVOLVER_DRAW, 0, 0, "shotgun");
 }
 
@@ -51,13 +48,12 @@ void CClientRevolver::PrimaryAttack(void)
 	if(m_iShotsFired < 3) m_iShotsFired ++;
 
 	SendWeaponAnim(REVOLVER_FIRE);
+
+	m_fInReload = false;
 }
 
 void CClientRevolver::Reload(void)
 {
-	if (m_iAmmo <= 0)
-		return;
-
 	DefaultReload(REVOLVER_MAX_CLIP, REVOLVER_RELOAD, 1.16);
 }
 
@@ -71,9 +67,9 @@ void CClientRevolver::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.4167f;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(REVOLVER_IDLE1);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(REVOLVER_IDLE1);
+	}
 }

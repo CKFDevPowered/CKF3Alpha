@@ -7,21 +7,26 @@
 #include "cvar.h"
 #include "event.h"
 
+#include "studio_util.h"
+#include "StudioModelRenderer.h"
+#include "GameStudioModelRenderer.h"
+
 #include "pm_materials.h"
 
 extern vec3_t g_vecZero;
 extern float *ev_punchangle;
 
-void R_BeginTracer(int iTracerColor, int iNumTracer);
-void R_BeginTracerDelayed(int iTracerColor, int iNumTracer, float flDelay);
-void R_BeginTracerAttachment(int iTracerColor, int iNumTracer, cl_entity_t *pEntity, int iAttachIndex);
-void R_EmitTracer(vec3_t vecSrc, vec3_t vecDst);
-void R_PistolMuzzle(cl_entity_t *pEntity, int attachment);
-void R_ShotgunMuzzle(cl_entity_t *pEntity, int attachment);
-void R_MinigunMuzzle(cl_entity_t *pEntity, int attachment);
-void R_ScattergunMuzzle(cl_entity_t *pEntity, int iAttachment);
+void R_BeginEntityTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, int iEntityIndex, int iAttachIndex);
+void R_BeginCoordTracer(int iTracerColor, int iNumTracer, float flDelay, float flSpeed, vec3_t vecSrc);
+void R_EmitTracer(vec3_t vecDst);
+
+void R_PistolMuzzle(int entindex, int attachment, vec3_t angles);
+void R_ShotgunMuzzle(int entindex, int attachment, vec3_t angles);
+void R_MinigunMuzzle(int entindex, int attachment, vec3_t angles);
+
 void R_FlameThrow(cl_entity_t *pEntity, int iTeam);
 void R_BulletImpact(vec3_t vecStart, vec3_t vecNormal);
+void R_AirBlast(cl_entity_t *pEntity);
 
 float UTIL_SharedRandomFloat( unsigned int seed, float low, float high );
 
@@ -66,60 +71,49 @@ void EV_MuzzleFlash( void )
 	ent->curstate.effects |= EF_MUZZLEFLASH;
 }
 
-void EV_SetupArgs(event_args_t *args, float *origin, float *tracer_origin, float *angles, float *forward, float *right, float *up)
+void EV_GetGunPosition(int idx, int attachment, float *origin)
 {
-	int idx;
+	cl_entity_t *ent = NULL;
 
-	idx = args->entindex;
-
-	if (EV_IsPlayer(idx))
+	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
 	{
-		VectorCopy(args->origin, origin);
-		VectorCopy(args->angles, angles);
-		if(angles[1] < 0)
-			angles[1] += 360;
+		//force to be attachment #0
+		ent = cl_viewent;
+		attachment = 0;
+	}
+	else
+	{
+		ent = gEngfuncs.GetEntityByIndex(idx);
+	}
 
-		gEngfuncs.pfnAngleVectors(angles, forward, right, up);
+	if(!ent || !ent->model)
+		return;
 
-		VectorCopy(origin, tracer_origin);
-		VectorMA(tracer_origin, 16, forward, tracer_origin);
-		if(EV_IsLocal(idx))
-		{
-			if(cl_righthand->value > 0)
-				VectorMA(tracer_origin, 4, right, tracer_origin);
-			else
-				VectorMA(tracer_origin, -4, right, tracer_origin);
-		}
-		VectorMA(tracer_origin, -4, up, tracer_origin);
+	studiohdr_t *pstudiohdr = (studiohdr_t *)gpEngineStudio->Mod_Extradata(ent->model);
+	if(!pstudiohdr)
+		return;
+
+	mstudioattachment_t	*pattachment = (mstudioattachment_t *)((byte *)pstudiohdr + pstudiohdr->attachmentindex);
+
+	g_StudioRenderer.m_pCurrentEntity = ent;
+	entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
+	if(bones)
+	{
+		VectorTransform(pattachment[attachment].org, bones->m_lighttransform[pattachment[attachment].bone], origin);
 	}
 }
 
-void EV_SetupArgsMinigun(event_args_t *args, float *origin, float *tracer_origin, float *angles, float *forward, float *right, float *up)
+void EV_SetupArgs(event_args_t *args, float *origin, float *angles, float *forward, float *right, float *up)
 {
-	int idx;
+	int idx = args->entindex;
 
-	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
 
-	if (EV_IsPlayer(idx))
-	{
-		VectorCopy(args->origin, origin);
-		VectorCopy(args->angles, angles);
-		if(angles[1] < 0)
-			angles[1] += 360;
+	if(angles[1] < 0)
+		angles[1] += 360;
 
-		gEngfuncs.pfnAngleVectors(angles, forward, right, up);
-
-		VectorCopy(origin, tracer_origin);
-		VectorMA(tracer_origin, 16, forward, tracer_origin);
-		if(EV_IsLocal(idx))
-		{
-			if(cl_righthand->value > 0)
-				VectorMA(tracer_origin, 1.3, right, tracer_origin);
-			else
-				VectorMA(tracer_origin, -1.3, right, tracer_origin);
-		}
-		VectorMA(tracer_origin, -4, up, tracer_origin);
-	}
+	gEngfuncs.pfnAngleVectors(angles, forward, right, up);
 }
 
 void EV_GetDefaultShellInfo(event_args_t *args, float *origin, float *velocity, float *ShellVelocity, float *ShellOrigin, float *forward, float *right, float *up, float forwardScale, float upScale, float rightScale, bool bReverseDirection)
@@ -391,7 +385,7 @@ float EV_HLDM_PlayTextureSound( int idx, pmtrace_t *ptr, float *vecSrc, float *v
 	return fvolbar;
 }
 
-void EV_HLDM_FireBullets(int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecTracerSrc, float *vecSpread, float flDistance, int iBulletType, int iTracerColor, int iRandSeed)
+void EV_HLDM_FireBullets(int idx, float *forward, float *right, float *up, int cShots, float *vecSrc, float *vecSpread, float flDistance, int iBulletType, int iTracerColor, int iRandSeed)
 {
 	int i;
 	pmtrace_t *tr;
@@ -432,16 +426,16 @@ void EV_HLDM_FireBullets(int idx, float *forward, float *right, float *up, int c
 			if(iBulletType == BULLET_PLAYER_SHOTGUN)
 			{
 				if(RANDOM_LONG(0, 0x7FFF) < 0x7FFF/2)
-					R_EmitTracer(vecTracerSrc, tr->endpos);
+					R_EmitTracer(tr->endpos);
 			}
 			else if(iBulletType == BULLET_PLAYER_MINIGUN)
 			{
 				if(RANDOM_LONG(0, 0x7FFF) < 0x7FFF/3)
-					R_EmitTracer(vecTracerSrc, tr->endpos);
+					R_EmitTracer(tr->endpos);
 			}
 			else
 			{
-				R_EmitTracer(vecTracerSrc, tr->endpos);
+				R_EmitTracer(tr->endpos);
 			}
 		}
 
@@ -472,13 +466,13 @@ void EV_HLDM_FireBullets(int idx, float *forward, float *right, float *up, int c
 void EV_FireScattergun( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -500,26 +494,17 @@ void EV_FireScattergun( event_args_t *args )
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_ShotgunMuzzle(ent, 0);
-	R_BeginTracer(args->iparam1, 10);
+	R_ShotgunMuzzle(idx, 0, angles);
+	R_BeginEntityTracer(args->iparam1, 10, 0.0f, RANDOM_LONG(3000, 6000), idx, 0);
 
 	if(args->bparam1)
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, g_vecZero, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, 0);
-		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, g_vecZero, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, 0);
+		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
 	}
 	else
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
 	}
 	CL_FinishPMTrace();
 }
@@ -527,13 +512,13 @@ void EV_FireScattergun( event_args_t *args )
 void EV_FirePistol( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -550,32 +535,39 @@ void EV_FirePistol( event_args_t *args )
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_PistolMuzzle(ent, 0);
-	R_BeginTracer(args->iparam1, 1);
+	R_PistolMuzzle(idx, 1, angles);
+	R_BeginEntityTracer(args->iparam1, 1, 0.0f, 8000, idx, 1);
 
-	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
+	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
 	CL_FinishPMTrace();
 }
 
 void EV_FireShotgun( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	int attachment = 0;
+
+	if(EV_IsPlayer(idx))
+	{
+		cl_entity_t *ent = gEngfuncs.GetEntityByIndex(idx);
+
+		int playerclass = ent->player ? ent->curstate.playerclass : 0;
+
+		switch(playerclass)
+		{
+			case CLASS_HEAVY: attachment = 1;break;
+			case CLASS_SOLDIER: attachment = 1;break;
+			case CLASS_PYRO: attachment = 1;break;
+			case CLASS_ENGINEER: attachment = 0;break;
+		}
+	}
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if(EV_IsLocal(idx))
 	{
@@ -599,26 +591,17 @@ void EV_FireShotgun( event_args_t *args )
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_ShotgunMuzzle(ent, 0);
-	R_BeginTracer(args->iparam1, 10);
+	R_ShotgunMuzzle(idx, attachment, angles);
+	R_BeginEntityTracer(args->iparam1, 10, 0.0f, RANDOM_LONG(6000, 8000), idx, attachment);
 
 	if(args->bparam1)
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, g_vecZero, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, 0);
-		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, g_vecZero, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, 0);
+		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
 	}
 	else
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, vSpread, 8192, BULLET_PLAYER_SHOTGUN, args->iparam1, args->iparam2);
 	}
 
 	CL_FinishPMTrace();
@@ -627,13 +610,13 @@ void EV_FireShotgun( event_args_t *args )
 void EV_FireRevolver( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -650,19 +633,10 @@ void EV_FireRevolver( event_args_t *args )
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_PistolMuzzle(ent, 0);
-	R_BeginTracer(args->iparam1, 1);
+	R_PistolMuzzle(idx, 0, angles);
+	R_BeginEntityTracer(args->iparam1, 1, 0.0f, 8000, idx, 0);
 
-	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
+	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
 
 	CL_FinishPMTrace();
 }
@@ -670,13 +644,13 @@ void EV_FireRevolver( event_args_t *args )
 void EV_FireSMG( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -693,19 +667,10 @@ void EV_FireSMG( event_args_t *args )
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_PistolMuzzle(ent, 0);
-	R_BeginTracer(args->iparam1, 1);
+	R_PistolMuzzle(idx, 0, angles);
+	R_BeginEntityTracer(args->iparam1, 1, 0.0f, 5000, idx, 0);
 
-	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
+	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, vSpread, 8192, BULLET_PLAYER_TF2, args->iparam1, args->iparam2);
 
 	CL_FinishPMTrace();
 }
@@ -783,6 +748,7 @@ void EV_FireLauncher(event_args_t *args)
 		{
 			V_PunchAxis(0, 2.0);
 		}
+		gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 		sample = "CKF_III/stickylauncher_shoot.wav";break;
 	default:
 		break;
@@ -801,7 +767,6 @@ void EV_StickyLauncher(event_args_t *args)
 {
 	if(args->iparam2 == 1)
 	{
-		//gHookFuncs.S_StopSound(args->entindex, CHAN_WEAPON);
 		gEngfuncs.pEventAPI->EV_StopAllSounds(args->entindex, CHAN_WEAPON);
 	}
 	else if(args->iparam2 == 2)
@@ -830,12 +795,13 @@ void EV_Launcher(event_args_t *args)
 void EV_FireMinigun(event_args_t *args)
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 	vec3_t vSpread;
+
 	idx = args->entindex;
 
-	EV_SetupArgsMinigun(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -847,26 +813,17 @@ void EV_FireMinigun(event_args_t *args)
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = cl_viewent;
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_MinigunMuzzle(ent, 0);
-	R_BeginTracerDelayed(args->iparam1, 10, 0.02);
+	R_MinigunMuzzle(idx, 0, angles);
+	R_BeginEntityTracer(args->iparam1, 10, 0.02f, 5000, idx, 0);
 
 	if(args->bparam1)
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, g_vecZero, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, 0);
-		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, g_vecZero, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, 0);
+		EV_HLDM_FireBullets(idx, forward, right, up, 9, origin, vSpread, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, args->iparam2);
 	}
 	else
 	{
-		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, tracer_origin, vSpread, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, args->iparam2);
+		EV_HLDM_FireBullets(idx, forward, right, up, 10, origin, vSpread, 8192, BULLET_PLAYER_MINIGUN, args->iparam1, args->iparam2);
 	}
 
 	CL_FinishPMTrace();
@@ -900,11 +857,11 @@ void EV_Minigun(event_args_t *args)
 		}
 		if(sample)
 		{
+			gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 			gEngfuncs.pEventAPI->EV_PlaySound(idx, args->origin, CHAN_WEAPON, sample, 1.0, ATTN_NORM, 0, PITCH_NORM);
 		}
 		else
 		{
-			//gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
 			gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 		}
 	}
@@ -917,7 +874,7 @@ void EV_Minigun(event_args_t *args)
 void EV_Sniperifle(event_args_t *args)
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 
 	if(args->iparam2 == 1)
@@ -928,7 +885,7 @@ void EV_Sniperifle(event_args_t *args)
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	if (EV_IsLocal(idx))
 	{
@@ -941,18 +898,10 @@ void EV_Sniperifle(event_args_t *args)
 
 	CL_SetupPMTrace(idx);
 
-	cl_entity_t *ent;
-	if(EV_IsLocal(idx) && !CL_IsThirdPerson())
-	{
-		ent = gEngfuncs.GetViewModel();
-	}
-	else
-	{
-		ent = gEngfuncs.GetEntityByIndex(idx);
-	}
-	R_PistolMuzzle(ent, 0);
+	R_PistolMuzzle(idx, 0, angles);
+	//sniperifle doesn't have a tracer
 
-	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, tracer_origin, g_vecZero, 8192, BULLET_PLAYER_SNIPERIFLE, 0, 0);
+	EV_HLDM_FireBullets(idx, forward, right, up, 1, origin, g_vecZero, 8192, BULLET_PLAYER_SNIPERIFLE, 0, 0);
 
 	CL_FinishPMTrace();
 }
@@ -991,7 +940,7 @@ void EV_Flamethrower(event_args_t *args)
 		}
 	case STATE_FLAMETHROWER_AIRBLAST:
 		{
-			R_FlameThrow(gEngfuncs.GetEntityByIndex(idx), 0);
+			R_AirBlast(gEngfuncs.GetEntityByIndex(idx));
 			sample = "CKF_III/flamethrower_airblast.wav";
 			break;
 		}
@@ -1000,11 +949,11 @@ void EV_Flamethrower(event_args_t *args)
 	}
 	if(sample)
 	{
+		gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 		gEngfuncs.pEventAPI->EV_PlaySound(idx, args->origin, CHAN_WEAPON, sample, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	}
 	else
 	{
-		//gHookFuncs.S_StopSound(idx, CHAN_WEAPON);
 		gEngfuncs.pEventAPI->EV_StopAllSounds(idx, CHAN_WEAPON);
 	}
 }
@@ -1022,12 +971,12 @@ void EV_Medigun(event_args_t *args)
 void EV_FireSyringegun( event_args_t *args )
 {
 	int idx;
-	vec3_t origin, tracer_origin, angles;
+	vec3_t origin, angles;
 	vec3_t up, right, forward;
 
 	idx = args->entindex;
 
-	EV_SetupArgs(args, origin, tracer_origin, angles, forward, right, up);
+	EV_SetupArgs(args, origin, angles, forward, right, up);
 
 	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "CKF_III/syringegun_shoot.wav", 1.0, 0.8, 0, 94 + gEngfuncs.pfnRandomLong(0, 0xf));
 	

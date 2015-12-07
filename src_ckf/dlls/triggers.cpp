@@ -1856,8 +1856,8 @@ void CControlPoint::PostSpawn(void)
 	{
 		strcpy(m_szName, "Control Point");
 	}
-	m_iIndex = g_pGameRules->m_ControlPoints.size() + 1;
-	g_pGameRules->m_ControlPoints.push_back(edict());
+	m_iIndex = g_pGameRules->m_ControlPoints.Count() + 1;
+	g_pGameRules->m_ControlPoints.AddToTail(edict());
 }
 
 void CControlPoint::Restart(void)
@@ -1918,12 +1918,12 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 	int iCapturer = 0;
 	CBasePlayer *plCapturer[32];
 	//Players event
-	for(int i=1; i <= gpGlobals->maxClients; i++)
+	for(int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
 		if(!pPlayer)
 			continue;
-		if(!pPlayer->IsNetClient())
+		if(pPlayer->IsDormant())
 			continue;
 
 		BOOL bPlayedSnd = (g_pGameRules->m_iRoundWinStatus) ? TRUE : FALSE;
@@ -1941,11 +1941,11 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 			if(!bPlayedSnd && RANDOM_LONG(0, 1) == 0)
 			{
 				bPlayedSnd = TRUE;
-				UTIL_PlayMP3(pPlayer, "sound/CKF_III/announcer_time_awarded.mp3");
+				UTIL_PlayMP3(pPlayer, "sound/CKF_III/ano/announcer_time_awarded.mp3");
 			}
 		}
 
-		if(!bPlayedSnd)//1/3 percent to play each sound
+		if(!bPlayedSnd)
 		{
 			bPlayedSnd = TRUE;
 			if(pev->team != 0)
@@ -1973,8 +1973,7 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 		}
 	}
 
-	const char *szIcon = (iNewTeam == TEAM_RED) ? "redcap" : "blucap";
-	g_pGameRules->ObjectNotice(m_szName, szIcon, iOldTeam, pev->team, plCapturer, iCapturer);
+	g_pGameRules->ObjectNotice(m_iIndex, 0, pev->team, iOldTeam, plCapturer, iCapturer);
 
 	if(iTimeAdded || g_pGameRules->m_iRoundStatus != ROUND_NORMAL)
 	{
@@ -2023,8 +2022,10 @@ void CControlPoint::ControlPointDefend(int iCapTeam)
 	for(int i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
-		if(!pPlayer) continue;
-		if(!pPlayer->IsNetClient()) continue;
+		if(!pPlayer || !pPlayer->IsPlayer())
+			continue;
+		if(pPlayer->IsDormant())
+			continue;
 		if(pPlayer->m_pentControlPoint == edict() && pPlayer->m_iTeam == 3-iCapTeam) 
 		{
 			plCapturer[iCapturer] = pPlayer;
@@ -2035,8 +2036,7 @@ void CControlPoint::ControlPointDefend(int iCapTeam)
 		}
 	}
 
-	const char *szIcon = (3-iCapTeam == TEAM_RED) ? "reddef" : "bludef";
-	g_pGameRules->ObjectNotice(m_szName, szIcon, pev->team, 3-iCapTeam, plCapturer, iCapturer);
+	g_pGameRules->ObjectNotice(m_iIndex, 1, 3-iCapTeam, pev->team, plCapturer, iCapturer);
 }
 
 void CControlPoint::ControlPointTouch(CBaseEntity *pOther)
@@ -2103,30 +2103,28 @@ void CControlPoint::ControlPointThink(void)
 	BOOL bIsCapuring = FALSE;
 	BOOL bIsDefending = FALSE;
 	BOOL bBlocked = FALSE;
-	for(int i=1; i <= gpGlobals->maxClients; i++)
+	for(int i = 1; i <= gpGlobals->maxClients; i++)
 	{
-		edict_t *pEdict = g_engfuncs.pfnPEntityOfEntIndex(i);
-		if(pEdict)
+		CBaseEntity *pEnt = UTIL_PlayerByIndex(i);
+		if(pEnt && pEnt->IsPlayer() && !pEnt->IsDormant())
 		{
-			CBaseEntity *pEnt = CBaseEntity::Instance(pEdict);
-			if(pEnt && pEnt->IsPlayer())
-			{			
-				CBasePlayer *pPlayer = (CBasePlayer *)pEnt;
-				if(!(pPlayer->m_iMapZone & MAPZONE_CONTROLPOINT))
-					continue;
-				if(pPlayer->m_pentControlPoint != edict())
-					continue;
+			CBasePlayer *pPlayer = (CBasePlayer *)pEnt;
+			if(!pPlayer->IsAlive())
+				continue;
+			if(!(pPlayer->m_iMapZone & MAPZONE_CONTROLPOINT))
+				continue;
+			if(pPlayer->m_pentControlPoint != edict())
+				continue;
 
-				if(pPlayer->m_iTeam == TEAM_RED)
-				{
-					iRedCaps += (pPlayer->m_iClass == CLASS_SCOUT) ? 2 : 1;
-					flRedCaps += pPlayer->GetCapRate();
-				}
-				else if(pPlayer->m_iTeam == TEAM_BLU)
-				{
-					iBluCaps += (pPlayer->m_iClass == CLASS_SCOUT) ? 2 : 1;
-					flBluCaps += pPlayer->GetCapRate();
-				}
+			if(pPlayer->m_iTeam == TEAM_RED)
+			{
+				iRedCaps += (pPlayer->m_iClass == CLASS_SCOUT) ? 2 : 1;
+				flRedCaps += pPlayer->GetCapRate();
+			}
+			else if(pPlayer->m_iTeam == TEAM_BLU)
+			{
+				iBluCaps += (pPlayer->m_iClass == CLASS_SCOUT) ? 2 : 1;
+				flBluCaps += pPlayer->GetCapRate();
 			}
 		}
 	}
@@ -2268,7 +2266,7 @@ void CNoBuildZone::Spawn(void)
 		ALERT(at_console, "Bad team number (%i) in %s\n", pev->team, STRING(pev->classname));
 		pev->team = 0;
 	}
-	g_pGameRules->m_NoBuildZone.push_back(edict());
+	g_pGameRules->m_NoBuildZone.AddToTail(edict());
 }
 
 //cs16

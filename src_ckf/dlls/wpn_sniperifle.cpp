@@ -170,9 +170,6 @@ void CSniperifle::SniperifleFire(void)
 	ViewAnglesForPlayBack(vecAngles);
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, vecSrc, vecAngles, 0, 0, iCrit, 0, 0, 0);
 
-	//EMIT_SOUND(ENT(pev) , CHAN_WEAPON, "CKF_III/sniperifle_shoot.wav", 1.0, 0.60);
-	//if(iCrit >= 2) EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/crit_shot.wav", VOL_NORM, ATTN_NORM);
-
 	m_pPlayer->m_iWeaponVolume = BIG_EXPLOSION_VOLUME;
 	m_pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
 
@@ -244,11 +241,11 @@ void CSniperifle::WeaponIdle(void)
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 10;
-	SendWeaponAnim(SNIPERIFLE_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SNIPERIFLE_IDLE1, UseDecrement() != FALSE);
+	}
 }
 
 float CSniperifle::GetMaxSpeed(void)
@@ -286,6 +283,7 @@ void CLaserSpot::Spawn(void)
 	pev->scale = 0.1;
 
 	pev->classname = MAKE_STRING("laser_spot");
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 }
 
 void CLaserSpot::Precache(void)

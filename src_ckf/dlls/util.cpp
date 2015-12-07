@@ -8,7 +8,7 @@
 #include "player.h"
 #include "weapons.h"
 #include "gamerules.h"
-#include "enghack.h"
+#include "enginedef.h"
 
 extern DLL_GLOBAL int g_fIsTraceLine;
 
@@ -378,7 +378,63 @@ CBaseEntity *UTIL_FindEntityInSphere(CBaseEntity *pStartEntity, const Vector &ve
 CBaseEntity *UTIL_FindEntityByString(CBaseEntity *pStartEntity, const char *szKeyword, const char *szValue)
 {
 	edict_t *pentEntity = pStartEntity ? pStartEntity->edict() : NULL;
-	pentEntity = FIND_ENTITY_BY_STRING(pentEntity, szKeyword, szValue);
+	int startEntityIndex = ENTINDEX(pentEntity);
+
+	if (*szKeyword != 'c')
+	{
+		pentEntity = FIND_ENTITY_BY_STRING(pentEntity, szKeyword, szValue);
+	}
+	else
+	{
+		int hash = 0;
+		hash_item_t *item;
+		int count;
+
+		hash = CaseInsensitiveHash(szValue, stringsHashTable.Count());
+		count = stringsHashTable.Count();
+		item = &stringsHashTable[hash];
+
+		while (item->pev)
+		{
+			if (!strcmp(STRING(item->pev->classname), szValue))
+				break;
+
+			hash = (hash + 1) % count;
+			item = &stringsHashTable[hash];
+		}
+
+		if (!item->pev)
+		{
+			item->lastHash = NULL;
+			return NULL;
+		}
+
+		if (pStartEntity)
+		{
+			if (item->lastHash && item->lastHash->pevIndex <= startEntityIndex)
+				item = item->lastHash;
+
+			while (item->pevIndex <= startEntityIndex)
+			{
+				if (!item->next)
+					break;
+
+				item = item->next;
+
+				if (!(item->pevIndex <= startEntityIndex))
+					break;
+			}
+
+			if (item->pevIndex == startEntityIndex)
+			{
+				stringsHashTable[hash].lastHash = NULL;
+				return NULL;
+			}
+		}
+
+		stringsHashTable[hash].lastHash = item;
+		pentEntity = ENT(item->pev);
+	}
 
 	if (!FNullEnt(pentEntity))
 		return CBaseEntity::Instance(pentEntity);
@@ -394,19 +450,6 @@ CBaseEntity *UTIL_FindEntityByClassname(CBaseEntity *pStartEntity, const char *s
 CBaseEntity *UTIL_FindEntityByTargetname(CBaseEntity *pStartEntity, const char *szName)
 {
 	return UTIL_FindEntityByString(pStartEntity, "targetname", szName);
-}
-//sohl - zhizhangertong
-CBaseEntity *UTIL_FindEntityByTargetname( CBaseEntity *pStartEntity, const char *szName, CBaseEntity *pActivator )
-{
-	if (FStrEq(szName, "*locus"))
-	{
-		if (pActivator && (pStartEntity == NULL || pActivator->eoffset() > pStartEntity->eoffset()))
-			return pActivator;
-		else
-			return NULL;
-	}
-	else 
-		return UTIL_FindEntityByTargetname( pStartEntity, szName );
 }
 
 CBaseEntity *UTIL_FindEntityGeneric(const char *szWhatever, Vector &vecSrc, float flRadius)

@@ -14,12 +14,15 @@ enum minigun_e
 	MINIGUN_SPIN_IDLE1
 };
 
-#define STATE_MINIGUN_NONE 0
-#define STATE_MINIGUN_WINDUP 1
-#define STATE_MINIGUN_SPIN 2
-#define STATE_MINIGUN_FIRE 3
-#define STATE_MINIGUN_FIRECRIT 4
-#define STATE_MINIGUN_WINDDOWN 5
+enum minigun_state_e
+{
+	STATE_MINIGUN_NONE,
+	STATE_MINIGUN_WINDUP,
+	STATE_MINIGUN_SPIN,
+	STATE_MINIGUN_FIRE,
+	STATE_MINIGUN_FIRECRIT,
+	STATE_MINIGUN_WINDDOWN
+};
 
 LINK_ENTITY_TO_CLASS(weapon_minigun, CMinigun);
 
@@ -82,7 +85,7 @@ void CMinigun::Holster(int skiplocal)
 	m_pPlayer->pev->flags &= ~FL_LOCK_DUCK;
 	m_pPlayer->pev->flags &= ~FL_LOCK_JUMP;
 
-	PLAYBACK_EVENT_FULL(FEV_GLOBAL | FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_NONE, 0, 0, 0);
+	PLAYBACK_EVENT_FULL(FEV_GLOBAL, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_NONE, 0, 0, 0);
 	//EMIT_SOUND(ENT(m_pPlayer->pev) , CHAN_WEAPON, "CKF_III/null.wav", 1.0, 0.80); 
 }
 
@@ -98,7 +101,7 @@ void CMinigun::PrimaryAttack(void)
 	if(m_iSpin < STATE_MINIGUN_SPIN || m_iSpin > STATE_MINIGUN_FIRECRIT)
 		return;
 
-	float flSpread = 0.10;
+	float flSpread = 0.06;
 	if(m_iShotsFired)
 		flSpread *= min(1.0+m_iShotsFired/20.0f, 1.5);
 
@@ -129,7 +132,7 @@ void CMinigun::PrimaryAttack(void)
 	int iMaxBurst = (m_iShotsFired) ? 4 : 3;
 
 	//Prepare to Draw Tracer
-	int iTracerColor = (iCrit >= 2) ? m_pPlayer->m_iTeam : 0;//Draw
+	int iTracerColor = (iCrit >= 2) ? m_pPlayer->m_iTeam : 0;
 
 	for(int iBurst = 0; iBurst < iMaxBurst; iBurst ++)
 	{
@@ -147,15 +150,13 @@ void CMinigun::PrimaryAttack(void)
 	{
 		m_iSpin = STATE_MINIGUN_FIRECRIT;
 		SendWeaponAnim(MINIGUN_SPIN_SHOOT, UseDecrement() != FALSE);
-		//EMIT_SOUND(ENT(m_pPlayer->pev) , CHAN_WEAPON, "CKF_III/minigun_shoot_crit.wav", 1.0, 0.80); 
-		//PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_FIRECRIT, 0, 0, 0);
+		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_FIRECRIT, 0, 0, 0);
 	}
 	else if(iCrit < 2 && m_iSpin != STATE_MINIGUN_FIRE)
 	{
 		m_iSpin = STATE_MINIGUN_FIRE;
 		SendWeaponAnim(MINIGUN_SPIN_SHOOT, UseDecrement() != FALSE);
-		//EMIT_SOUND(ENT(m_pPlayer->pev) , CHAN_WEAPON, "CKF_III/minigun_shoot.wav", 1.0, 0.80); 
-		//PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_FIRE, 0, 0, 0);
+		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_FIRE, 0, 0, 0);
 	}
 
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
@@ -175,11 +176,10 @@ void CMinigun::ItemPostFrame(void)
 	int iButton = m_pPlayer->pev->button;
 	int iOldButton = m_pPlayer->pev->oldbuttons;
 
-	if((m_iSpin == STATE_MINIGUN_FIRE || m_iSpin == STATE_MINIGUN_FIRECRIT) && !(iButton & IN_ATTACK))
+	if((m_iSpin == STATE_MINIGUN_FIRE || m_iSpin == STATE_MINIGUN_FIRECRIT) && (!(iButton & IN_ATTACK) || m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0))
 	{
 		m_iSpin = STATE_MINIGUN_SPIN;
 		SendWeaponAnim(MINIGUN_SPIN_IDLE1, UseDecrement() != FALSE);
-		//EMIT_SOUND(ENT(m_pPlayer->pev) , CHAN_WEAPON, "CKF_III/minigun_spin.wav", 1.0, 0.80);
 		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, STATE_MINIGUN_SPIN, 0, 0, 0);
 	}
 	else if((iButton & IN_ATTACK) || (iButton & IN_ATTACK2))
@@ -271,7 +271,7 @@ void CMinigun::WeaponIdle(void)
 float CMinigun::GetMaxSpeed(void)
 {
 	if (m_iSpin != STATE_MINIGUN_NONE)
-		return 0.4935;
+		return 0.4935f;
 
 	return 1;
 }

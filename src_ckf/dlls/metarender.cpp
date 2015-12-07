@@ -3,6 +3,8 @@
 #include "cbase.h"
 #include "gamerules.h"
 
+skycamera_t g_SkyCamera;
+
 //sky camera
 
 class CSkyCamera : public CPointEntity
@@ -15,42 +17,8 @@ LINK_ENTITY_TO_CLASS(sky_camera, CSkyCamera);
 
 void CSkyCamera::Spawn(void)
 {
-	g_pGameRules->m_SkyCamera.origin = pev->origin;
-	g_pGameRules->m_SkyCamera.enable = 1;
-	SetThink(&CBaseEntity::SUB_Remove);
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-//sky center
-
-class CSkyCenter : public CPointEntity
-{
-public:
-	void Spawn(void);
-};
-
-LINK_ENTITY_TO_CLASS(sky_center, CSkyCenter);
-
-void CSkyCenter::Spawn(void)
-{
-	g_pGameRules->m_SkyCamera.center = pev->origin;
-	SetThink(&CBaseEntity::SUB_Remove);
-	pev->nextthink = gpGlobals->time + 0.1;
-}
-
-//sky_box
-
-class CSkyBox : public CPointEntity
-{
-public:
-	void Spawn(void);
-};
-
-LINK_ENTITY_TO_CLASS(sky_box, CSkyBox);
-
-void CSkyBox::Spawn(void)
-{
-	strcpy(g_pGameRules->m_SkyCamera.model, STRING(pev->model));
+	g_SkyCamera.origin = pev->origin;
+	g_SkyCamera.enable = 1;
 	SetThink(&CBaseEntity::SUB_Remove);
 	pev->nextthink = gpGlobals->time + 0.1;
 }
@@ -75,16 +43,17 @@ LINK_ENTITY_TO_CLASS(shadow_manager, CShadowManager);
 
 void CShadowManager::Spawn(void)
 {
-	shadow_manager_t mgr;
+	shadow_manager_t &mgr = g_pGameRules->m_ShadowManager[g_pGameRules->m_ShadowManager.AddToTail()];
 
-	strcpy(mgr.affectmodel, STRING(m_iAffectModel));
+	strncpy(mgr.affectmodel, STRING(m_iAffectModel), sizeof(mgr.affectmodel)-1);
+	mgr.affectmodel[sizeof(mgr.affectmodel) - 1] = '\0';
+
 	mgr.angles = pev->angles;
 	mgr.radius = m_flRadius;
 	mgr.scale = m_flScale;
 	mgr.fard = m_flFarDist;
 	mgr.texsize = m_iTexSize;
-
-	g_pGameRules->m_ShadowManager.push_back(mgr);
+	
 	SetThink(&CBaseEntity::SUB_Remove);
 	pev->nextthink = gpGlobals->time + 0.1;
 }

@@ -240,7 +240,7 @@ void T_BluePrint_Update(void)
 	{
 		hullok = 0;
 	}
-	if(hullok && !g_NoBuildZones.empty())
+	if(hullok && g_NoBuildZones.Count())
 	{
 		vecMins[0] = vecSrc[0] - 16;
 		vecMins[1] = vecSrc[1] - 16;
@@ -248,8 +248,8 @@ void T_BluePrint_Update(void)
 		vecMaxs[0] = vecSrc[0] + 16;
 		vecMaxs[1] = vecSrc[1] + 16;
 		vecMaxs[2] = vecSrc[2] + height;
-		int size = g_NoBuildZones.size();
-		for(int i = 0; i < size ; ++i)
+
+		for(int i = 0; i < g_NoBuildZones.Count() ; ++i)
 		{
 			physent_t *pe = &g_NoBuildZones[i];
 			if(pe->team != 0 && pe->team != g_iTeam)
@@ -421,8 +421,8 @@ void CL_ControlPointUpdate(void)
 	vecMaxs[0] = vecSrc[0] + 16;
 	vecMaxs[1] = vecSrc[1] + 16;
 	vecMaxs[2] = vecSrc[2] + 48;
-	int size = g_ControlPoints.size();
-	for(int i = 0; i < size ; ++i)
+
+	for(int i = 0; i < g_ControlPoints.Count(); ++i)
 	{
 		physent_t *pe = &g_ControlPoints[i].physent;
 

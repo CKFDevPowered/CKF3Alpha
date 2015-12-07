@@ -11,14 +11,18 @@
 
 extern cl_entity_t ent;
 
-class CPSDisguiseSmoke : public CPartSystemEntity
+qboolean EV_IsLocal( int idx );
+
+class CDisguiseSmoke : public CPartSystemEntity
 {
 public:
-	CPSDisguiseSmoke(){}
+	CDisguiseSmoke(){}
 	void Init(int parts, int childs, cl_entity_t *entity, int team)
 	{
 		CPartSystemEntity::Init(PS_DisguiseSmoke, parts, childs, entity);
 		Reset(team);
+
+		m_mod = entity->model;
 	}
 	void Reset(int team)
 	{
@@ -33,12 +37,15 @@ public:
 		entity_bones_t *bones = g_StudioRenderer.GetEntityBones();
 		if(bones)
 		{
-			VectorTransform(p->org, bones->m_lighttransform[p->bone], org);
+			VectorTransform(p->org, bones->m_bonetransform[p->bone], org);
 			VectorMA(org, frac2, p->vel, org);
 		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		CALC_FRACTION(p);
 
 		ent.curstate.rendermode = kRenderTransAlpha;
@@ -71,15 +78,38 @@ public:
 	}
 	virtual void Update(void)
 	{
+		if(m_entity->model != m_mod)
+		{
+			RemoveInvalid();
+			m_mod = m_entity->model;
+		}
 		if(!m_dead && m_entity->model)
 		{
 			AddParticle();
 		}
 	}
+	void RemoveInvalid(void)
+	{
+		if(!m_entity->model)
+			return;
+
+		studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
+
+		for(int i = 0;i < m_part.size(); ++i)
+		{
+			if(!m_part[i].free)
+			{
+				if(m_part[i].bone > pstudiohdr->numbones)
+					m_part[i].die = 0;
+			}
+		}
+	}
 	void AddParticle(void)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		part_t *p = AllocParticle();
-		if(!p) return;
 
 		p->modn = RANDOM_LONG(0,4);
 		if(m_team == 0)
@@ -96,6 +126,7 @@ public:
 		}
 		p->col[3] = RANDOM_LONG(128, 200);
 
+		//generate position for this model
 		{
 			studiohdr_t *pstudiohdr = (studiohdr_t *)IEngineStudio.Mod_Extradata(m_entity->model);
 			if(pstudiohdr && pstudiohdr->numhitboxes > 0)
@@ -121,12 +152,13 @@ public:
 	}
 public:
 	int m_team;
+	model_t *m_mod;
 };
 
-class CPSDisguiseFlash : public CPartSystemEntity
+class CDisguiseFlash : public CPartSystemEntity
 {
 public:
-	CPSDisguiseFlash(){}
+	CDisguiseFlash(){}
 	void Init(int parts, int childs, cl_entity_t *entity)
 	{
 		CPartSystemEntity::Init(PS_DisguiseFlash, parts, childs, entity);
@@ -137,6 +169,9 @@ public:
 	}
 	virtual void Render(part_t *p, float *org)
 	{
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
+
 		CALC_FRACTION(p);
 
 		ent.curstate.rendermode = kRenderTransAdd;
@@ -163,10 +198,12 @@ public:
 	}
 	void AddParticle(void)
 	{
-		part_t *p = AllocParticle();
-		if(!p) return;
+		if(m_entity->player && EV_IsLocal(m_entity->index) && !CL_IsThirdPerson())
+			return;
 
-		CPSDisguiseSmoke *parent = (CPSDisguiseSmoke *)m_parent;
+		part_t *p = AllocParticle();
+
+		CDisguiseSmoke *parent = (CDisguiseSmoke *)m_parent;
 		if(parent->m_team == 0)
 		{
 			p->col[0] = RANDOM_LONG(236, 255);
@@ -192,7 +229,7 @@ private:
 
 void R_DisguiseSmoke(cl_entity_t *pEntity, int iTeam)
 {
-	CPSDisguiseSmoke *pOldSmoke = (CPSDisguiseSmoke *)R_FindPartSystem(PS_DisguiseSmoke, pEntity);;
+	CDisguiseSmoke *pOldSmoke = (CDisguiseSmoke *)R_FindPartSystem(PS_DisguiseSmoke, pEntity);;
 
 	if(pOldSmoke)
 	{
@@ -201,10 +238,10 @@ void R_DisguiseSmoke(cl_entity_t *pEntity, int iTeam)
 		return;
 	}
 
-	CPSDisguiseSmoke *pSmoke = new CPSDisguiseSmoke;
+	CDisguiseSmoke *pSmoke = new CDisguiseSmoke;
 	pSmoke->Init(150, 1, pEntity, iTeam-1);
 
-	CPSDisguiseFlash *pFlash = new CPSDisguiseFlash;
+	CDisguiseFlash *pFlash = new CDisguiseFlash;
 	pFlash->Init(35, 0, pEntity);
 
 	pSmoke->AddChild(pFlash);

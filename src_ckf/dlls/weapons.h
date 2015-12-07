@@ -350,6 +350,7 @@ public:
 	virtual CBasePlayerItem *GetWeaponPtr(void) { return (CBasePlayerItem *)this; }
 	virtual void Swing(void){};//for melee attack
 	virtual void Reset(void){};//for reset weapon statement
+	virtual void Reloaded(void);
 
 public:
 	BOOL DefaultDeploy(char *szViewModel, char *szWeaponModel, int iAnim, char *szAnimExt, int body = 0);
@@ -360,7 +361,7 @@ public:
 	BOOL AddSecondaryAmmo(int iCount, char *szName, int iMaxCarry);
 	int PrimaryAmmoIndex(void);
 	int SecondaryAmmoIndex(void);
-	void EjectBrassLate(void);
+	//bool HasAnyAmmo( void );
 
 public:
 	int m_iPlayEmptySound;
@@ -488,6 +489,7 @@ public:
 	void PrimaryAttack(void);
 	void Reload(void);
 	void WeaponIdle(void);
+	void Reloaded(void);
 
 	BOOL UseDecrement(void)
 	{
@@ -633,6 +635,7 @@ public:
 	void Reload(void);
 	void WeaponIdle(void);
 	void PreAttachPlayer(CBasePlayer *pPlayer);
+	void Reloaded(void);
 
 	int iSlot(void);
 	const char *pszAmmo1(void);
@@ -719,6 +722,7 @@ public:
 	void StickyFucker(void);
 	int RecountSticky(void);
 	void Reload(void);
+	void Reloaded(void);
 	void WeaponIdle(void);
 	void StopCharge(void);
 
@@ -773,6 +777,7 @@ public:
 	void SecondaryAttack(void);
 	void Reload(void);
 	void WeaponIdle(void);
+	void Reloaded(void);
 
 	BOOL UseDecrement(void)
 	{
@@ -831,6 +836,7 @@ public:
 	void PrimaryAttack(void);
 	void Reload(void);
 	void WeaponIdle(void);
+	void Reloaded(void);
 
 	BOOL UseDecrement(void)
 	{
@@ -972,7 +978,6 @@ public:
 	void PrimaryAttack(void);
 	void SecondaryAttack(void);
 	void WeaponIdle(void);
-	void ItemPostFrame(void);
 
 	BOOL UseDecrement(void)
 	{

@@ -18,9 +18,9 @@ BOOL CClientPistol::Deploy(void)
 
 void CClientPistol::PrimaryAttack(void)
 {
-	float flSpread = 0.05;
+	float flSpread = 0.03;
 
-	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
+	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/12.0f, 2.0);
 
 	if (m_iClip <= 0)
 	{
@@ -40,15 +40,17 @@ void CClientPistol::PrimaryAttack(void)
 
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, NULL, m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, flSpread, 0, iTracerColor, g_Player.random_seed, (!m_iShotsFired) ? TRUE : FALSE, 0);
 
-	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0f/6;
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.167f;
 
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.9;
 
-	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 1.0f/6;
+	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 0.2f;
 
 	if(m_iShotsFired < 5) m_iShotsFired ++;
 
 	SendWeaponAnim(PISTOL_FIRE);
+
+	m_fInReload = false;
 }
 
 void CClientPistol::SecondaryAttack(void)
@@ -58,9 +60,6 @@ void CClientPistol::SecondaryAttack(void)
 
 void CClientPistol::Reload(void)
 {
-	if (m_iAmmo <= 0)
-		return;
-
 	DefaultReload(PISTOL_MAX_CLIP, PISTOL_RELOAD, (g_iClass == CLASS_SCOUT) ? 1.25 : 1.36);
 }
 
@@ -74,9 +73,9 @@ void CClientPistol::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.25;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(PISTOL_IDLE1);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(PISTOL_IDLE1);
+	}
 }

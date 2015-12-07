@@ -15,7 +15,7 @@
 #include "netadr.h"
 #include "monsters.h"
 #include "pm_shared.h"
-#include "enghack.h"
+#include "enginedef.h"
 #include <string>
 
 extern DLL_GLOBAL int g_fTraceLineIgnore;
@@ -1833,12 +1833,13 @@ void ServerDeactivate(void)
 		return;
 
 	g_serveractive = 0;
-	//CLocalNav::Reset();//Hostage
 }
 
 void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
 {
 	g_serveractive = 1;
+
+	EmptyEntityHashTable();
 
 	for (int i = 0; i < edictCount; i++)
 	{
@@ -1851,7 +1852,11 @@ void ServerActivate(edict_t *pEdictList, int edictCount, int clientMax)
 		CBaseEntity *pClass = CBaseEntity::Instance(&pEdictList[i]);
 
 		if (pClass && !(pClass->pev->flags & FL_DORMANT))
+		{
+			//cs16nd added
+			AddEntityHashValue(&pEdictList[i].v, STRING(pEdictList[i].v.classname), CLASSNAME);
 			pClass->Activate();
+		}
 		else
 			ALERT(at_console, "Can't instance %s\n", STRING(pEdictList[i].v.classname));
 	}
@@ -1898,7 +1903,6 @@ void StartFrame(void)
 	if (g_fGameOver)
 		return;
 
-	//CLocalNav::Think();//Hostage
 	static cvar_t *skill = NULL;
 
 	if (!skill)
@@ -2277,14 +2281,14 @@ void SetupVisibility(edict_t *pViewEntity, edict_t *pClient, unsigned char **pvs
 		org = org + (VEC_HULL_MIN - VEC_DUCK_HULL_MIN);
 
 	*pvs = ENGINE_SET_PVS((float *)&org);
-	if(g_pGameRules->m_SkyCamera.enable)
+	if(g_SkyCamera.enable)
 	{
-		gSVFuncs.SV_AddToFatPVS( (float *)&(g_pGameRules->m_SkyCamera.origin.x), (*sv_worldmodel)->nodes );
+		gSVFuncs.SV_AddToFatPVS( (float *)&(g_SkyCamera.origin.x), (*sv_worldmodel)->nodes );
 	}
 	*pas = ENGINE_SET_PAS((float *)&org);
-	if(g_pGameRules->m_SkyCamera.enable)
+	if(g_SkyCamera.enable)
 	{
-		gSVFuncs.SV_AddToFatPAS( (float *)&(g_pGameRules->m_SkyCamera.origin.x), (*sv_worldmodel)->nodes );
+		gSVFuncs.SV_AddToFatPAS( (float *)&(g_SkyCamera.origin.x), (*sv_worldmodel)->nodes );
 	}
 }
 
@@ -3169,6 +3173,7 @@ void CmdEnd(const edict_t *player)
 
 int ConnectionlessPacket(const struct netadr_s *net_from, const char *args, char *response_buffer, int *response_buffer_size)
 {
+	*response_buffer_size = 0;
 	return 0;
 }
 

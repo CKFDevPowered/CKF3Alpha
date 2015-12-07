@@ -530,3 +530,78 @@ void R_StickyTrail(cl_entity_t *pEntity)
 	pTrail->AddChild(pCritSpark);
 	R_AddPartSystem(pTrail);
 }
+
+class CPSStickyKill : public CParticleSystem
+{
+public:
+	CPSStickyKill(){}
+	void Init(int parts, int childs)
+	{
+		CParticleSystem::Init(PS_StickyKill, parts, childs);
+	}
+	virtual void Movement(part_t *p, float *org)
+	{
+		R_ParticleMovementNone(p, org);
+	}
+	virtual void Render(part_t *p, float *org)
+	{
+		CALC_FRACTION(p);
+
+		ent.curstate.rendermode = kRenderTransAdd;
+		if(p->col[2] != 255)
+		{
+			COLOR_FADE(71, 61, 46);
+		}
+		else
+		{
+			COLOR_FADE(65, 75, 93);
+		}
+		ALPHA_FADE_OUT(0.1);
+
+		ent.curstate.scale = 0.1;
+		ent.curstate.fuser1 = 1;
+		ent.curstate.frame = 0;
+
+		VectorCopy(org, ent.origin);
+		ent.angles[2] = 0;
+
+		R_DrawTGASprite(&ent, &g_texSoftGlow);
+	}
+	virtual void Update(void)
+	{
+	}
+	void AddParticle(vec3_t origin, int skin)
+	{
+		part_t *p = AllocParticle();
+		if(!p) return;
+
+		if(skin == 0 || skin == 2)
+		{
+			p->col[0] = 255;
+			p->col[1] = 84;
+			p->col[2] = 0;
+		}
+		else
+		{
+			p->col[0] = 0;
+			p->col[1] = 150;
+			p->col[2] = 255;
+		}
+		p->col[3] = 255;
+
+		VectorCopy(origin, p->org);
+		p->life = 3.0f;
+		p->die = g_flClientTime + p->life;
+	}
+protected:
+
+};
+
+void R_StickyKill(vec3_t origin, int skin)
+{
+	CPSStickyKill *pKill = new CPSStickyKill;
+	pKill->Init(1, 0);
+	pKill->AddParticle(origin, skin);
+
+	R_AddPartSystem(pKill);
+}

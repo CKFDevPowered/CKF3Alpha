@@ -62,7 +62,7 @@ BOOL CDestroyPDA::CanDeploy(void)
 	if(m_pPlayer->m_iHudMenu == HUDMENU_BUILD || m_pPlayer->m_iCarryBluePrint)
 		return FALSE;
 
-	return TRUE;
+	return CBasePlayerWeapon::CanDeploy();
 }
 
 void CDestroyPDA::WeaponIdle(void)

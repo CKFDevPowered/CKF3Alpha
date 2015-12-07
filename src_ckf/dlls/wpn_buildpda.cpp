@@ -102,7 +102,7 @@ BOOL CBuildPDA::CanDeploy(void)
 			return FALSE;
 	}
 
-	return TRUE;
+	return CBasePlayerWeapon::CanDeploy();
 }
 
 void CBuildPDA::WeaponIdle(void)

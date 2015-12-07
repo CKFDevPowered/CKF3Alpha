@@ -41,10 +41,7 @@ void CClientGrenadeLauncher::PrimaryAttack(void)
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
 	m_fInSpecialReload = 0;
 }
@@ -56,7 +53,7 @@ void CClientGrenadeLauncher::SecondaryAttack(void)
 
 void CClientGrenadeLauncher::Reload(void)
 {
-	if (m_iAmmo <= 0 || m_iClip == GRENADE_MAX_CLIP)
+	if (!m_iAmmo || m_iClip == GRENADE_MAX_CLIP)
 		return;
 
 	if (m_flNextPrimaryAttack > UTIL_WeaponTimeBase())
@@ -65,30 +62,36 @@ void CClientGrenadeLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		SendWeaponAnim(GRENADELAUNCHER_START_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		g_Player.m_flNextAttack = UTIL_WeaponTimeBase() + 0.64;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.64;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.64;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.64;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.64;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CClientGrenadeLauncher::Reloaded(void)
+{
+	if (m_iAmmo <= 0 || m_iClip == GRENADE_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(GRENADELAUNCHER_RELOAD);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.60;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.60;
+		SendWeaponAnim(GRENADELAUNCHER_AFTER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_iAmmo--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(GRENADELAUNCHER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.60;		
 	}
 }
 
@@ -98,23 +101,7 @@ void CClientGrenadeLauncher::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_iAmmo)
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == GRENADE_MAX_CLIP || !m_iAmmo)
-			{
-				SendWeaponAnim(GRENADELAUNCHER_AFTER_RELOAD);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(GRENADELAUNCHER_IDLE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 	}
 }

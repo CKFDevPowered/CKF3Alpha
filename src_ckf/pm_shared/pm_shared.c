@@ -2555,7 +2555,6 @@ void PM_RebuildPhysents(struct playermove_s *ppmove)
 
 	//rebuild
 	ppmove->numphysent = 0;
-
 	
 	for(i = 0; i < g_iNumBackupPhysent; i++)
 	{
@@ -2564,11 +2563,7 @@ void PM_RebuildPhysents(struct playermove_s *ppmove)
 		{
 			bShouldCheck = true;
 		}
-		else if(ppmove->physents[i].movetype == MOVETYPE_TOSS && ppmove->physents[i].solid == SOLID_SLIDEBOX)
-		{
-			bShouldCheck = true;
-		}
-		else if(ppmove->physents[i].solid == SOLID_BSP)
+		else if(ppmove->physents[i].solid >= SOLID_BBOX && ppmove->physents[i].solid <= SOLID_BSP)
 		{
 			bShouldCheck = true;
 		}

@@ -1,5 +1,4 @@
 #include "gl_local.h"
-#include "screen.h"
 
 qboolean drawhudinworld = false;
 qboolean draw3dhud = false;
@@ -33,8 +32,8 @@ void R_InitRefHUD(void)
 {
 	if(gl_shader_support)
 	{
-		char *pp_fxaa_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_fxaa.vsh", 5, 0);
-		char *pp_fxaa_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_fxaa.fsh", 5, 0);
+		char *pp_fxaa_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_fxaa.vsh", 5, 0);
+		char *pp_fxaa_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_fxaa.fsh", 5, 0);
 		if(pp_fxaa_vscode && pp_fxaa_fscode)
 		{
 			pp_fxaa_program = R_CompileShader(pp_fxaa_vscode, pp_fxaa_fscode, "pp_fxaa.vsh", "pp_fxaa.fsh");
@@ -44,13 +43,13 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_fxaa, rt_w, "rt_w");
 				SHADER_UNIFORM_INIT(pp_fxaa, rt_h, "rt_h");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_fxaa_vscode);
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_fxaa_fscode);
+			gEngfuncs.COM_FreeFile(pp_fxaa_vscode);
+			gEngfuncs.COM_FreeFile(pp_fxaa_fscode);
 		}
 
 		//downsample
-		char *pp_common_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_common.vsh", 5, 0);
-		char *pp_downsample_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_downsample.fsh", 5, 0);
+		char *pp_common_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_common.vsh", 5, 0);
+		char *pp_downsample_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_downsample.fsh", 5, 0);
 		if(pp_common_vscode && pp_downsample_fscode)
 		{
 			pp_downsample_program = R_CompileShader(pp_common_vscode, pp_downsample_fscode, "pp_common.vsh", "pp_downsample.fsh");
@@ -58,11 +57,11 @@ void R_InitRefHUD(void)
 			{
 				SHADER_UNIFORM_INIT(pp_downsample, tex, "tex");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_downsample_fscode);
+			gEngfuncs.COM_FreeFile(pp_downsample_fscode);
 		}
 		//2x2 downsample
-		char *pp_common2x2_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_common2x2.vsh", 5, 0);
-		char *pp_downsample2x2_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_downsample2x2.fsh", 5, 0);
+		char *pp_common2x2_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_common2x2.vsh", 5, 0);
+		char *pp_downsample2x2_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_downsample2x2.fsh", 5, 0);
 		if(pp_common2x2_vscode && pp_downsample2x2_fscode)
 		{
 			pp_downsample2x2_program = R_CompileShader(pp_common2x2_vscode, pp_downsample2x2_fscode, "pp_common2x2.vsh", "pp_downsample2x2.fsh");
@@ -71,10 +70,10 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_downsample2x2, tex, "tex");
 				SHADER_UNIFORM_INIT(pp_downsample2x2, texelsize, "texelsize");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_downsample2x2_fscode);
+			gEngfuncs.COM_FreeFile(pp_downsample2x2_fscode);
 		}
 		//luminance downsample
-		char *pp_lumin_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_lumin.fsh", 5, 0);
+		char *pp_lumin_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_lumin.fsh", 5, 0);
 		if(pp_common2x2_vscode && pp_lumin_fscode)
 		{
 			pp_lumin_program = R_CompileShader(pp_common2x2_vscode, pp_lumin_fscode, "pp_common2x2.vsh", "pp_lumin.fsh");
@@ -83,11 +82,11 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_lumin, tex, "tex");
 				SHADER_UNIFORM_INIT(pp_lumin, texelsize, "texelsize");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_lumin_fscode);
+			gEngfuncs.COM_FreeFile(pp_lumin_fscode);
 		}
 
 		//log luminance downsample
-		char *pp_luminlog_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_luminlog.fsh", 5, 0);
+		char *pp_luminlog_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_luminlog.fsh", 5, 0);
 		if(pp_common2x2_vscode && pp_luminlog_fscode)
 		{
 			pp_luminlog_program = R_CompileShader(pp_common2x2_vscode, pp_luminlog_fscode, "pp_common2x2.vsh", "pp_luminlog.fsh");
@@ -96,11 +95,11 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_luminlog, tex, "tex");
 				SHADER_UNIFORM_INIT(pp_luminlog, texelsize, "texelsize");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_luminlog_fscode);
+			gEngfuncs.COM_FreeFile(pp_luminlog_fscode);
 		}
 		
 		//exp luminance downsample
-		char *pp_luminexp_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_luminexp.fsh", 5, 0);
+		char *pp_luminexp_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_luminexp.fsh", 5, 0);
 		if(pp_common2x2_vscode && pp_luminexp_fscode)
 		{
 			pp_luminexp_program = R_CompileShader(pp_common2x2_vscode, pp_luminexp_fscode, "pp_common2x2.vsh", "pp_luminexp.fsh");
@@ -109,11 +108,11 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_luminexp, tex, "tex");
 				SHADER_UNIFORM_INIT(pp_luminexp, texelsize, "texelsize");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_luminexp_fscode);
+			gEngfuncs.COM_FreeFile(pp_luminexp_fscode);
 		}
 
 		//luminance adaptation downsample
-		char *pp_luminadapt_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_luminadapt.fsh", 5, 0);
+		char *pp_luminadapt_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_luminadapt.fsh", 5, 0);
 		if(pp_common_vscode && pp_luminadapt_fscode)
 		{
 			pp_luminadapt_program = R_CompileShader(pp_common_vscode, pp_luminadapt_fscode, "pp_common.vsh", "pp_luminadapt.fsh");
@@ -123,12 +122,12 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_luminadapt, adatex, "adatex");
 				SHADER_UNIFORM_INIT(pp_luminadapt, frametime, "frametime");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_luminadapt_fscode);
+			gEngfuncs.COM_FreeFile(pp_luminadapt_fscode);
 		}
 
 		//tone mapping
-		char *pp_tonemap_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_tonemap.vsh", 5, 0);
-		char *pp_tonemap_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\pp_tonemap.fsh", 5, 0);
+		char *pp_tonemap_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_tonemap.vsh", 5, 0);
+		char *pp_tonemap_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\pp_tonemap.fsh", 5, 0);
 		if(pp_tonemap_vscode && pp_tonemap_fscode)
 		{
 			pp_tonemap_program = R_CompileShader(pp_tonemap_vscode, pp_tonemap_fscode, "pp_tonemap.vsh", "pp_tonemap.fsh");
@@ -142,12 +141,12 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(pp_tonemap, darkness, "darkness");
 				SHADER_UNIFORM_INIT(pp_tonemap, contrast, "contrast");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_tonemap_vscode);
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_tonemap_fscode);
+			gEngfuncs.COM_FreeFile(pp_tonemap_vscode);
+			gEngfuncs.COM_FreeFile(pp_tonemap_fscode);
 		}
 
-		char *hud_drawroundrect_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\hud_drawroundrect.vsh", 5, 0);
-		char *hud_drawroundrect_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\hud_drawroundrect.fsh", 5, 0);
+		char *hud_drawroundrect_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\hud_drawroundrect.vsh", 5, 0);
+		char *hud_drawroundrect_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\hud_drawroundrect.fsh", 5, 0);
 		if(hud_drawroundrect_vscode && hud_drawroundrect_fscode)
 		{
 			hud_drawroundrect_program = R_CompileShader(hud_drawroundrect_vscode, hud_drawroundrect_fscode, "hud_drawroundrect.vsh", "hud_drawroundrect.fsh");
@@ -158,12 +157,12 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(hud_drawroundrect, radius, "radius");
 				SHADER_UNIFORM_INIT(hud_drawroundrect, blurdist, "blurdist");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(hud_drawroundrect_vscode);
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(hud_drawroundrect_fscode);
+			gEngfuncs.COM_FreeFile(hud_drawroundrect_vscode);
+			gEngfuncs.COM_FreeFile(hud_drawroundrect_fscode);
 		}
 
-		char *hud_drawhudmask_vscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\hud_drawhudmask.vsh", 5, 0);
-		char *hud_drawhudmask_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\hud_drawhudmask.fsh", 5, 0);
+		char *hud_drawhudmask_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\hud_drawhudmask.vsh", 5, 0);
+		char *hud_drawhudmask_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\hud_drawhudmask.fsh", 5, 0);
 		if(hud_drawhudmask_vscode && hud_drawhudmask_fscode)
 		{
 			hud_drawhudmask_program = R_CompileShader(hud_drawhudmask_vscode, hud_drawhudmask_fscode, "hud_drawhudmask.vsh", "hud_drawhudmask.fsh");
@@ -172,11 +171,11 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(hud_drawhudmask, base, "base");
 				SHADER_UNIFORM_INIT(hud_drawhudmask, src_col, "src_col");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(hud_drawhudmask_vscode);
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(hud_drawhudmask_fscode);
+			gEngfuncs.COM_FreeFile(hud_drawhudmask_vscode);
+			gEngfuncs.COM_FreeFile(hud_drawhudmask_fscode);
 		}
 
-		char *hud_drawcolormask_fscode = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\hud_drawcolormask.fsh", 5, 0);
+		char *hud_drawcolormask_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\hud_drawcolormask.fsh", 5, 0);
 		if(pp_common_vscode && hud_drawcolormask_fscode)
 		{
 			hud_drawcolormask_program = R_CompileShader(pp_common_vscode, hud_drawcolormask_fscode, "pp_common.vsh", "hud_drawcolormask.fsh");
@@ -185,27 +184,27 @@ void R_InitRefHUD(void)
 				SHADER_UNIFORM_INIT(hud_drawcolormask, base, "base");
 				SHADER_UNIFORM_INIT(hud_drawcolormask, alpha_range, "alpha_range");
 			}
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(hud_drawcolormask_fscode);
+			gEngfuncs.COM_FreeFile(hud_drawcolormask_fscode);
 		}
 
 		//gaussian blur code
 		if(pp_common_vscode)
 		{
 			R_InitBlur(pp_common_vscode, 16);
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_common_vscode);
+			gEngfuncs.COM_FreeFile(pp_common_vscode);
 		}
 		if(pp_common2x2_vscode)
 		{
-			g_pMetaSave->pEngineFuncs->COM_FreeFile(pp_common2x2_vscode);
+			gEngfuncs.COM_FreeFile(pp_common2x2_vscode);
 		}
 	}
-	r_hdr = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr", "1", FCVAR_ARCHIVE);
-	r_hdr_blurwidth = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr_blurwidth", "0.1", FCVAR_ARCHIVE);
-	r_hdr_exposure = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr_exposure", "2.0", FCVAR_ARCHIVE);
-	r_hdr_darkness = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr_darkness", "1.8", FCVAR_ARCHIVE);
-	r_hdr_contrast = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr_contrast", "1.2", FCVAR_ARCHIVE);
-	r_hdr_adaptation = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hdr_adaptation", "150.0", FCVAR_ARCHIVE);
-	r_hudinworld_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_hudinworld_debug", "0", FCVAR_ARCHIVE);
+	r_hdr = gEngfuncs.pfnRegisterVariable("r_hdr", "1", FCVAR_ARCHIVE);
+	r_hdr_blurwidth = gEngfuncs.pfnRegisterVariable("r_hdr_blurwidth", "0.1", FCVAR_ARCHIVE);
+	r_hdr_exposure = gEngfuncs.pfnRegisterVariable("r_hdr_exposure", "2.0", FCVAR_ARCHIVE);
+	r_hdr_darkness = gEngfuncs.pfnRegisterVariable("r_hdr_darkness", "1.8", FCVAR_ARCHIVE);
+	r_hdr_contrast = gEngfuncs.pfnRegisterVariable("r_hdr_contrast", "1.2", FCVAR_ARCHIVE);
+	r_hdr_adaptation = gEngfuncs.pfnRegisterVariable("r_hdr_adaptation", "150.0", FCVAR_ARCHIVE);
+	r_hudinworld_debug = gEngfuncs.pfnRegisterVariable("r_hudinworld_debug", "0", FCVAR_ARCHIVE);
 
 	last_luminance = 0;
 
@@ -511,12 +510,12 @@ void R_PartialBlur(FBO_Container_t *src, FBO_Container_t *dst, qboolean vertical
 	if(!vertical)
 	{
 		qglUseProgramObjectARB(pp_gaussianblur_h_program);
-		qglUniform1iARB(pp_lumin_uniform.tex, 0);
+		qglUniform1iARB(pp_gaussianblur_h_uniform.tex, 0);
 	}
 	else
 	{
 		qglUseProgramObjectARB(pp_gaussianblur_v_program);
-		qglUniform1iARB(pp_luminlog_uniform.tex, 0);
+		qglUniform1iARB(pp_gaussianblur_v_uniform.tex, 0);
 	}
 
 	R_DrawHUDQuad_Texture(src->s_hBackBufferTex, dst->iWidth, dst->iHeight);
@@ -600,11 +599,11 @@ void R_SetupGL_3DHUD(void)
 	qglTranslatef(-r_refdef->vieworg[0], -r_refdef->vieworg[1], -r_refdef->vieworg[2]);
 }
 
-void GLSetupHud(void)
+void GLSetupHud(int w, int h)
 {
 	qglMatrixMode(GL_PROJECTION);
 	qglLoadIdentity();
-	qglOrtho(0, glwidth, glheight, 0, -99999, 99999);
+	qglOrtho(0, w, h, 0, -99999, 99999);
 
 	qglMatrixMode(GL_MODELVIEW);
 	qglLoadIdentity();
@@ -729,7 +728,7 @@ void R_BeginDrawHUDInWorld(int texid, int w, int h)
 	qglFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texid, 0);
 	
 	qglClearColor(0.0, 0.0, 0.0, 0.0);
-	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	qglClear(GL_COLOR_BUFFER_BIT);
 
 	qglMatrixMode(GL_PROJECTION);
 	qglPushMatrix();
@@ -737,7 +736,7 @@ void R_BeginDrawHUDInWorld(int texid, int w, int h)
 	qglMatrixMode(GL_MODELVIEW);
 	qglPushMatrix();
 
-	GLSetupHud();
+	GLSetupHud(w, h);
 	GLBeginHud();
 	qglViewport(0, 0, w, h);
 

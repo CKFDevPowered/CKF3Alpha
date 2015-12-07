@@ -40,6 +40,11 @@ int CGrenade::FShouldCollide(CBaseEntity *pHit)
 			return 0;
 		return 1;
 	}
+	if(pHit->Classify() == CLASS_PROJECTILE)
+	{
+		//projectile do not touch with each other
+		return 0;
+	}
 	return 1;
 }
 
@@ -52,7 +57,9 @@ int CGrenade::TakeDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, float 
 
 	if(pInflictor)
 	{
-		if(pInflictor->Classify() == CLASS_PROJECTILE) return 0;
+		//projectiles never get damaged by another projectiles.
+		if(pInflictor->Classify() == CLASS_PROJECTILE)
+			return 0;
 	}
 
 	pev->health -= flDamage;

@@ -17,7 +17,6 @@
 extern cl_enginefunc_t gEngfuncs;
 extern engine_studio_api_t IEngineStudio;
 extern engine_studio_api_t *gpEngineStudio;
-extern r_studio_interface_t StudioInterface;
 extern ref_params_t refparams;
 extern cl_entity_t **CurrentEntity;
 extern studiohdr_t **StudioHeader;

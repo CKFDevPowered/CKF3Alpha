@@ -4,8 +4,6 @@
 #include "pm_materials.h"
 #include "hintmessage.h"
 
-#include <vector>
-
 #define EF_INVULNERABLE				(1<<8)//256
 #define EF_CRITBOOST				(1<<9)
 #define EF_AFTERBURN				(1<<10)
@@ -51,7 +49,8 @@ enum fx_e
 	FX_DISGUISEHINT,
 	FX_KILLALLTRAIL,
 	FX_CRITPLAYERWEAPON,
-	FX_INVULNPLAYER
+	FX_INVULNPLAYER,
+	FX_AIRBLAST
 };
 
 enum
@@ -303,10 +302,17 @@ typedef struct
 
 typedef struct
 {
-	float flTime;
-	int iDamage;
 	entvars_t *pevAttacker;
-}dmg_record_t;
+	int iDamage;
+	float flTime;		
+}dmgrecord_t;
+
+typedef struct
+{
+	entvars_t *pevAttacker;
+	int iDamage;
+	int iCrit;	
+}hitdamage_t;
 
 class CBasePlayer : public CBaseMonster
 {
@@ -325,6 +331,9 @@ public:
 		m_pBuildable[1] = NULL;
 		m_pBuildable[2] = NULL;
 		m_pBuildable[3] = NULL;
+
+		m_flHitDamageTimer = 0;;
+		m_flCritHitTimer = 0;
 
 		Condition_Init();
 	}
@@ -468,13 +477,12 @@ public:
 	void Cloak_Stop(void);
 	void Cloak_Think(void);
 	BOOL PlayerCanAttack(void);	
-	void SendCriticalHit(BOOL bShowEffects);
-	void SendMiniCritHit(BOOL bShowEffects);
+	void SendCriticalHit(BOOL bShowEffects, BOOL bShowSound);
+	void SendMiniCritHit(BOOL bShowEffects, BOOL bShowSound);
 	void SendAddHealth(int iHeal);
 	void SendAddTime(int iTime);
 	void SendAddMetal(int iMetal);
-	void SendHitDamage(entvars_t *pevVictim, int iDamage);
-	void ClearProjectile(void);
+	void SendHitDamage(entvars_t *pevVictim, int iDamage, int iCrit);
 	void ClearSticky(void);
 
 	void Invulnerable_Add(float flDuration, qboolean bFlash);
@@ -495,12 +503,12 @@ public:
 	void DmgRecord_Add(CBasePlayer *pAttacker, int iDamage);
 	int DmgRecord_Get(CBasePlayer *pAttacker, float flBefore);
 	void DmgRecord_Clear(void);
+	int DmgRecord_SendHitDamage(CBasePlayer *pAttacker);
 	bool CanCapture(void);
 	void Disguise_Start(int iTeam, int iClass);
 	void Disguise_Weapon(void);
 	void Disguise_Think(void);
 	void Disguise_Stop(void);
-	//void Disguise_Update(void);
 	void SetDisguiseAnimation(PLAYER_ANIM playerAnim);
 	void Build_Start(int iBuildClass);
 	void Build_Deploy(void);
@@ -524,6 +532,11 @@ public:
 	void SetObserverAutoDirector(bool bState);
 	bool CanSwitchObserverModes(void);
 	void SendSpecHealth(bool bShowEntIndex, entvars_t *pevInflictor);
+	void UpdateDominate(void);
+	void ClearDominates(void);
+	void AddHitDamage(entvars_t *pevAttacker, int iDamage, int iCrit);
+	void FlushHitDamage(void);
+	void ClearEffects(void);
 
 public:
 	static TYPEDESCRIPTION m_playerSaveData[];
@@ -693,7 +706,8 @@ public:
 	float m_flCloakEnergy;
 	float m_flCloakEnergyTimer;
 	unsigned long m_ulModelIndexPlayer;
-	float m_fHitDamageTimer;
+	float m_flHitDamageTimer;
+	float m_flCritHitTimer;
 	bool m_bCritKilled;
 	bool m_bLastHitCrit;
 	bool m_bBackStabKilled;
@@ -709,7 +723,8 @@ public:
 	float m_flResupplyCase;
 	edict_t *m_pentControlPoint;
 	//DmageRecord
-	std::vector<dmg_record_t> m_DmgRecord;
+	CUtlVector<dmgrecord_t> m_DmgRecord;
+	CUtlVector<hitdamage_t> m_HitDamage;
 	//Disguise Field
 	/*struct
 	{
@@ -772,6 +787,7 @@ public:
 	int m_iBluePrintYaw;
 	CBaseBuildable *m_pCarryBuild;
 	CBaseBuildable *m_pBuildable[4];
+	bool m_bAutoReload;
 };
 
 #define UC_INVULNERABLE (1<<0)

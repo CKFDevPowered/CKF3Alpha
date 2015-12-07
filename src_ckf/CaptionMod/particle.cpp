@@ -22,12 +22,14 @@ tgasprite_t g_texSoftGlowTrans;
 tgasprite_t g_texMultiJumpSmoke[5];
 tgasprite_t g_texCircle1;
 tgasprite_t g_texCircle2;
+tgasprite_t g_texCircle4;
 tgasprite_t g_texSingleFlame;
 tgasprite_t g_texDebris[6];
 tgasprite_t g_texStarFlash;
 tgasprite_t g_texCritHit;
 tgasprite_t g_texMiniCritHit;
 tgasprite_t g_texElectric1;
+tgasprite_t g_texConcNormal;
 
 std::vector<vispart_t> g_visparts;
 std::vector<CParticleSystem *> g_partsystems;
@@ -92,14 +94,18 @@ void R_Particles_VidInit(void)
 
 		R_LoadTGASprite(&g_texBrightGlowY, "resource/tga/brightglow_y.tga", 1, 1, 0, 1);
 
-		for(i = 0, j = 0; i < 5; ++i, j += (i == 1) ? 21 : 19)
+		for(i = 0, j = 0; i < 5; ++i)
+		{
 			R_LoadTGASprite(&g_texFlamethrowerFire[i], "resource/tga/flamethrowerfire102.dds", 10, 10, j, (i == 1) ? 21 : 19);
+			j += (i == 1) ? 21 : 19;
+		}
 
 		R_LoadTGASprite(&g_texMediBeam, "resource/tga/medicbeam_curl.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texSoftGlow, "resource/tga/softglow.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texSoftGlowTrans, "resource/tga/softglow_translucent.tga", 1, 1, 0, 1);		
 		R_LoadTGASprite(&g_texCircle1, "resource/tga/circle1.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texCircle2, "resource/tga/circle2.tga", 1, 1, 0, 1);
+		R_LoadTGASprite(&g_texCircle4, "resource/tga/circle4.dds", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texSingleFlame, "resource/tga/singleflame.tga", 1, 1, 0, 1);
 
 		for(i = 0; i < 6; ++i)
@@ -110,6 +116,7 @@ void R_Particles_VidInit(void)
 		R_LoadTGASprite(&g_texCritHit, "resource/tga/crit.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texMiniCritHit, "resource/tga/minicrit.tga", 1, 1, 0, 1);
 		R_LoadTGASprite(&g_texElectric1, "resource/tga/electric1.tga", 1, 1, 0, 1);
+		R_LoadTGASprite(&g_texConcNormal, "resource/tga/conc_normal.tga", 1, 1, 0, 1);
 	}
 
 	g_partsystems.clear();
@@ -226,7 +233,7 @@ void R_DrawParticles(void)
 			double start = cl_pmove->Sys_FloatTime();
 			std::sort(g_visparts.begin(), g_visparts.end(), R_SortVisParticle);
 			double end = cl_pmove->Sys_FloatTime();
-			gEngfuncs.Con_Printf("%d particles sort, %.2f msec used\n", size, (end-start)*1000 );
+			gEngfuncs.Con_Printf("%d particles sorted, %.2f msec used\n", size, (end-start)*1000 );
 		}
 		else
 		{
@@ -245,11 +252,6 @@ void R_DrawParticles(void)
 	}
 }
 
-void R_StickyKill(cl_entity_t *pEntity)
-{
-	
-}
-
 int CParticleSystem::GetActivePartCount(void)
 {
 	int size = m_part.size();
@@ -260,6 +262,15 @@ int CParticleSystem::GetActivePartCount(void)
 			++ count;
 	}
 	return count;
+}
+
+void CParticleSystem::KillAllParticles(void)
+{
+	int size = m_part.size();
+	for(int i = 0; i < size; ++i)
+	{
+		m_part[i].die = 0;
+	}
 }
 
 void CParticleSystem::Init(int type, int numpart, int numchild)
@@ -303,9 +314,6 @@ void CParticleSystem::UpdateParticles(void)
 	int i, size;
 	part_t *p;
 
-	//update partsystem
-	int numvisparts = 0;
-
 	Update();
 	size = m_part.size();
 	if(size)
@@ -318,10 +326,7 @@ void CParticleSystem::UpdateParticles(void)
 				p->free = true;
 
 			if(!p->free)
-			{
 				R_AddVisParticles(this, p);
-				++ numvisparts;
-			}
 		}
 	}
 
@@ -329,7 +334,7 @@ void CParticleSystem::UpdateParticles(void)
 	{
 		SetDead(1);
 	}
-	else if(m_dead == 1 && !numvisparts)//ready for delete
+	else if(m_dead == 1 && !GetActivePartCount())//ready for delete
 	{
 		SetDead(2);
 	}
@@ -343,8 +348,6 @@ void R_RecursiveUpdateParticles(CParticleSystem *partsystem)
 
 	if(v.empty())
 		return;
-
-	//int msgnum = gEngfuncs.GetLocalPlayer()->curstate.messagenum;
 
 	std::vector<CParticleSystem *>::iterator &it = v.begin();
 	std::vector<CParticleSystem *>::iterator &end = v.end();

@@ -1,17 +1,11 @@
 #include "gl_local.h"
-#include "screen.h"
 
+qboolean draw3dsky;
 vec3_t _3dsky_view;
-vec3_t _3dsky_mins;
-vec3_t _3dsky_maxs;
 float _3dsky_mvmatrix[16];
 mplane_t _3dsky_frustum[4];
-qboolean draw3dsky;
-vec3_t _3dsky_camera;
-vec3_t _3dsky_center;
-int _3dsky_dir;
-int _3dsky_enable;
-float _3dsky_scale;
+
+r_3dsky_parm_t r_3dsky_parm;
 
 cvar_t *r_3dsky;
 cvar_t *r_3dsky_debug;
@@ -19,20 +13,20 @@ cvar_t *r_3dsky_debug;
 void R_Clear3DSky(void)
 {
 	draw3dsky = false;
-	_3dsky_enable = false;
-	_3dsky_scale = 16;
-	VectorClear(_3dsky_camera);
-	VectorClear(_3dsky_center);
-	VectorClear(_3dsky_mins);
-	VectorClear(_3dsky_maxs);
+	r_3dsky_parm.enable = false;
+	r_3dsky_parm.scale = 16;
+	VectorClear(r_3dsky_parm.camera);
+	VectorClear(r_3dsky_parm.center);
+	VectorClear(r_3dsky_parm.mins);
+	VectorClear(r_3dsky_parm.maxs);
 }
 
 void R_Init3DSky(void)
 {
 	R_Clear3DSky();
 
-	r_3dsky = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_3dsky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_3dsky_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_3dsky_debug", "0", FCVAR_CLIENTDLL);
+	r_3dsky = gEngfuncs.pfnRegisterVariable("r_3dsky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_3dsky_debug = gEngfuncs.pfnRegisterVariable("r_3dsky_debug", "0", FCVAR_CLIENTDLL);
 }
 
 void R_SetupGL_3DSky(void)
@@ -56,7 +50,7 @@ void R_SetupGL_3DSky(void)
 	qglRotatef(-r_refdef->viewangles[0], 0, 1, 0);
 	qglRotatef(-r_refdef->viewangles[1], 0, 0, 1);
 
-	qglScalef(_3dsky_scale, _3dsky_scale, _3dsky_scale);
+	qglScalef(r_3dsky_parm.scale, r_3dsky_parm.scale, r_3dsky_parm.scale);
 
 	qglTranslatef(-r_refdef->vieworg[0], -r_refdef->vieworg[1], -r_refdef->vieworg[2]);
 
@@ -78,8 +72,8 @@ void R_SetupGL_3DSky(void)
 void R_ViewOriginFor3DSky(float *org)
 {
 	vec3_t r_sub;
-	VectorSubtract(r_refdef->vieworg, _3dsky_center, r_sub);
-	VectorMA(_3dsky_camera, 1 / _3dsky_scale, r_sub, org);
+	VectorSubtract(r_refdef->vieworg, r_3dsky_parm.center, r_sub);
+	VectorMA(r_3dsky_parm.camera, 1 / r_3dsky_parm.scale, r_sub, org);
 
 	//(org - center) / scale + camera
 }
@@ -122,7 +116,7 @@ void R_Draw3DSkyEntities(void)
 	numvisedicts = *cl_numvisedicts;
 	parsecount = (*cl_parsecount) & 63;
 
-	numTransObjs = 0;
+	(*numTransObjs) = 0;
 
 	for (i = 0; i < numvisedicts; i++)
 	{
@@ -150,7 +144,7 @@ void R_Draw3DSkyEntities(void)
 				R_Setup3DSkyModel();
 				if ((*currententity)->player)
 				{
-					gpStudioInterface->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
+					(*gpStudioInterface)->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
 				}
 				else
 				{
@@ -164,11 +158,11 @@ void R_Draw3DSkyEntities(void)
 
 								if ((*currententity)->player)
 								{
-									gpStudioInterface->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
+									(*gpStudioInterface)->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
 								}
 								else
 								{
-									gpStudioInterface->StudioDrawModel(0);
+									(*gpStudioInterface)->StudioDrawModel(0);
 								}
 
 								*currententity = cl_visedicts_new[i];
@@ -177,7 +171,7 @@ void R_Draw3DSkyEntities(void)
 						}
 					}
 
-					gpStudioInterface->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
+					(*gpStudioInterface)->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
 				}
 				R_Finish3DSkyModel();
 				break;
@@ -222,9 +216,9 @@ void R_Draw3DSkyEntities(void)
 	}
 
 	//draw trans objects
-	R_SortTEntities();
+	//R_SortTEntities();
 
-	for (i = 0; i < numTransObjs; i++)
+	for (i = 0; i < (*numTransObjs); i++)
 	{
 		(*currententity) = (*transObjects)[i].pEnt;
 
@@ -241,7 +235,7 @@ void R_Draw3DSkyEntities(void)
 		*r_blend = (*r_blend) / 255.0;
 
 		if ((*currententity)->curstate.rendermode == kRenderGlow && (*currententity)->model->type != mod_sprite)
-			g_pMetaSave->pEngineFuncs->Con_DPrintf("Non-sprite set to glow!\n");
+			gEngfuncs.Con_DPrintf("Non-sprite set to glow!\n");
 
 		switch ((*currententity)->model->type)
 		{
@@ -283,7 +277,7 @@ void R_Draw3DSkyEntities(void)
 				R_Setup3DSkyModel();
 				if ((*currententity)->player)
 				{
-					gpStudioInterface->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
+					(*gpStudioInterface)->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
 				}
 				else
 				{
@@ -297,11 +291,11 @@ void R_Draw3DSkyEntities(void)
 
 								if ((*currententity)->player)
 								{
-									gpStudioInterface->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
+									(*gpStudioInterface)->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
 								}
 								else
 								{
-									gpStudioInterface->StudioDrawModel(0);
+									(*gpStudioInterface)->StudioDrawModel(0);
 								}
 
 								*currententity = (*transObjects)[i].pEnt;
@@ -310,7 +304,7 @@ void R_Draw3DSkyEntities(void)
 						}
 					}
 
-					gpStudioInterface->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
+					(*gpStudioInterface)->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
 				}
 				R_Finish3DSkyModel();
 				break;
@@ -322,7 +316,7 @@ void R_Draw3DSkyEntities(void)
 			}
 		}
 	}
-	numTransObjs = 0;
+	(*numTransObjs) = 0;
 }
 
 void R_Add3DSkyEntity(cl_entity_t *ent)

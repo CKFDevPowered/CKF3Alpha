@@ -73,6 +73,19 @@ typedef struct
 	int					iNumTextures;
 }extratexture_mgr_t;
 
+typedef struct epair_s
+{
+   struct epair_s *next;
+   char  *key;
+   char  *value;
+} epair_t;
+
+typedef struct
+{
+   vec3_t      origin;
+   epair_t     *epairs;
+}bspentity_t;
+
 typedef struct
 {
 	GLuint				hVBO;
@@ -89,12 +102,13 @@ typedef struct
 
 	maptexture_t		MapTextures[MAX_MAP_TEXTURES];
 
-	int					iDetailSupport;
-
 	int					iSkyTextures[6];
 
-	texture_t			DecalTextures[512];
+	texture_t			DecalTextures[MAX_MAP_TEXTURES];
 	int					iNumDecalTextures;
+
+	int					iNumBSPEntities;
+	bspentity_t			pBSPEntities[4096];
 }r_worldsurf_t;
 
 #define OFFSET(type, variable) ((const void*)&(((type*)NULL)->variable))
@@ -125,6 +139,11 @@ extern mvertex_t *currentvertbase;
 //cvar
 extern cvar_t *r_wsurf_replace;
 extern cvar_t *r_wsurf_sky;
+
+void R_ClearBSPEntities(void);
+void R_ParseBSPEntities(void);
+char *ValueForKey(bspentity_t *ent, char *key);
+void R_LoadBSPEntities(void);
 
 void R_LinkDecalTexture(texture_t *t);
 void R_LoadExtraTextureFile(qboolean loadmap);

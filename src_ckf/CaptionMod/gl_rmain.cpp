@@ -197,6 +197,13 @@ void R_DrawTGASprite(cl_entity_t *e, tgasprite_t *tgaspr)
 		qglDisable(GL_DEPTH_TEST);
 		qglDepthMask(0);
 	}
+	if(e->curstate.rendermode == kRenderShaderConc)
+	{
+		qglTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		qglColor4ub(col.r,col.g,col.b,e->curstate.renderamt);
+		qglDepthMask(0);
+	}
 	qglEnable(GL_BLEND);
 
 	gRefExports.RefAPI.R_GetSpriteAxes(e, SPR_VP_PARALLEL, v_forward, v_right, v_up);
@@ -204,6 +211,14 @@ void R_DrawTGASprite(cl_entity_t *e, tgasprite_t *tgaspr)
 	gRefExports.RefAPI.GL_DisableMultitexture();
 
 	gRefExports.RefAPI.GL_Bind(tgaspr->tex);
+
+	if(e->curstate.rendermode == kRenderShaderConc)
+	{
+		gRefExports.RefAPI.GL_EnableMultitexture();
+		gRefExports.RefAPI.GL_Bind(gRefExports.R_GetCloakTexture());
+		
+		gRefExports.R_BeginRenderConc(e->curstate.fuser2, e->curstate.fuser3);
+	}
 
 	qglEnable(GL_ALPHA_TEST);
 	qglBegin(GL_QUADS);
@@ -238,6 +253,14 @@ void R_DrawTGASprite(cl_entity_t *e, tgasprite_t *tgaspr)
 	qglVertex3fv(point);
 
 	qglEnd();
+
+	if(e->curstate.rendermode == kRenderShaderConc)
+	{
+		gRefExports.RefAPI.GL_DisableMultitexture();
+		gRefExports.ShaderAPI.GL_EndProgram();
+
+		e->curstate.iuser2 = 0;
+	}
 
 	if(gl_wireframe->value != 0)
 	{

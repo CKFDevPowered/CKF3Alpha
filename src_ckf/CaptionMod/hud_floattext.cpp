@@ -5,7 +5,7 @@
 
 static vgui::HFont g_hAddHealthFont;
 
-class CHudFloatText
+class CFloatText
 {
 public:
 	void Draw(void)
@@ -30,12 +30,14 @@ public:
 	float m_life;
 };
 
-std::vector<CHudFloatText> g_FloatTexts;
+CUtlVector<CFloatText> g_FloatTexts;
 
 int HudFloatText_VidInit(void)
 {
 	g_hAddHealthFont = g_pSurface->CreateFont();
 	g_pSurface->AddGlyphSetToFont(g_hAddHealthFont, "TF2", 24 * ScreenHeight / 480, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x48, 0x57);
+
+	g_FloatTexts.RemoveAll();
 
 	return 1;
 }
@@ -44,7 +46,8 @@ void HudFloatText_AddHealth(int iHealth)
 {
 	if(iHealth == 0)
 		return;
-	CHudFloatText ft;
+	
+	CFloatText &ft = g_FloatTexts[g_FloatTexts.AddToTail()];
 
 	ft.m_font = g_hAddHealthFont;
 	ft.m_x = 75*(ScreenHeight*4/3)/640;
@@ -71,8 +74,6 @@ void HudFloatText_AddHealth(int iHealth)
 	}
 	ft.m_life = 1.5;
 	ft.m_die = g_flClientTime + ft.m_life;
-
-	g_FloatTexts.push_back(ft);
 }
 
 void HudFloatText_AddMetal(int iMetal)
@@ -80,7 +81,7 @@ void HudFloatText_AddMetal(int iMetal)
 	if(iMetal == 0)
 		return;
 
-	CHudFloatText ft;
+	CFloatText &ft = g_FloatTexts[g_FloatTexts.AddToTail()];
 
 	ft.m_font = g_hAddHealthFont;
 
@@ -108,28 +109,24 @@ void HudFloatText_AddMetal(int iMetal)
 	}
 	ft.m_life = 1.5;
 	ft.m_die = g_flClientTime + ft.m_life;
-
-	g_FloatTexts.push_back(ft);
 }
 
 int HudFloatText_Redraw(float flTime, int iIntermission)
 {
 	if(iIntermission)
 		return 0;
-	
-	std::vector<CHudFloatText>::iterator it = g_FloatTexts.begin();
 
-	while(it != g_FloatTexts.end())
+	int i;
+	for(i = g_FloatTexts.Count()-1; i >= 0; --i)
 	{
-		if(flTime > it->m_die)
-		{
-			it = g_FloatTexts.erase(it);
-			continue;
-		}
+		if(flTime > g_FloatTexts[i].m_die)
+			break;
 
-		it->Draw();
-		
-		it++;
+		g_FloatTexts[i].Draw();
+	}
+	if(i != -1)
+	{
+		g_FloatTexts.RemoveMultiple(0, i+1);
 	}
 	return 1;
 }

@@ -39,10 +39,7 @@ void CClientRocketLauncher::PrimaryAttack(void)
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.8;
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
 	m_fInSpecialReload = 0;
 
@@ -60,30 +57,36 @@ void CClientRocketLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		SendWeaponAnim(ROCKETLAUNCHER_START_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		g_Player.m_flNextAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.50;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.50;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CClientRocketLauncher::Reloaded(void)
+{
+	if (m_iAmmo <= 0 || m_iClip == ROCKET_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(ROCKETLAUNCHER_RELOAD);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
+		SendWeaponAnim(ROCKETLAUNCHER_AFTER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_iAmmo--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(ROCKETLAUNCHER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;		
 	}
 }
 
@@ -93,23 +96,7 @@ void CClientRocketLauncher::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_iAmmo)
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == ROCKET_MAX_CLIP || !m_iAmmo)
-			{
-				SendWeaponAnim(ROCKETLAUNCHER_AFTER_RELOAD);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(ROCKETLAUNCHER_IDLE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(ROCKETLAUNCHER_IDLE);
 	}
 }

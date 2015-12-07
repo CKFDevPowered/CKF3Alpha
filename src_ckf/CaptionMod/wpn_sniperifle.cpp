@@ -163,11 +163,11 @@ void CClientSniperifle::WeaponIdle(void)
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 10;
-	SendWeaponAnim(SNIPERIFLE_IDLE1);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SNIPERIFLE_IDLE1);
+	}
 }
 
 float CClientSniperifle::GetMaxSpeed(void)

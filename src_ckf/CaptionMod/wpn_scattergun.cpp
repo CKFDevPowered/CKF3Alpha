@@ -20,7 +20,7 @@ BOOL CClientScattergun::Deploy(void)
 
 void CClientScattergun::PrimaryAttack(void)
 {
-	float flSpread = 0.08;
+	float flSpread = 0.09;
 
 	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
 
@@ -45,10 +45,7 @@ void CClientScattergun::PrimaryAttack(void)
 	m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.64;
 	m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.64;
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.625;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.8;
 
 	m_flDecreaseShotsFired = m_flNextPrimaryAttack + 0.2;
 	if(m_iShotsFired < 5) m_iShotsFired ++;
@@ -71,32 +68,36 @@ void CClientScattergun::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		SendWeaponAnim(SCATTERGUN_START_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		g_Player.m_flNextAttack = UTIL_WeaponTimeBase() + 0.20;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.20;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.20;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.20;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CClientScattergun::Reloaded(void)
+{
+	if (m_iAmmo <= 0 || m_iClip == SCATTERGUN_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		//EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "CKF_III/scattergun_reload.wav", VOL_NORM, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 31));
-
-		SendWeaponAnim(SCATTERGUN_RELOAD);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.56;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.56;
+		SendWeaponAnim(SCATTERGUN_AFTER_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_iAmmo--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(SCATTERGUN_RELOAD);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.56;		
 	}
 }
 
@@ -112,23 +113,7 @@ void CClientScattergun::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_iAmmo)
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == SCATTERGUN_MAX_CLIP || !m_iAmmo)
-			{
-				SendWeaponAnim(SCATTERGUN_AFTER_RELOAD);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(SCATTERGUN_IDLE1);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SCATTERGUN_IDLE1);
 	}
 }

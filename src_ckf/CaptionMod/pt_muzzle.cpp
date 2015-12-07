@@ -10,16 +10,19 @@
 extern cl_entity_t ent;
 
 void PerpendicularVector(vec3_t dst, vec3_t src);
+qboolean EV_IsLocal( int idx );
+void EV_GetGunPosition(int idx, int attachment, float *origin);;
 
-class CPSMuzzle : public CPartSystemAttachment
+class CMuzzleCore : public CParticleSystem
 {
 public:
-	CPSMuzzle(){}
-	void Init(int type, int parts, int childs, cl_entity_t *entity, int attachindex, int size)
+	CMuzzleCore(){}
+	void Init(int type, int parts, int childs, int entindex, int attachment, vec3_t angles, int size)
 	{
-		CPartSystemAttachment::Init(type, parts, childs, entity);
-		m_firstview = (entity == cl_viewent) ? true : false;
-		m_attachindex = attachindex;
+		CParticleSystem::Init(type, parts, childs);
+		m_entindex = entindex ;
+		m_attachment = attachment;
+		VectorCopy(angles, m_angles);
 		m_size = size;
 	}
 	virtual void Movement(part_t *p, float *org)
@@ -28,24 +31,38 @@ public:
 	}
 	virtual void Update(void)
 	{
-		vec3_t ang;
-		VectorCopy(m_entity->angles, ang);
-		ang[0] *= -1;
-		gEngfuncs.pfnAngleVectors(ang, m_vel, m_right, m_up);
+		if(EV_IsLocal(m_entindex) && !CL_IsThirdPerson())
+		{
+			VectorCopy(refparams.forward, m_fwd);
+			VectorCopy(refparams.right, m_right);
+			VectorCopy(refparams.up, m_up);
+			VectorCopy(cl_viewent->attachment[0], m_pos);
+			m_firstview = true;
+		}
+		else
+		{
+			gEngfuncs.pfnAngleVectors(m_angles, m_fwd, m_right, m_up);
+
+			EV_GetGunPosition(m_entindex, m_attachment, m_pos);
+			m_firstview = false;
+		}
 	}
 public:
-	vec3_t m_vel, m_right, m_up;
-	int m_attachindex;
-	int m_firstview;
+	vec3_t m_angles;
+	vec3_t m_fwd, m_right, m_up, m_pos;
+	int m_entindex;
+	int m_attachment;
+	qboolean m_firstview;
 	int m_size;
 };
 
-class CPSMuzzleFlash : public CPartSystemEntity
+class CMuzzleFlash : public CParticleSystem
 {
 public:
-	void Init(int parts, int childs, cl_entity_t *entity)
+	void Init(int parts, int childs)
 	{
-		CPartSystemEntity::Init(PS_MuzzleFlash, parts, childs, entity);
+		CParticleSystem::Init(PS_MuzzleFlash, parts, childs);
+		SetCull(false);
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
@@ -55,10 +72,10 @@ public:
 	{
 		CALC_FRACTION(p);
 
-		CPSMuzzle *pParent = (CPSMuzzle *)m_parent;
+		CMuzzleCore *pParent = (CMuzzleCore *)m_parent;
 
 		//must calc org here or attachment will be wrong
-		VectorMA(pParent->m_attachment[pParent->m_attachindex], frac2 * p->vel[0] - frac2 * frac2 * p->vel[1], pParent->m_vel, org);
+		VectorMA(pParent->m_pos, frac2 * p->vel[0] - frac2 * frac2 * p->vel[1], pParent->m_fwd, org);
 
 		ent.curstate.rendermode = kRenderAddColor;
 		COLOR_FADE(255, 131, 11);
@@ -91,13 +108,12 @@ public:
 	void AddParticle(int i, int count)
 	{
 		part_t *p = AllocParticle();
-		if(!p) return;
 
-		CPSMuzzle *pParent = (CPSMuzzle *)m_parent;
+		CMuzzleCore *pParent = (CMuzzleCore *)m_parent;
 
 		if(pParent->m_size == 2)
 		{
-			p->vel[0] = 48;//v
+			p->vel[0] = 24;//v
 			p->vel[1] = 16;//0.5a
 		}
 		else if(pParent->m_size == 1)
@@ -110,7 +126,7 @@ public:
 			p->vel[0] = 24;//v
 			p->vel[1] = 6;//0.5a
 		}
-		VectorCopy(pParent->m_attachment[pParent->m_attachindex], p->org);
+		VectorCopy(pParent->m_pos, p->org);
 
 		COLOR_RANDOM_LERP(255, 223, 94, 218, 158, 77);
 		p->col[3] = 140;
@@ -118,7 +134,7 @@ public:
 		p->life = RANDOM_FLOAT(0.1, 0.15);
 		p->die = g_flClientTime + p->life + (double)i / (double)count * g_flFrameTime;
 		if(pParent->m_size == 2)
-			p->scale = 2.0;
+			p->scale = 3.0;
 		else if(pParent->m_size == 1)
 			p->scale = 1.0;
 		else
@@ -126,12 +142,15 @@ public:
 	}
 };
 
-class CPSMuzzleSpark : public CPartSystemEntity
+class CMuzzleSpark : public CParticleSystem
 {
 public:
-	void Init(int parts, int childs, cl_entity_t *entity)
+	void Init(int parts, int childs)
 	{
-		CPartSystemEntity::Init(PS_MuzzleSpark, parts, childs, entity);
+		CParticleSystem::Init(PS_MuzzleSpark, parts, childs);
+		SetCull(false);
+
+		m_emitted = false;
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
@@ -141,15 +160,15 @@ public:
 	{
 		CALC_FRACTION(p);
 
-		CPSMuzzle *pParent = (CPSMuzzle *)m_parent;
+		CMuzzleCore *parent = (CMuzzleCore *)m_parent;
 
 		vec3_t vel;
 		//must calc org here or attachment will be wrong
 		VectorClear(vel);
-		VectorMA(vel, frac2 * p->vel[0], pParent->m_vel, vel);
-		VectorMA(vel, frac2 * p->vel[1], pParent->m_right, vel);
-		VectorMA(vel, frac2 * p->vel[2], pParent->m_up, vel);
-		VectorAdd(vel, pParent->m_attachment[pParent->m_attachindex], org);
+		VectorMA(vel, frac2 * p->vel[0], parent->m_fwd, vel);
+		VectorMA(vel, frac2 * p->vel[1], parent->m_right, vel);
+		VectorMA(vel, frac2 * p->vel[2], parent->m_up, vel);
+		VectorAdd(vel, parent->m_pos, org);
 
 		ent.curstate.rendermode = kRenderTransAdd;	
 		COLOR_FADE_IN(0.5, 255, 121, 1);
@@ -162,25 +181,37 @@ public:
 		VectorCopy(org, ent.origin);
 		VectorCopy(vel, ent.curstate.velocity);
 
-		if(pParent->m_firstview)
+		if(parent->m_firstview)
 			qglDepthRange(0, 0.3);
 
 		R_DrawTGATracer(&ent, &g_texBrightGlowY);
 		
-		if(pParent->m_firstview)
+		if(parent->m_firstview)
 			qglDepthRange(0, 1);
+	}
+	virtual void Update(void)
+	{
+		if(!m_emitted)
+		{
+			CMuzzleCore *parent = (CMuzzleCore *)m_parent;
+			if(parent->m_size > 0)
+			{
+				for(int i = 0; i < 6; ++i)
+					AddParticle();
+			}
+			m_emitted = true;
+		}
 	}
 	void AddParticle(void)
 	{
 		part_t *p = AllocParticle();
-		if(!p) return;
 
 		p->vel[0] = RANDOM_FLOAT(24, 48);
 		p->vel[1] = RANDOM_FLOAT(-4, 4);
 		p->vel[2] = RANDOM_FLOAT(0, 4);
 
-		CPSMuzzle *pParent = (CPSMuzzle *)m_parent;
-		VectorCopy(pParent->m_attachment[pParent->m_attachindex], p->org);
+		CMuzzleCore *parent = (CMuzzleCore *)m_parent;
+		VectorCopy(parent->m_pos, p->org);
 
 		p->scale = RANDOM_FLOAT(8, 16);
 
@@ -191,28 +222,43 @@ public:
 		p->life = RANDOM_FLOAT(0.08, 0.15);
 		p->die = g_flClientTime + p->life;
 	}
+private:
+	int m_emitted;
 };
 
-class CPSMuzzleSmoke : public CPartSystemEntity
+class CMuzzleSmoke : public CParticleSystem
 {
 public:
-	CPSMuzzleSmoke(){}
-	void Init(int parts, int childs, cl_entity_t *entity)
+	CMuzzleSmoke(){}
+	void Init(int parts, int childs)
 	{
-		CPartSystemEntity::Init(PS_MuzzleSmoke, parts, childs, entity);
+		CParticleSystem::Init(PS_MuzzleSmoke, parts, childs);
+
+		m_emitted = false;
 	}
 	virtual void Movement(part_t *p, float *org)
 	{
-		p->vel[2] += 30 * g_flFrameTime;
-
 		VectorMA(p->org, g_flFrameTime, p->vel, p->org);
 		VectorCopy(p->org, org);
+	}
+	virtual void Update(void)
+	{
+		if(!m_emitted)
+		{
+			CMuzzleCore *parent = (CMuzzleCore *)m_parent;
+			if(parent->m_size > 0)
+			{
+				for(int i = 0; i < 5; ++i)
+					AddParticle();
+			}
+			m_emitted = true;
+		}
 	}
 	virtual void Render(part_t *p, float *org)
 	{
 		CALC_FRACTION(p);
 
-		ent.curstate.rendermode = kRenderTransAlpha;
+		ent.curstate.rendermode = kRenderTransAlphaNoDepth;
 		COLOR_FADE(80, 80, 80);
 		ALPHA_FADE_OUT(0.3);
 
@@ -228,110 +274,94 @@ public:
 	void AddParticle(void)
 	{
 		part_t *p = AllocParticle();
-		if(!p) return;
 
-		CPSMuzzle *pParent = (CPSMuzzle *)m_parent;
-		VectorCopy(pParent->m_attachment[pParent->m_attachindex], p->org);
+		CMuzzleCore *parent = (CMuzzleCore *)m_parent;
+		VectorCopy(parent->m_pos, p->org);
 
 		p->vel[0] = RANDOM_FLOAT(-10, 10);
 		p->vel[1] = RANDOM_FLOAT(-10, 10);
-		p->vel[2] = RANDOM_FLOAT(10, 20);
+		p->vel[2] = RANDOM_FLOAT(30, 60);
 
 		COLOR_RANDOM_LERP(138, 130, 119, 255, 255, 255);
 		p->col[3] = RANDOM_LONG(32, 64);
-		p->scale = RANDOM_FLOAT(0.7, 1.6);
+		p->scale = RANDOM_FLOAT(0.9, 2.1);
 		p->rot = RANDOM_FLOAT(-25, 25);
 		p->life = RANDOM_FLOAT(0.6, 1.3);
 		p->die = g_flClientTime + p->life;
 	}
+private:
+	int m_emitted;
 };
 
-void R_MinigunMuzzle(cl_entity_t *pEntity, int attachment)
+void R_MinigunMuzzle(int entindex, int attachment, vec3_t angles)
 {
 	int i, iSize;
 
-	iSize = 2;//size 2 = minigun
+	iSize = 2;
 
-	CPSMuzzle *pFind = (CPSMuzzle *)R_FindPartSystem(PS_MinigunMuzzle, pEntity);
-	if(pFind)
-	{
-		pFind->SetDie(1.0);
-		pFind->GetChild(0)->SetDie(0.1);
-		return;
-	}
-
-	CPSMuzzle *pCore = new CPSMuzzle;
-	pCore->Init(PS_MinigunMuzzle, 0, 4, pEntity, attachment, iSize);
+	CMuzzleCore *pCore = new CMuzzleCore;
+	pCore->Init(PS_MinigunMuzzle, 0, 3, entindex, attachment, angles, iSize);
 	pCore->SetDie(1.0);
 
-	CPSMuzzleFlash *pFlash = new CPSMuzzleFlash;
-	pFlash->Init(10, 0, pEntity);
+	CMuzzleFlash *pFlash = new CMuzzleFlash;
+	pFlash->Init(10, 0);
 	pFlash->SetDie(0.1);
 
-	CPSMuzzleSpark *pSpark = new CPSMuzzleSpark;
-	pSpark->Init(6, 0, pEntity);
+	//HZ: don't emit particles here since we don't get m_pos now
+	CMuzzleSpark *pSpark = new CMuzzleSpark;
+	pSpark->Init(6, 0);
 
-	CPSMuzzleSmoke *pSmoke = new CPSMuzzleSmoke;
-	pSmoke->Init(5, 0, pEntity);
+	CMuzzleSmoke *pSmoke = new CMuzzleSmoke;
+	pSmoke->Init(5, 0);
+
+	//add particles later since we didn't have a parent at this time
 
 	pCore->AddChild(pFlash);
 	pCore->AddChild(pSpark);
 	pCore->AddChild(pSmoke);
 
-	//add particles at the end, or will crash
-	for(i = 0; i < 6; ++i)
-		pSpark->AddParticle();
-	for(i = 0; i < 5; ++i)
-		pSmoke->AddParticle();
-
 	R_AddPartSystem(pCore);
 }
 
-void R_ShotgunMuzzle(cl_entity_t *pEntity, int attachment)
+void R_ShotgunMuzzle(int entindex, int attachment, vec3_t angles)
 {
 	int i, iSize;
 
 	iSize = 1;//size 1 = shotgun
 
-	CPSMuzzle *pCore = new CPSMuzzle;
-	pCore->Init(PS_ShotgunMuzzle, 0, 4, pEntity, attachment, iSize);
+	CMuzzleCore *pCore = new CMuzzleCore;
+	pCore->Init(PS_ShotgunMuzzle, 0, 3, entindex, attachment, angles, iSize);
 	pCore->SetDie(1.5);
 
-	CPSMuzzleFlash *pFlash = new CPSMuzzleFlash;
-	pFlash->Init(10, 0, pEntity);
+	CMuzzleFlash *pFlash = new CMuzzleFlash;
+	pFlash->Init(10, 0);
 	pFlash->SetDie(0.1);
 
-	CPSMuzzleSpark *pSpark = new CPSMuzzleSpark;
-	pSpark->Init(6, 0, pEntity);
+	CMuzzleSpark *pSpark = new CMuzzleSpark;
+	pSpark->Init(6, 0);
 
-	CPSMuzzleSmoke *pSmoke = new CPSMuzzleSmoke;
-	pSmoke->Init(5, 0, pEntity);
+	CMuzzleSmoke *pSmoke = new CMuzzleSmoke;
+	pSmoke->Init(5, 0);
 
 	pCore->AddChild(pFlash);
 	pCore->AddChild(pSpark);
 	pCore->AddChild(pSmoke);
 
-	//add particles at the end, or will crash
-	for(i = 0; i < 6; ++i)
-		pSpark->AddParticle();
-	for(i = 0; i < 5; ++i)
-		pSmoke->AddParticle();
-
 	R_AddPartSystem(pCore);
 }
 
-void R_PistolMuzzle(cl_entity_t *pEntity, int attachment)
+void R_PistolMuzzle(int entindex, int attachment, vec3_t angles)
 {
 	int iSize;
 
 	iSize = 0;//size 0 = pistol
 
-	CPSMuzzle *pCore = new CPSMuzzle;
-	pCore->Init(PS_PistolMuzzle, 0, 4, pEntity, attachment, iSize);
+	CMuzzleCore *pCore = new CMuzzleCore;
+	pCore->Init(PS_PistolMuzzle, 0, 1, entindex, attachment, angles, iSize);
 	pCore->SetDie(1.5);
 
-	CPSMuzzleFlash *pFlash = new CPSMuzzleFlash;
-	pFlash->Init(10, 0, pEntity);
+	CMuzzleFlash *pFlash = new CMuzzleFlash;
+	pFlash->Init(10, 0);
 	pFlash->SetDie(0.1);
 
 	pCore->AddChild(pFlash);

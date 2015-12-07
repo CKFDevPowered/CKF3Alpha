@@ -46,9 +46,6 @@ void CClientSyringegun::PrimaryAttack(void)
 
 void CClientSyringegun::Reload(void)
 {
-	if (m_iAmmo <= 0)
-		return;
-
 	DefaultReload(SYRINGE_MAX_CLIP, SYRINGEGUN_RELOAD, 1.6);
 }
 
@@ -56,9 +53,9 @@ void CClientSyringegun::WeaponIdle(void)
 {
 	ResetEmptySound();
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(SYRINGEGUN_IDLE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SYRINGEGUN_IDLE);
+	}
 }

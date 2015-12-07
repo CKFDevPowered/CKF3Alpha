@@ -1,5 +1,7 @@
 #include <metahook.h>
+
 #include "exportfuncs.h"
+
 #include "command.h"
 
 cmd_function_t *(*Cmd_GetCmdBase)(void);

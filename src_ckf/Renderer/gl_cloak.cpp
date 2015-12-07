@@ -1,10 +1,11 @@
 #include "gl_local.h"
-#include "screen.h"
 
 int cloak_texture = 0;
 int cloak_program = 0;
-
 cloak_uniform_t cloak_uniform;
+
+int conc_program = 0;
+conc_uniform_t conc_uniform;
 
 cvar_t *r_cloak_debug;
 
@@ -12,8 +13,8 @@ void R_InitCloak(void)
 {
 	if(gl_shader_support)
 	{
-		const char *cloak_vscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\cloak_shader.vsh", 5, 0);
-		const char *cloak_fscode = (const char *)g_pMetaSave->pEngineFuncs->COM_LoadFile("resource\\shader\\cloak_shader.fsh", 5, 0);
+		const char *cloak_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\cloak_shader.vsh", 5, 0);
+		const char *cloak_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\cloak_shader.fsh", 5, 0);
 		if(cloak_vscode && cloak_fscode)
 		{
 			cloak_program = R_CompileShader(cloak_vscode, cloak_fscode, "cloak_shader.vsh", "cloak_shader.fsh");
@@ -25,8 +26,23 @@ void R_InitCloak(void)
 				SHADER_UNIFORM_INIT(cloak, refractamount, "refractamount");
 			}
 		}
-		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)cloak_vscode);
-		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *)cloak_fscode);
+		gEngfuncs.COM_FreeFile((void *)cloak_vscode);
+		gEngfuncs.COM_FreeFile((void *)cloak_fscode);
+
+		const char *conc_vscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\conc_shader.vsh", 5, 0);
+		const char *conc_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\conc_shader.fsh", 5, 0);
+		if(conc_vscode && conc_fscode)
+		{
+			conc_program = R_CompileShader(conc_vscode, conc_fscode, "conc_shader.vsh", "conc_shader.fsh");
+			if(conc_program)
+			{
+				SHADER_UNIFORM_INIT(conc, refractmap, "refractmap");
+				SHADER_UNIFORM_INIT(conc, normalmap, "normalmap");
+				SHADER_UNIFORM_INIT(conc, packedfactor, "packedfactor");
+			}
+		}
+		gEngfuncs.COM_FreeFile((void *)conc_vscode);
+		gEngfuncs.COM_FreeFile((void *)conc_fscode);
 	}
 
 	if(!s_CloakFBO.s_hBackBufferFBO)
@@ -44,7 +60,7 @@ void R_InitCloak(void)
 		cloak_texture = s_CloakFBO.s_hBackBufferTex;
 	}
 
-	r_cloak_debug = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_cloak_debug", "0", FCVAR_CLIENTDLL);
+	r_cloak_debug = gEngfuncs.pfnRegisterVariable("r_cloak_debug", "0", FCVAR_CLIENTDLL);
 }
 
 void R_RenderCloakTexture(void)
@@ -70,4 +86,17 @@ void R_RenderCloakTexture(void)
 		qglEnable(GL_TEXTURE_2D);
 		qglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, glwidth, glheight);
 	}
+}
+
+void R_BeginRenderConc(float flBlurFactor, float flRefractFactor)
+{
+	qglUseProgramObjectARB(conc_program);
+	qglUniform1iARB(conc_uniform.normalmap, 0);
+	qglUniform1iARB(conc_uniform.refractmap, 1);
+	qglUniform2fARB(conc_uniform.packedfactor, flBlurFactor, flRefractFactor);
+}
+
+int R_GetCloakTexture(void)
+{
+	return cloak_texture;
 }

@@ -22,6 +22,7 @@ static int g_sizeHudMaskEdge;
 
 //hit damage text
 static vgui::HFont g_hHitDamageFont;
+
 int g_texFloatText;
 
 int HudCommon_VidInit(void)
@@ -49,10 +50,9 @@ int HudCommon_VidInit(void)
 	g_sizeHudMaskEdge = 5 * ScreenHeight / 480;
 
 	g_hHitDamageFont = g_pSurface->CreateFont();
-	g_pSurface->AddGlyphSetToFont(g_hHitDamageFont, "TF2", 192, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x0, 0xFFFF);
+	g_pSurface->AddGlyphSetToFont(g_hHitDamageFont, "TF2", 96, 0, 0, 0, vgui::ISurface::FONTFLAG_CUSTOM | vgui::ISurface::FONTFLAG_ANTIALIAS, 0x0, 0xFFFF);
 
-	g_texFloatText = gRefExports.R_GLGenTexture(ScreenWidth, ScreenHeight);
-
+	g_texFloatText = gRefExports.R_GLGenTexture(320, 240);
 	return 1;
 }
 
@@ -293,6 +293,9 @@ void DrawHudMask(int col, int x, int y, int w, int h)
 void R_DrawHitDamageText(const wchar_t *text, int width, int height)
 {
 	int w, h;
+
+	//reset vgui::surface->m_iBoundTexture since the current OpenGL texture may not be equal to m_iBoundTexture;
+	g_pSurface->DrawSetTexture(0);
 	g_pSurface->GetTextSize(g_hHitDamageFont, text, w, h);
 	g_pSurface->DrawSetTextColor(255, 255, 255, 255);
 	g_pSurface->DrawSetTextFont(g_hHitDamageFont);

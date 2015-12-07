@@ -32,7 +32,7 @@ void R_ClearSkyTextures(void)
 		r_wsurf.iSkyTextures[i] = 0;
 }
 
-void R_FreeDecalTextures(void)
+/*void R_FreeDecalTextures(void)
 {
 	for(int i = 0; i < r_wsurf.iNumDecalTextures; ++i)
 	{
@@ -49,7 +49,7 @@ void R_FreeDecalTextures(void)
 		}
 	}
 	R_ClearDecalTextures();
-}
+}*/
 
 void R_InitDetailTextures(void)
 {
@@ -62,7 +62,6 @@ void R_InitDetailTextures(void)
 		qglTexEnvf(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, 2.0);
 		qglDisable(GL_TEXTURE_2D);
 		qglActiveTextureARB(TEXTURE0_SGIS);
-		r_wsurf.iDetailSupport = true;
 	}
 }
 
@@ -296,6 +295,7 @@ void R_LoadWaterTextures(cJSON *tex)
 			water_parm.color[3] = clamp(water_parm.color[3], 0, 255) / 255.0;
 		}
 	}
+	water_parm.active = true;
 }
 
 void R_LoadExtraTextureFile(qboolean loadmap)
@@ -310,27 +310,30 @@ void R_LoadExtraTextureFile(qboolean loadmap)
 	}
 	else
 	{
-		strcpy( szFileName, g_pMetaSave->pEngineFuncs->pfnGetLevelName() );
+		strcpy( szFileName, gEngfuncs.pfnGetLevelName() );
 		if ( !strlen(szFileName) )
 		{
-			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't GetLevelName.\n");
+			gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't GetLevelName.\n");
 			return;
 		}
 		szFileName[strlen(szFileName)-4] = 0;
 		strcat(szFileName, "_extra.txt");
+
+		//deactivate the water param
+		water_parm.active = false;
 	}
 
-	pFile = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile(szFileName, 5, NULL);
+	pFile = (char *)gEngfuncs.COM_LoadFile(szFileName, 5, NULL);
 	if (!pFile)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't open %s.\n", szFileName);
+		gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't open %s.\n", szFileName);
 		return;
 	}
 
 	cJSON *pRoot = cJSON_Parse(pFile);
 	if (!pRoot)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadExtraTextureFile couldn't parse %s.\n", szFileName);
+		gEngfuncs.Con_Printf("R_LoadExtraTextureFile couldn't parse %s.\n", szFileName);
 		return;
 	}
 
@@ -422,7 +425,7 @@ void R_LoadExtraTextureFile(qboolean loadmap)
 	}
 
 	cJSON_Delete(pRoot);
-	g_pMetaSave->pEngineFuncs->COM_FreeFile( pFile );
+	gEngfuncs.COM_FreeFile( pFile );
 }
 
 void R_LoadExtraTextures(qboolean loadmap)
@@ -550,44 +553,43 @@ void R_InitWSurf(void)
 	r_wsurf.hVBO = 0;
 	r_wsurf.pVertexBuffer = NULL;
 	r_wsurf.pFaceBuffer = NULL;
+	r_wsurf.iNumBSPEntities = 0;
 
 	R_ClearExtraTextures();
-
-	//Clear MapTextures
 	R_ClearMapTextures();
-	//Clear SkyTextures
 	R_ClearSkyTextures();
-	//Clear DecalTextures
 	R_ClearDecalTextures();
+	R_ClearBSPEntities();
 
-	r_wsurf_replace = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_replace", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_wsurf_sky = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_sky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
-	r_wsurf_decal = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("r_wsurf_decal", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_replace = gEngfuncs.pfnRegisterVariable("r_wsurf_replace", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_sky = gEngfuncs.pfnRegisterVariable("r_wsurf_sky", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
+	r_wsurf_decal = gEngfuncs.pfnRegisterVariable("r_wsurf_decal", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE);
 }
 
 void R_VidInitWSurf(void)
 {
 	water_normalmap = water_normalmap_default;
-	//Clear MapTextures
+
+	//we don't need to free extra or decal textures cuz they are freed by engine when level changes.
+
 	R_ClearMapTextures();
-	//Clear SkyTextures
 	R_ClearSkyTextures();
-	//Clear DecalTextures
-	//R_FreeDecalTextures();
-	//R_ClearDecalTextures();
+	R_ClearBSPEntities();
 
-	//Load StudioTextures
+	//Load local extra textures into array
 	R_LoadStudioTextures(true);
-
-	//Load MapTexture File & Sky Textures & Water Textures
 	R_LoadExtraTextureFile(true);
 
-	//Rebuild MapTextures
+	//Rebuild MapTextures from both local and global array
 	R_LoadExtraTextures(true);
 	R_LoadExtraTextures(false);
 
 	R_FreeVertexBuffer();
 	R_GenerateVertexBuffer();
+
+	//parse entities data from bsp's entity lump
+	R_ParseBSPEntities();
+	R_LoadBSPEntities();
 }
 
 void R_DrawPolyFromArray(glpoly_t *p)
@@ -604,7 +606,7 @@ float ScrollOffset(msurface_t *psurface, cl_entity_t *pEntity)
 	if (pEntity->curstate.rendercolor.r == 0)
 		speed = -speed;
 
-	sOffset = (1.0 / psurface->texinfo->texture->width) * speed * g_pMetaSave->pEngineFuncs->GetClientTime();
+	sOffset = (1.0 / psurface->texinfo->texture->width) * speed * (*cl_time);
 
 	if (sOffset < 0)
 		sOffset = fmod(sOffset, -1.0f);
@@ -880,4 +882,205 @@ void R_DrawSequentialPoly(msurface_t *s, int face)
 		}
 		return;
 	}
+}
+
+char *ValueForKey(bspentity_t *ent, char *key)
+{
+   for (epair_t  *pEPair = ent->epairs; pEPair; pEPair = pEPair->next)
+   {
+      if (!strcmp(pEPair->key, key) )
+         return pEPair->value;
+   }
+   return NULL;
+}
+
+void R_ClearBSPEntities(void)
+{
+	for(int i = 0; i < r_wsurf.iNumBSPEntities; i++)
+	{
+		epair_t *pPair = r_wsurf.pBSPEntities[i].epairs;
+		while(pPair)
+		{
+			epair_t *pFree = pPair;
+			pPair = pFree->next;
+
+			delete [] pFree->key;
+			delete [] pFree->value;
+			delete pFree;
+		}
+		r_wsurf.pBSPEntities[i].epairs = NULL;
+	}
+	
+	r_wsurf.iNumBSPEntities = 0;
+}
+
+//From trinity renderer
+void R_ParseBSPEntities(void)
+{
+	char *pEntData = r_worldmodel->entities;
+
+	if(!pEntData)
+		return;
+
+	int iEntDataSize = strlen(pEntData);
+
+	char *pCurText = pEntData;
+	while(pCurText && pCurText - pEntData < iEntDataSize)
+	{
+		if(r_wsurf.iNumBSPEntities == 4096)
+			break;
+
+		while(1)
+		{
+			if(pCurText[0] == '{')
+				break;
+			
+			if(pCurText - pEntData >= iEntDataSize)
+				break;
+
+			pCurText++;
+		}
+
+		if(pCurText - pEntData >= iEntDataSize)
+			break;
+
+		bspentity_t *pEntity = &r_wsurf.pBSPEntities[r_wsurf.iNumBSPEntities];
+		r_wsurf.iNumBSPEntities++;
+
+		while(1)
+		{
+			// skip to next token
+			while(1)
+			{
+				if(pCurText[0] == '}')
+					break;
+
+				if(pCurText[0] == '"')
+				{
+					pCurText++;
+					break;
+				}
+
+				pCurText++;
+			}
+
+			// end of ent
+			if(pCurText[0] == '}')
+				break;
+
+			epair_t *pEPair = new epair_t;
+			memset(pEPair, 0, sizeof(epair_t));
+
+			if(pEntity->epairs)
+				pEPair->next = pEntity->epairs;
+				
+			pEntity->epairs = pEPair;
+
+			int iLength = 0;
+			char *pTemp = pCurText;
+			while(1)
+			{
+				if(pTemp[0] == '"')
+					break;
+				
+				if(pCurText[0] == '}')
+				{
+					Sys_ErrorEx("R_ParseBSPEntities: failed to parse entity data\n");
+					return;
+				}
+
+				iLength++;
+				pTemp++;
+			}
+
+			pEPair->key = new char[iLength+1];
+			pEPair->key[iLength] = NULL; // terminator
+
+			memcpy(pEPair->key, pCurText, sizeof(char)*iLength);
+			pCurText += iLength+1;
+
+			// skip to next token
+			while(1)
+			{
+				if(pCurText[0] == '}')
+				{
+					Sys_ErrorEx("R_ParseBSPEntities: failed to parse entity data\n");
+					return;
+				}
+
+				if(pCurText[0] == '"')
+				{
+					pCurText++;
+					break;
+				}
+
+				pCurText++;
+			}
+
+			iLength = 0;
+			pTemp = pCurText;
+			while(1)
+			{
+				if(pCurText[0] == '}')
+				{
+					Sys_ErrorEx("R_ParseBSPEntities: failed to parse entity data\n");
+					return;
+				}
+
+				if(pTemp[0] == '"')
+					break;
+				
+				iLength++;
+				pTemp++;
+			}
+
+			pEPair->value = new char[iLength+1];
+			strncpy(pEPair->value, pCurText, sizeof(char)*iLength);
+			pEPair->value[iLength] = NULL;
+			pCurText += iLength+1;
+		}
+	}
+}
+
+void R_LoadBSPEntities(void)
+{
+	for(int i = 0; i < r_wsurf.iNumBSPEntities; i++)
+	{
+		bspentity_t *ent = &r_wsurf.pBSPEntities[i];
+		char *classname = ValueForKey(ent, "classname");
+
+		if(!classname)
+			continue;
+
+		if(!strcmp(classname, "sky_box"))
+		{
+			char *model = ValueForKey(ent, "model");
+			if (model && model[0] == '*')
+			{
+				model_t *mod = IEngineStudio.Mod_ForName(model, false);
+				if(mod)
+				{
+					VectorCopy(mod->mins, r_3dsky_parm.mins);
+					VectorCopy(mod->maxs, r_3dsky_parm.maxs);
+				}
+			}
+		}
+		if(!strcmp(classname, "sky_center"))
+		{
+			char *origin = ValueForKey(ent, "origin");
+			if (origin)
+			{
+				sscanf(origin, "%f %f %f", &r_3dsky_parm.center[0], &r_3dsky_parm.center[1], &r_3dsky_parm.center[2]);
+			}			
+		}
+		if(!strcmp(classname, "sky_camera"))
+		{
+			char *origin = ValueForKey(ent, "origin");
+			if (origin)
+			{
+				sscanf(origin, "%f %f %f", &r_3dsky_parm.camera[0], &r_3dsky_parm.camera[1], &r_3dsky_parm.camera[2]);
+			}
+			r_3dsky_parm.enable = true;
+		}
+	}//end for
 }

@@ -307,9 +307,6 @@ void W_Precache(void)
 	PRECACHE_SOUND("weapons/debris1.wav");
 	PRECACHE_SOUND("weapons/debris2.wav");
 	PRECACHE_SOUND("weapons/debris3.wav");
-	//PRECACHE_SOUND("weapons/grenade_hit1.wav");
-	//PRECACHE_SOUND("weapons/grenade_hit2.wav");
-	//PRECACHE_SOUND("weapons/grenade_hit3.wav");
 	PRECACHE_SOUND("weapons/bullet_hit1.wav");
 	PRECACHE_SOUND("weapons/bullet_hit2.wav");
 	PRECACHE_SOUND("items/weapondrop1.wav");
@@ -320,16 +317,13 @@ void W_Precache(void)
 	PRECACHE_SOUND("CKF_III/explode3.wav");
 	PRECACHE_SOUND("CKF_III/draw_melee.wav");
 	PRECACHE_SOUND("CKF_III/melee_swing.wav");
-	PRECACHE_SOUND("CKF_III/crit_shot.wav");
-	PRECACHE_SOUND("CKF_III/crit_hit.wav");
-	PRECACHE_SOUND("CKF_III/crit_received.wav");
 	PRECACHE_SOUND("CKF_III/null.wav");
 	PRECACHE_SOUND("CKF_III/multijump.wav");
 	PRECACHE_SOUND("CKF_III/spy_cloak.wav");
 	PRECACHE_SOUND("CKF_III/spy_uncloak.wav");
 	PRECACHE_SOUND("CKF_III/spy_disguise.wav");
 	PRECACHE_SOUND("CKF_III/regenerate.wav");
-	//PRECACHE_SOUND("CKF_III/zoom.wav");
+	PRECACHE_SOUND("CKF_III/zoom.wav");
 }
 
 void CBasePlayerItem::SetObjectCollisionBox(void)
@@ -461,12 +455,12 @@ void CBasePlayerItem::DefaultTouch(CBaseEntity *pOther)
 	SUB_UseTargets(pOther, USE_TOGGLE, 0);
 }
 
-void CBasePlayerWeapon::EjectBrassLate(void)
-{
-	UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
-	Vector vecShellVelocity = m_pPlayer->pev->velocity + gpGlobals->v_right * RANDOM_FLOAT(-50, -70) + gpGlobals->v_up * RANDOM_FLOAT(100, 150) + gpGlobals->v_forward * 25;
-	EjectBrass(pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_up * -9 + gpGlobals->v_forward * 16 + gpGlobals->v_right * 9, vecShellVelocity, pev->angles.y, m_iShellId, TE_BOUNCE_SHELL);
-}
+//void CBasePlayerWeapon::EjectBrassLate(void)
+//{
+//	UTIL_MakeVectors(m_pPlayer->pev->v_angle + m_pPlayer->pev->punchangle);
+//	Vector vecShellVelocity = m_pPlayer->pev->velocity + gpGlobals->v_right * RANDOM_FLOAT(-50, -70) + gpGlobals->v_up * RANDOM_FLOAT(100, 150) + gpGlobals->v_forward * 25;
+//	EjectBrass(pev->origin + m_pPlayer->pev->view_ofs + gpGlobals->v_up * -9 + gpGlobals->v_forward * 16 + gpGlobals->v_right * 9, vecShellVelocity, pev->angles.y, m_iShellId, TE_BOUNCE_SHELL);
+//}
 
 //valvesb
 void CBasePlayerWeapon::ItemPostFrame(void)
@@ -481,13 +475,9 @@ void CBasePlayerWeapon::ItemPostFrame(void)
 		}
 	}*/
 
-	if (m_fInReload && m_flNextReload <= UTIL_WeaponTimeBase())
+	if ((m_fInReload || m_fInSpecialReload) && m_flNextReload < UTIL_WeaponTimeBase())
 	{
-		int j = min(iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
-
-		m_iClip += j;
-		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
-		m_fInReload = FALSE;
+		Reloaded();
 	}
 
 	if(m_bMeleeAttack && m_flMeleeAttack <= UTIL_WeaponTimeBase())
@@ -495,22 +485,22 @@ void CBasePlayerWeapon::ItemPostFrame(void)
 		m_bMeleeAttack = FALSE;
 		Swing();		
 	}
-	else if(m_pPlayer->pev->button & IN_ATTACK2 && m_flNextSecondaryAttack <= UTIL_WeaponTimeBase())
+	else if((m_pPlayer->pev->button & IN_ATTACK2) && m_flNextSecondaryAttack <= UTIL_WeaponTimeBase())
 	{
-		if (pszAmmo2() && !m_pPlayer->m_rgAmmo[SecondaryAmmoIndex()])
+		if (pszAmmo1() && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()])
 			m_fFireOnEmpty = TRUE;
 
 		SecondaryAttack();
-		m_pPlayer->pev->button &= ~IN_ATTACK2;
+		//m_pPlayer->pev->button &= ~IN_ATTACK2;
 	}
-	else if (m_pPlayer->pev->button & IN_ATTACK && m_flNextPrimaryAttack <= UTIL_WeaponTimeBase() && m_pPlayer->PlayerCanAttack())
+	else if ((m_pPlayer->pev->button & IN_ATTACK) && m_flNextPrimaryAttack <= UTIL_WeaponTimeBase() && m_pPlayer->PlayerCanAttack())
 	{
 		if ((!m_iClip && pszAmmo1()) || (iMaxClip() == WEAPON_NOCLIP && !m_pPlayer->m_rgAmmo[PrimaryAmmoIndex()]))
 			m_fFireOnEmpty = TRUE;
 
 		PrimaryAttack();
 	}
-	else if (m_pPlayer->pev->button & IN_RELOAD && iMaxClip() != WEAPON_NOCLIP && !m_fInReload)
+	else if ((m_pPlayer->pev->button & IN_RELOAD) && iMaxClip() != WEAPON_NOCLIP && !m_fInReload && !m_fInSpecialReload)
 	{
 		Reload();
 	}
@@ -519,24 +509,19 @@ void CBasePlayerWeapon::ItemPostFrame(void)
 		m_bDelayedFire = FALSE;
 		m_fFireOnEmpty = FALSE;
 
-		if (!IsUseable() && m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
+		if ( IsUseable() && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0 && (!m_iClip || (m_iClip < iMaxClip() && m_pPlayer->m_bAutoReload)) && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack <= UTIL_WeaponTimeBase())
+		{
+			Reload();
+		}
+		// If we don't have any ammo, switch to the next best weapon
+		if ( !IsUseable() && m_flNextPrimaryAttack < UTIL_WeaponTimeBase() && !(iFlags() & ITEM_FLAG_NOAUTOSWITCHEMPTY) && g_pGameRules->GetNextBestWeapon( m_pPlayer, this ))
 		{
 		}
 		else
 		{
-			if (!m_iClip && !(iFlags() & ITEM_FLAG_NOAUTORELOAD) && m_flNextPrimaryAttack < UTIL_WeaponTimeBase() && m_pPlayer->PlayerCanAttack())
-			{
-				Reload();
-				return;
-			}
+			WeaponIdle();
 		}
-
-		WeaponIdle();
-		return;
 	}
-
-	if (ShouldWeaponIdle())
-		WeaponIdle();
 }
 
 void CBasePlayerItem::DestroyItem(void)
@@ -746,6 +731,9 @@ BOOL CBasePlayerWeapon::IsUseable(void)
 
 BOOL CBasePlayerWeapon::CanDeploy(void)
 {
+	if(!IsUseable())
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -829,19 +817,21 @@ BOOL CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
 		return FALSE;
 
+	if(m_fInReload)
+		return FALSE;
+
 	int j = min(iClipSize - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
 
 	if (!j)
 		return FALSE;
 
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
 	m_flNextReload = UTIL_WeaponTimeBase() + fDelay;
+	m_flTimeWeaponIdle = m_flNextReload + 0.5;
 
 	ReloadSound();
 	SendWeaponAnim(iAnim, UseDecrement() ? 1 : 0);
 
-	m_fInReload = TRUE;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + fDelay + 0.5;
+	m_fInReload = true;
 	return TRUE;
 }
 
@@ -933,6 +923,29 @@ void CBasePlayerWeapon::RetireWeapon(void)
 	m_pPlayer->pev->viewmodel = NULL;
 	m_pPlayer->pev->weaponmodel = NULL;
 	g_pGameRules->GetNextBestWeapon(m_pPlayer, this);
+}
+
+//bool CBasePlayerWeapon::HasAnyAmmo( void )
+//{
+//	// If I don't use ammo of any kind, I can always fire
+//	if ( iMaxClip() <= 0 && iMaxAmmo1() <= 0 )
+//		return true;
+//
+//	// Otherwise, I need ammo of either type
+//	return ( (m_iClip > 0) || (iMaxAmmo1() > 0 && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] > 0) );
+//}
+
+//default reloaded
+void CBasePlayerWeapon::Reloaded(void)
+{
+	if(m_iPrimaryAmmoType < 0)
+		return;
+
+	int j = min(iMaxClip() - m_iClip, m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]);
+
+	m_iClip += j;
+	m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= j;
+	m_fInReload = false;
 }
 
 LINK_ENTITY_TO_CLASS(weaponbox, CWeaponBox);

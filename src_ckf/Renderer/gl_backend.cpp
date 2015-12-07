@@ -1,5 +1,4 @@
 #include "gl_local.h"
-#include "screen.h"
 
 byte *scrcapture_buffer = NULL;
 int scrcapture_bufsize = 0;
@@ -32,7 +31,7 @@ void R_CaptureScreen(const char *szExt)
 		qglReadPixels(0, 0, glwidth, glheight, GL_RGB, GL_UNSIGNED_BYTE, scrcapture_buffer);
 	}
 
-	const char *pLevel = g_pMetaSave->pEngineFuncs->pfnGetLevelName();
+	const char *pLevel = gEngfuncs.pfnGetLevelName();
 	if(!pLevel || !pLevel[0])
 	{
 		strcpy(szLevelName, "screenshot");
@@ -54,7 +53,7 @@ void R_CaptureScreen(const char *szExt)
 
 	if(TRUE == SaveImageGeneric(szFileName, glwidth, glheight, scrcapture_buffer))
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("Screenshot %s saved.\n", szFileName);
+		gEngfuncs.Con_Printf("Screenshot %s saved.\n", szFileName);
 	}
 }
 
@@ -69,9 +68,9 @@ void CL_ScreenShot_f(void)
 	}
 
 	char *szExt = "jpg";
-	if(g_pMetaSave->pEngineFuncs->Cmd_Argc() > 1)
+	if(gEngfuncs.Cmd_Argc() > 1)
 	{
-		szExt = g_pMetaSave->pEngineFuncs->Cmd_Argv(1);
+		szExt = gEngfuncs.Cmd_Argv(1);
 	}
 
 	R_CaptureScreen(szExt);

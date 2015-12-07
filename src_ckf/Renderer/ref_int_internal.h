@@ -47,7 +47,6 @@ typedef struct msurface_s msurface_t;
 
 typedef struct
 {
-	int (*LoadTGA)(const char *szFilename, byte *buffer, int bufferSize, int *width, int *height);
 	void (*R_Clear)(void);
 	void (*R_ForceCVars)(qboolean mp);
 	void (*R_RenderView)(void);
@@ -83,7 +82,6 @@ typedef struct
 	void (*Draw_MiptexTexture)(cachewad_t *wad, byte *data);
 	void (*R_BuildLightMap)(msurface_t *psurf, byte *dest, int stride);
 	void *(*Mem_Malloc)(size_t);
-	void *(*Hunk_Alloc)(size_t);
 	void (*R_DecalMPoly)(float *v, texture_t *ptexture, msurface_t *psurf, int vertCount);
 	void (*FreeFBObjects)(void);//only above 5953
 	void (*R_MarkLeaves)(void);
@@ -95,12 +93,7 @@ typedef struct
 	void (*R_GetSpriteAxes)(cl_entity_t *entity, int type, float *vforwrad, float *vright, float *vup);
 	void (*R_SpriteColor)(mcolor24_t *col, cl_entity_t *entity, int renderamt);
 	void (*VID_UpdateWindowVars)(RECT *prc, int x, int y);
-	void (*GL_SwapBuffer)(void);
-	void (**pfnGL_SwapBuffer)(void);
-}ref_funcs_t;
 
-typedef struct
-{
 	//Engine Studio
 	void (*R_GLStudioDrawPoints)(void);
 	studiohdr_t *(*R_LoadTextures)(struct model_s *psubmodel);
@@ -118,7 +111,7 @@ typedef struct
 	void (*studioapi_StudioSetupLighting)(alight_t *plighting);
 	void (*studioapi_SetupRenderer)(int rendermode);
 	void (*studioapi_RestoreRenderer)(void);
-}studio_funcs_t;
+}ref_funcs_t;
 
 typedef struct
 {
@@ -154,7 +147,6 @@ typedef struct
 	float (*GlowBlend)(cl_entity_t *entity);
 	int (*CL_FxBlend)(cl_entity_t *entity);
 	int (*R_CullBox)(vec3_t mins, vec3_t maxs);
-	void (*GL_SwapBuffer)(void);
 }engrefapi_t;
 
 typedef struct
@@ -201,6 +193,8 @@ typedef struct
 	void (*R_BeginDrawHudMask)(int r, int g, int b);
 	//cloak
 	void (*R_RenderCloakTexture)(void);
+	int (*R_GetCloakTexture)(void);
+	void (*R_BeginRenderConc)(float flBlurFactor, float flRefractFactor);
 	//3dhud
 	int (*R_Get3DHUDTexture)(void);
 	void (*R_Draw3DHUDQuad)(int x, int y, int left, int top);
@@ -215,7 +209,6 @@ typedef struct
 }ref_export_t;
 
 extern ref_funcs_t gRefFuncs;
-extern studio_funcs_t gStudioFuncs;
 extern ref_export_t gRefExports;
 
 #define r_draw_normal 0
@@ -241,4 +234,4 @@ enum
 	kRenderFxInvulnLayer
 };
 
-#define META_RENDERER_VERSION "Meta Renderer 1.4b"
+#define META_RENDERER_VERSION "Meta Renderer 1.5"

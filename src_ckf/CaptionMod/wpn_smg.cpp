@@ -18,9 +18,9 @@ BOOL CClientSMG::Deploy(void)
 
 void CClientSMG::PrimaryAttack(void)
 {
-	float flSpread = 0.05;
+	float flSpread = 0.03;
 
-	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/10.0f, 1.5);
+	if(m_iShotsFired) flSpread *= min(1.0+m_iShotsFired/20.0f, 1.5);
 
 	if (m_iClip <= 0)
 	{
@@ -48,13 +48,12 @@ void CClientSMG::PrimaryAttack(void)
 	if(m_iShotsFired < 5) m_iShotsFired ++;
 
 	SendWeaponAnim(SMG_FIRE);
+
+	m_fInReload = false;
 }
 
 void CClientSMG::Reload(void)
 {
-	if (m_iAmmo <= 0)
-		return;
-
 	DefaultReload(SMG_MAX_CLIP, SMG_RELOAD, 1.4);
 }
 
@@ -68,9 +67,9 @@ void CClientSMG::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.25;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(SMG_IDLE1);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SMG_IDLE1);
+	}
 }

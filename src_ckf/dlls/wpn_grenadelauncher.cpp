@@ -123,12 +123,9 @@ void CGrenadeLauncher::GrenadeLauncherFire()
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.6;
 
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
-	m_fInSpecialReload = 0;
+	m_fInSpecialReload = false;
 
 	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
 	SendWeaponAnim(GRENADELAUNCHER_SHOOT, UseDecrement() != FALSE);
@@ -145,31 +142,38 @@ void CGrenadeLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
+
 		SendWeaponAnim(GRENADELAUNCHER_START_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.64;
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.64;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.64;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.64;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.64;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CGrenadeLauncher::Reloaded(void)
+{
+	if (m_iClip == GRENADE_MAX_CLIP || m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(GRENADELAUNCHER_RELOAD, UseDecrement() != FALSE);
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.60;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.60;
+		SendWeaponAnim(GRENADELAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(GRENADELAUNCHER_RELOAD, UseDecrement() != FALSE);
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.60;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 	}
 }
 
@@ -179,24 +183,8 @@ void CGrenadeLauncher::WeaponIdle(void)
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == GRENADE_MAX_CLIP || !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-			{
-				SendWeaponAnim(GRENADELAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(GRENADELAUNCHER_IDLE, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(GRENADELAUNCHER_IDLE, UseDecrement() != FALSE);
 	}
 }
 
@@ -224,21 +212,23 @@ void CDemoGrenade::Spawn( void )
 	Precache();
 	// motor
 	SET_MODEL(ENT(pev), "models/CKF_III/pj_grenade.mdl");
-	UTIL_SetSize(pev, Vector(-4,-4,-4), Vector(4,4,4));
+	UTIL_SetSize(pev, Vector(-3,-3,-3), Vector(3,3,3));
 	pev->movetype = MOVETYPE_BOUNCE;
 	pev->solid = SOLID_BBOX;
 	pev->avelocity = Vector(RANDOM_FLOAT(0, 720), RANDOM_FLOAT(0, 720), RANDOM_FLOAT(0, 720));
-	pev->takedamage = DAMAGE_NO;
+	pev->takedamage = DAMAGE_YES;
 	UTIL_SetOrigin( pev, pev->origin );
 
 	pev->classname = MAKE_STRING("pj_grenade");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	SetThink(&CDemoGrenade::GrenadeThink);
 	pev->nextthink = gpGlobals->time + 0.1;
 	SetTouch(&CDemoGrenade::GrenadeTouch);
 	pev->dmgtime = gpGlobals->time + 2.28;
 	pev->team = -1;
-	pev->health = 200;
+	pev->health = 999999;
 
 	pev->gravity = 1.0;
 
@@ -351,10 +341,13 @@ void CDemoGrenade::GrenadeTouch(CBaseEntity *pOther)
 void CDemoGrenade::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flForce)
 {
 	CBasePlayer *pPlayer = NULL;
-	if(pAttacker->IsPlayer()) pPlayer = (CBasePlayer *)pAttacker;
+	if(pAttacker->IsPlayer())
+		pPlayer = (CBasePlayer *)pAttacker;
 
 	if(!m_bFall)
+	{
 		pev->velocity = vecDirShooting.Normalize() * (pev->velocity.Length());
+	}
 	else
 	{
 		vecDirShooting = vecDirShooting * flForce * 2;
@@ -367,9 +360,13 @@ void CDemoGrenade::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, floa
 	pev->avelocity = Vector(RANDOM_FLOAT(-720, 720), RANDOM_FLOAT(-720, 720), RANDOM_FLOAT(-720, 720));
 
 	pev->owner = pAttacker->edict();
-	if(pPlayer) m_iTeam = pPlayer->m_iTeam;
-	pev->skin = m_iTeam - 1;
+	if(pPlayer)
+	{
+		m_iTeam = pPlayer->m_iTeam;
+		pev->skin = m_iTeam - 1;
+	}
 	m_iPjFlags |= PJ_AIRBLAST_DEFLECTED;
+
 	if(!m_iCrit) m_iCrit ++;
 
 	MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);

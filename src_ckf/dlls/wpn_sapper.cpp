@@ -100,11 +100,11 @@ void CSapper::SecondaryAttack(void)
 
 void CSapper::WeaponIdle(void)
 {
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(SAPPER_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(SAPPER_IDLE1, UseDecrement() != FALSE);
+	}
 }
 
 //PjSapper
@@ -149,6 +149,8 @@ void CBuildSapper::Spawn( void )
 	pev->max_health = pev->health = 100;
 
 	pev->classname = MAKE_STRING("pj_sapper");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	m_fDmg = 12.5;
 	m_iPjFlags = 0;

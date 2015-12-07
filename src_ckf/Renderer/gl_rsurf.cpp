@@ -1,4 +1,5 @@
 #include "gl_local.h"
+#include "zone.h"
 
 int skytexturenum;
 
@@ -32,8 +33,7 @@ void R_RecursiveWorldNode(mnode_t *node)
 
 void R_DrawWorld(void)
 {
-	qboolean waterfog = false;
-	if(r_water->value && !R_GetDrawPass() && r_params.waterlevel > 2)
+	if(r_water->value && !R_GetDrawPass() && *cl_waterlevel > 2)
 	{
 		R_RenderWaterFog();
 	}
@@ -140,7 +140,7 @@ void BuildSurfaceDisplayList(msurface_t *fa, model_t *model)
 	lnumverts = fa->numedges;
 	vertpage = 0;
 
-	poly = (glpoly_t *)gRefFuncs.Hunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
+	poly = (glpoly_t *)Hunk_Alloc(sizeof(glpoly_t) + (lnumverts - 4) * VERTEXSIZE * sizeof(float));
 	poly->next = fa->polys;
 	poly->flags = fa->flags;
 	fa->polys = poly;
@@ -263,7 +263,7 @@ int R_LightmapAllocBlock(int w, int h, int *x, int *y)
 		return texnum;
 	}
 
-	g_pMetaSave->pEngineFuncs->Con_Printf("R_LightmapAllocBlock: full");
+	Sys_ErrorEx("AllocBlock: full");
 	return 0;
 }
 

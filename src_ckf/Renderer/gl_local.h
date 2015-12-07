@@ -49,8 +49,8 @@ extern cl_entity_t **cl_visedicts_old;
 extern cl_entity_t **cl_visedicts_new;
 extern cl_entity_t **currententity;
 extern int *maxTransObjs;
+extern int *numTransObjs;
 extern transObjRef **transObjects;
-extern int numTransObjs;
 
 extern RECT *window_rect;
 
@@ -62,6 +62,8 @@ extern float windowvideoaspect_old;
 extern GLuint screenframebuffer;
 extern GLuint drawframebuffer;
 extern GLuint readframebuffer;
+
+extern float scr_fov_value;
 
 extern mleaf_t **r_viewleaf, **r_oldviewleaf;
 extern texture_t *r_notexture_mip;
@@ -82,11 +84,15 @@ extern vec_t *r_entorigin;
 
 extern int *r_framecount;
 extern int *r_visframecount;
-extern float r_world_matrix[16];
-extern float r_projection_matrix[16];
+
+//extern float r_world_matrix[16];
+//extern float r_projection_matrix[16];
 
 extern frame_t *cl_frames;
 extern int *cl_parsecount;
+extern int *cl_waterlevel;
+extern double *cl_time;
+extern double *cl_oldtime;
 
 //gl extension
 extern qboolean gl_framebuffer_object;
@@ -147,7 +153,6 @@ extern cvar_t *r_mmx;
 extern cvar_t *r_traceglow;
 extern cvar_t *r_wadtextures;
 extern cvar_t *r_glowshellfreq;
-extern cvar_t *r_novis;
 extern cvar_t *r_detailtextures;
 
 extern cvar_t *gl_vsync;
@@ -188,10 +193,8 @@ extern cvar_t *v_brightness;
 extern cvar_t *v_gamma;
 extern cvar_t *cl_righthand;
 
-void API_InstallHook(void);
 void R_FillAddress(void);
 void R_InstallHook(void);
-void R_UninstallHook(void);
 void R_RenderView(void);
 void R_RenderScene(void);
 qboolean R_CullBox(vec3_t mins, vec3_t maxs);
@@ -232,8 +235,6 @@ void R_AllocObjects(int nMax);
 void R_AddTEntity(cl_entity_t *pEnt);
 void R_SortTEntities(void);
 
-RECT *VID_GetWindowRect(void);
-void GL_SwapBuffer(void);
 void GL_Init(void);
 void GL_BeginRendering(int *x, int *y, int *width, int *height);
 void GL_EndRendering(void);
@@ -309,3 +310,6 @@ extern int save_refdefstack;
 
 extern double g_flFrameTime;
 extern int last_luminance;
+
+#define glwidth g_iVideoWidth
+#define glheight g_iVideoHeight

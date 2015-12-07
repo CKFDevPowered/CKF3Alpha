@@ -1426,7 +1426,7 @@ void CStudioModelRenderer::StudioRenderFinal_Software(void)
 		for (i = 0; i < m_pStudioHeader->numbodyparts; i++)
 		{
 			gpEngineStudio->StudioSetupModel(i, (void **)&m_pBodyPart, (void **)&m_pSubModel);
-			if(StudioDrawBodyPart())
+			if(StudioDrawBody())
 				gpEngineStudio->StudioDrawPoints();
 		}
 	}
@@ -1469,7 +1469,7 @@ void CStudioModelRenderer::StudioRenderFinal_Hardware(void)
 			if (m_fDoInterp)
 				m_pCurrentEntity->trivial_accept = 0;
 
-			if(StudioDrawBodyPart())
+			if(StudioDrawBody())
 			{
 				gpEngineStudio->GL_SetRenderMode(rendermode);
 				gpEngineStudio->StudioSetRenderamt(m_pCurrentEntity->curstate.renderamt);
@@ -1698,7 +1698,7 @@ int R_StudioDrawModel(int flags)
 		pEntity->curstate.sequence = iSapperSequence;
 		if(iSapperSequence != -1)
 		{
-			pEntity->curstate.skin = iSaveSkin+1;
+			pEntity->curstate.skin = 1;
 			g_bRenderPlayerWeapon = 0;
 			g_StudioRenderer.StudioRenderAttach(flags, g_mdlSapper);
 		}
@@ -1805,7 +1805,7 @@ void CStudioModelRenderer::StudioSpecialLight(alight_t *plight)
 	}
 }
 
-int CStudioModelRenderer::StudioDrawBodyPart(void)
+int CStudioModelRenderer::StudioDrawBody(void)
 {
 	if(CL_IsViewModel(m_pCurrentEntity))
 	{

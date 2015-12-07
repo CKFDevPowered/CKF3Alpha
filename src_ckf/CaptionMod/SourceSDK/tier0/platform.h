@@ -784,7 +784,7 @@ PLATFORM_INTERFACE double			Plat_FloatTime();		// Returns time in seconds since 
 PLATFORM_INTERFACE unsigned long	Plat_MSTime();			// Time in milliseconds.
 
 // b/w compatibility
-#define Sys_FloatTime Plat_FloatTime
+//#define Sys_FloatTime Plat_FloatTime
 
 
 // Processor Information:

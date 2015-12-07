@@ -105,6 +105,8 @@ void CRevolver::RevolverFire(void)
 	SendWeaponAnim(REVOLVER_FIRE, UseDecrement() != FALSE);
 
 	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
+
+	m_fInReload = false;
 }
 
 void CRevolver::SecondaryAttack(void)
@@ -117,9 +119,6 @@ void CRevolver::SecondaryAttack(void)
 
 void CRevolver::Reload(void)
 {
-	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-		return;
-
 	if (DefaultReload(REVOLVER_MAX_CLIP, REVOLVER_RELOAD, 1.16))
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
@@ -129,7 +128,6 @@ void CRevolver::Reload(void)
 void CRevolver::WeaponIdle(void)
 {
 	ResetEmptySound();
-	//m_pPlayer->GetAutoaimVector(AUTOAIM_10DEGREES);
 
 	if(m_iShotsFired && UTIL_WeaponTimeBase() > m_flDecreaseShotsFired)
 	{
@@ -137,9 +135,9 @@ void CRevolver::WeaponIdle(void)
 		m_flDecreaseShotsFired = UTIL_WeaponTimeBase() + 0.4167f;
 	}
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-		return;
-
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
-	SendWeaponAnim(REVOLVER_IDLE1, UseDecrement() != FALSE);
+	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
+	{
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(REVOLVER_IDLE1, UseDecrement() != FALSE);
+	}
 }

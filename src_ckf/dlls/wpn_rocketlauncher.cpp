@@ -111,20 +111,11 @@ void CRocketLauncher::RocketLauncherFire()
 
 	m_pPlayer->pev->effects |= EF_MUZZLEFLASH;
 
-	//EMIT_SOUND(ENT(pev) , CHAN_WEAPON, "CKF_III/rocketlauncher_shoot.wav", 1.0, 0.80);
-	//if(iCrit >= 2) EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/crit_shot.wav", VOL_NORM, ATTN_NORM);
-
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usFireScript, 0, (float *)&g_vecZero, (float *)&g_vecZero, 0, 0, m_iId, 0, (iCrit >= 2) ? TRUE : FALSE, 0);
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.8;
 
-	//if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
-	//	m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
-
-	if (m_iClip)
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 2.5;
-	else
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.80;
 
 	m_fInSpecialReload = 0;
 }
@@ -140,60 +131,49 @@ void CRocketLauncher::Reload(void)
 	if (!m_fInSpecialReload)
 	{
 		m_pPlayer->SetAnimation(PLAYER_RELOAD);
+
 		SendWeaponAnim(ROCKETLAUNCHER_START_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
 
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.50;
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 0.50;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.50;
 	}
-	else if (m_fInSpecialReload == 1)
+}
+
+void CRocketLauncher::Reloaded(void)
+{
+	if (m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 || m_iClip == ROCKET_MAX_CLIP)//out of ammo or full of clip, stop reloading
 	{
-		if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
-			return;
-
-		m_fInSpecialReload = 2;
-
-		SendWeaponAnim(ROCKETLAUNCHER_RELOAD, UseDecrement() != FALSE);
-		m_pPlayer->SetAnimation(PLAYER_RELOAD);//anim fix
-
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.70;
+		SendWeaponAnim(ROCKETLAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_fInSpecialReload = 0;
 	}
-	else
+	else if (m_fInSpecialReload == 2)
 	{
 		m_iClip++;
 		m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType]--;
-		m_fInSpecialReload = 1;
+
+		m_fInSpecialReload = 1;//go back to start stage
+		Reloaded();//have the next try now so weapon anim will be played immediately 
+	}
+	else
+	{
+		m_fInSpecialReload = 2;//reloading stage
+
+		SendWeaponAnim(ROCKETLAUNCHER_RELOAD, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.70;		
 	}
 }
 
 void CRocketLauncher::WeaponIdle(void)
 {
 	ResetEmptySound();
-	//m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
 
 	if (m_flTimeWeaponIdle < UTIL_WeaponTimeBase())
 	{
-		if (!m_iClip && !m_fInSpecialReload && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-		{
-			Reload();
-		}
-		else if (m_fInSpecialReload)
-		{
-			if (m_iClip == ROCKET_MAX_CLIP || !m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType])
-			{
-				SendWeaponAnim(ROCKETLAUNCHER_AFTER_RELOAD, UseDecrement() != FALSE);
-
-				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
-			}
-			else
-				Reload();
-		}
-		else
-			SendWeaponAnim(ROCKETLAUNCHER_IDLE, UseDecrement() != FALSE);
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 20;
+		SendWeaponAnim(ROCKETLAUNCHER_IDLE, UseDecrement() != FALSE);
 	}
 }
 
@@ -214,22 +194,21 @@ CRocket *CRocket::CreatePjRocket(Vector vecOrigin, Vector vecAngles, CBaseEntity
 	TraceResult tr;
 	UTIL_TraceLine(vecOrigin, vecOrigin + gpGlobals->v_forward * 8192, dont_ignore_monsters, pOwner->edict(), &tr);
 	float flDistance = (tr.vecEndPos - vecOrigin).Length();
+
+	pRocket->SetThink(&CRocket::RocketLaunch);
 	if(flDistance > 880)
 	{
 		pRocket->pev->velocity = gpGlobals->v_forward * 50;
-		pRocket->SetThink(&CRocket::RocketLaunch);
 		pRocket->pev->nextthink = gpGlobals->time + 0.15;
 	}
 	else if(flDistance > 220)
 	{
 		pRocket->pev->velocity = gpGlobals->v_forward * 50;
-		pRocket->SetThink(&CRocket::RocketLaunch);
 		pRocket->pev->nextthink = gpGlobals->time + 0.05+0.10*(flDistance-220)/880;
 	}
 	else
 	{
-		pRocket->pev->velocity = gpGlobals->v_forward * 50;
-		pRocket->SetThink(&CRocket::RocketLaunch);
+		pRocket->pev->velocity = gpGlobals->v_forward * 1100;
 		pRocket->pev->nextthink = gpGlobals->time + 0.05;
 	}
 
@@ -248,6 +227,8 @@ void CRocket::Spawn(void)
 	pev->health = 80;
 
 	pev->classname = MAKE_STRING("pj_rocket");
+	//fix for cs16nd
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	SetTouch(&CRocket::RocketTouch);
 
@@ -285,17 +266,19 @@ void CRocket::Deflected(CBaseEntity *pAttacker, Vector vecDirShooting, float flF
 		pPlayer = (CBasePlayer *)pAttacker;
 
 	pev->velocity = vecDirShooting.Normalize() * (pev->velocity.Length());
+	pev->angles = UTIL_VecToAngles(vecDirShooting);
+
 	pev->owner = pAttacker->edict();
 
 	if(pPlayer)
+	{
 		m_iTeam = pPlayer->m_iTeam;
-	pev->skin = m_iTeam - 1;
+		pev->skin = m_iTeam - 1;
+	}
+	
 	m_iPjFlags |= PJ_AIRBLAST_DEFLECTED;
 
-	if(!m_iCrit)
-		m_iCrit ++;
-
-	//pev->classname = MAKE_STRING("pj_defrocket");
+	if(!m_iCrit) m_iCrit ++;
 }
 
 void CRocket::RocketLaunch(void)

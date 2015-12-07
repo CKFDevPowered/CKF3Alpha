@@ -1,6 +1,5 @@
 #include "gl_local.h"
 #include "cJSON.h"
-#include "screen.h"
 #include <IBTEClient.h>
 
 ref_funcs_t gRefFuncs;
@@ -26,12 +25,14 @@ float windowvideoaspect_old;
 cl_entity_t **cl_visedicts_old;
 cl_entity_t **cl_visedicts_new;
 cl_entity_t **currententity;
+int *numTransObjs;
 int *maxTransObjs;
 transObjRef **transObjects;
-int numTransObjs;
 GLuint screenframebuffer;
 GLuint drawframebuffer;
 GLuint readframebuffer;
+
+float scr_fov_value;
 
 mleaf_t **r_viewleaf, **r_oldviewleaf;
 texture_t *r_notexture_mip;
@@ -55,11 +56,12 @@ int *r_visframecount;
 
 frame_t *cl_frames;
 int *cl_parsecount;
+int *cl_waterlevel;
+double *cl_time;
+double *cl_oldtime;
 
-char com_token[1024];
-
-float r_world_matrix[16];
-float r_projection_matrix[16];
+//float r_world_matrix[16];
+//float r_projection_matrix[16];
 
 qboolean gl_framebuffer_object = false;
 qboolean gl_shader_support = false;
@@ -313,8 +315,8 @@ void R_AddTEntity(cl_entity_t *pEnt)
 	float dist;
 	vec3_t v;
 
-	if (numTransObjs >= (*maxTransObjs))
-		g_pMetaSave->pEngineFuncs->Con_Printf("R_AddTEntity: Too many objects");
+	if ((*numTransObjs) >= (*maxTransObjs))
+		gEngfuncs.Con_Printf("R_AddTEntity: Too many objects");
 
 	if (!pEnt->model || pEnt->model->type != mod_brush || pEnt->curstate.rendermode != kRenderTransAlpha)
 	{
@@ -329,9 +331,20 @@ void R_AddTEntity(cl_entity_t *pEnt)
 		dist = 1000000000;
 	}
 
-	(*transObjects)[numTransObjs].pEnt = pEnt;
-	(*transObjects)[numTransObjs].distance = dist;
-	numTransObjs ++;
+	int i;
+
+	for ( i = (*numTransObjs); i > 0; i-- )
+	{
+		if ( (*transObjects)[i - 1].distance >= dist )
+			break;
+
+		(*transObjects)[i].pEnt = (*transObjects)[i - 1].pEnt;
+		(*transObjects)[i].distance = (*transObjects)[i - 1].distance;
+	}
+
+	(*transObjects)[i].pEnt = pEnt;
+	(*transObjects)[i].distance = dist;
+	(*numTransObjs)++;
 }
 
 #define CURRENT_DRAW_PLAYER_STATE ((entity_state_t *)( (char *)cl_frames + sizeof(frame_t) * parsecount + sizeof(entity_state_t) * (*currententity)->index) )
@@ -351,9 +364,9 @@ void R_DrawEntitiesOnList(void)
 	numvisedicts = *cl_numvisedicts;
 	parsecount = (*cl_parsecount) & 63;
 
-	numTransObjs = 0;
+	(*numTransObjs) = 0;
 
-	candraw3dsky = (_3dsky_enable && r_3dsky->value > 0) ? true : false;
+	candraw3dsky = (r_3dsky_parm.enable && r_3dsky->value > 0) ? true : false;
 
 	for (i = 0; i < numvisedicts; i++)
 	{
@@ -381,7 +394,7 @@ void R_DrawEntitiesOnList(void)
 				R_Setup3DSkyModel();
 				if ((*currententity)->player)
 				{
-					gpStudioInterface->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
+					(*gpStudioInterface)->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
 				}
 				else
 				{
@@ -395,11 +408,11 @@ void R_DrawEntitiesOnList(void)
 
 								if ((*currententity)->player)
 								{
-									gpStudioInterface->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
+									(*gpStudioInterface)->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
 								}
 								else
 								{
-									gpStudioInterface->StudioDrawModel(0);
+									(*gpStudioInterface)->StudioDrawModel(0);
 								}
 
 								*currententity = cl_visedicts_new[i];
@@ -408,7 +421,7 @@ void R_DrawEntitiesOnList(void)
 						}
 					}
 
-					gpStudioInterface->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
+					(*gpStudioInterface)->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
 					
 				}
 				R_Finish3DSkyModel();
@@ -454,16 +467,6 @@ void R_DrawEntitiesOnList(void)
 	}
 }
 
-int R_QuickSortTEntities(const void *a, const void *b)
-{
-	return ((transObjRef *)a)->distance > ((transObjRef *)b)->distance;
-}
-
-void R_SortTEntities(void)
-{
-	qsort((*transObjects), numTransObjs, sizeof(transObjRef), R_QuickSortTEntities);
-}
-
 void R_DrawTEntitiesOnList(int onlyClientDraw)
 {
 	int i, j, numvisedicts, parsecount, candraw3dsky;
@@ -474,17 +477,14 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 	numvisedicts = *cl_numvisedicts;
 	parsecount = (*cl_parsecount) & 63;
 
-	candraw3dsky = (_3dsky_enable && r_3dsky->value > 0) ? true : false;
-
-	R_SortTEntities();
+	candraw3dsky = (r_3dsky_parm.enable && r_3dsky->value > 0) ? true : false;
 
 	if (!onlyClientDraw)
 	{
-		for (i = 0; i < numTransObjs; i++)
+		for (i = 0; i < (*numTransObjs); i++)
 		{
 			(*currententity) = (*transObjects)[i].pEnt;
 
-			//if( !candraw3dsky && ((*currententity)->curstate.effects & EF_3DSKY) )
 			if( !candraw3dsky && (*currententity)->curstate.entityType == ET_3DSKYENTITY )
 				continue;
 
@@ -498,7 +498,7 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 			*r_blend = (*r_blend) / 255.0;
 
 			if ((*currententity)->curstate.rendermode == kRenderGlow && (*currententity)->model->type != mod_sprite)
-				g_pMetaSave->pEngineFuncs->Con_DPrintf("Non-sprite set to glow!\n");
+				gEngfuncs.Con_DPrintf("Non-sprite set to glow!\n");
 
 			switch ((*currententity)->model->type)
 			{
@@ -537,16 +537,19 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 
 				case mod_studio:
 				{
+					if ( (*currententity)->curstate.renderamt == kRenderNormal )
+						continue;
+
 					R_Setup3DSkyModel();
 					if ((*currententity)->player)
 					{
-						gpStudioInterface->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
+						(*gpStudioInterface)->StudioDrawPlayer(STUDIO_RENDER | STUDIO_EVENTS, CURRENT_DRAW_PLAYER_STATE );
 					}
 					else
 					{
 						if ((*currententity)->curstate.movetype == MOVETYPE_FOLLOW)
 						{
-							for (j = 0; j < numvisedicts; j++)
+							for (j = 0; j < (*numTransObjs); j++)
 							{
 								if ((*transObjects)[j].pEnt->index == (*currententity)->curstate.aiment)
 								{
@@ -554,11 +557,11 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 
 									if ((*currententity)->player)
 									{
-										gpStudioInterface->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
+										(*gpStudioInterface)->StudioDrawPlayer(0, CURRENT_DRAW_PLAYER_STATE );
 									}
 									else
 									{
-										gpStudioInterface->StudioDrawModel(0);
+										(*gpStudioInterface)->StudioDrawModel(0);
 									}
 
 									*currententity = (*transObjects)[i].pEnt;
@@ -567,7 +570,7 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 							}
 						}
 
-						gpStudioInterface->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
+						(*gpStudioInterface)->StudioDrawModel(STUDIO_RENDER | STUDIO_EVENTS);
 					}
 					R_Finish3DSkyModel();
 
@@ -595,7 +598,7 @@ void R_DrawTEntitiesOnList(int onlyClientDraw)
 	if (*g_bUserFogOn)
 		qglEnable(GL_FOG);
 
-	numTransObjs = 0;
+	(*numTransObjs) = 0;
 	*r_blend = 1.0;
 }
 
@@ -668,7 +671,7 @@ void R_SetupFrame(void)
 	float r_dynamic_value = r_dynamic->value;
 
 	if (R_GetDrawPass() == r_draw_normal)
-		R_ForceCVars(g_pMetaSave->pEngineFuncs->GetMaxClients() > 1);
+		R_ForceCVars(gEngfuncs.GetMaxClients() > 1);
 
 	gRefFuncs.R_SetupFrame();
 
@@ -729,7 +732,7 @@ void R_RenderScene(void)
 	R_UploadLightmaps();
 	Draw_UpdateAnsios();
 
-	if(_3dsky_enable && r_3dsky->value)
+	if(r_3dsky_parm.enable && r_3dsky->value)
 	{
 		R_ViewOriginFor3DSky(_3dsky_view);
 	}
@@ -756,7 +759,7 @@ void R_RenderScene(void)
 
 	R_Clear();
 
-	if(_3dsky_enable && r_3dsky->value)
+	if(r_3dsky_parm.enable && r_3dsky->value)
 	{
 		R_Render3DSky();
 	}
@@ -861,24 +864,24 @@ void GL_GenerateFBO(void)
 	if (!gl_framebuffer_object)
 		return;
 
-	bNoStretchAspect = (g_pMetaSave->pEngineFuncs->CheckParm("-stretchaspect", NULL) == 0);
+	bNoStretchAspect = (gEngfuncs.CheckParm("-stretchaspect", NULL) == 0);
 
-	if (g_pMetaSave->pEngineFuncs->CheckParm("-nomsaa", NULL))
+	if (gEngfuncs.CheckParm("-nomsaa", NULL))
 		bDoMSAAFBO = false;
 
 	//if (!gl_msaa_blit_support)
 	//	bDoMSAAFBO = false;
 
-	if (g_pMetaSave->pEngineFuncs->CheckParm("-nofbo", NULL))
+	if (gEngfuncs.CheckParm("-nofbo", NULL))
 		bDoScaledFBO = false;
 
-	if (g_pMetaSave->pEngineFuncs->CheckParm("-directblit", NULL))
+	if (gEngfuncs.CheckParm("-directblit", NULL))
 		bDoDirectBlit = true;
 
-	if (g_pMetaSave->pEngineFuncs->CheckParm("-nodirectblit", NULL))
+	if (gEngfuncs.CheckParm("-nodirectblit", NULL))
 		bDoDirectBlit = false;
 
-	if (g_pMetaSave->pEngineFuncs->CheckParm("-nohdr", NULL))
+	if (gEngfuncs.CheckParm("-nohdr", NULL))
 		bDoHDR = false;
 
 	if(!gl_float_buffer_support)
@@ -906,7 +909,7 @@ void GL_GenerateFBO(void)
 
 	if(!bDoScaledFBO)
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("FBO backbuffer rendering disabled.\n");
+		gEngfuncs.Con_Printf("FBO backbuffer rendering disabled.\n");
 		bDoHDR = false;
 	}
 
@@ -984,12 +987,12 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_MSAAFBO);
 			gl_msaa_support = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("Error initializing MSAA frame buffer\n");
+			gEngfuncs.Con_Printf("Error initializing MSAA frame buffer\n");
 		}
 	}
 	else
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("MSAA backbuffer rendering disabled.\n");
+		gEngfuncs.Con_Printf("MSAA backbuffer rendering disabled.\n");
 	}
 
 	if (bDoScaledFBO)
@@ -1012,7 +1015,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_MSAAFBO);
 			GL_FreeFBO(&s_BackBufferFBO);		
-			g_pMetaSave->pEngineFuncs->Con_Printf("FBO backbuffer rendering disabled due to create error.\n");
+			gEngfuncs.Con_Printf("FBO backbuffer rendering disabled due to create error.\n");
 		}
 	}
 
@@ -1031,7 +1034,7 @@ void GL_GenerateFBO(void)
 	if (qglCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		GL_FreeFBO(&s_3DHUDFBO);
-		g_pMetaSave->pEngineFuncs->Con_Printf("3DHUD FBO rendering disabled due to create error.\n");
+		gEngfuncs.Con_Printf("3DHUD FBO rendering disabled due to create error.\n");
 	}
 
 	//HUDInWorld FBO
@@ -1055,7 +1058,7 @@ void GL_GenerateFBO(void)
 	if (qglCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		GL_FreeFBO(&s_WaterFBO);
-		g_pMetaSave->pEngineFuncs->Con_Printf("Water FBO rendering disabled due to create error.\n");
+		gEngfuncs.Con_Printf("Water FBO rendering disabled due to create error.\n");
 	}
 
 	//DownSample FBO
@@ -1076,7 +1079,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_DownSampleFBO[i]);
 			bDoHDR = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("DownSample FBO #%d rendering disabled due to create error.\n", i);
+			gEngfuncs.Con_Printf("DownSample FBO #%d rendering disabled due to create error.\n", i);
 		}
 	}
 
@@ -1097,7 +1100,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_LuminFBO[i]);
 			bDoHDR = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("Luminance FBO #%d rendering disabled due to create error.\n", i);
+			gEngfuncs.Con_Printf("Luminance FBO #%d rendering disabled due to create error.\n", i);
 		}
 		downW >>= 2;
 		downH >>= 2;
@@ -1117,7 +1120,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_Lumin1x1FBO[i]);
 			bDoHDR = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("Luminance FBO #%d rendering disabled due to create error.\n", i);
+			gEngfuncs.Con_Printf("Luminance FBO #%d rendering disabled due to create error.\n", i);
 		}
 	}
 
@@ -1136,7 +1139,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_BlurFBO[i]);
 			bDoHDR = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("Blur FBO #%d rendering disabled due to create error.\n", i);
+			gEngfuncs.Con_Printf("Blur FBO #%d rendering disabled due to create error.\n", i);
 		}
 	}
 
@@ -1154,7 +1157,7 @@ void GL_GenerateFBO(void)
 		{
 			GL_FreeFBO(&s_ToneMapFBO);
 			bDoHDR = false;
-			g_pMetaSave->pEngineFuncs->Con_Printf("Tone mapping FBO #%d rendering disabled due to create error.\n");
+			gEngfuncs.Con_Printf("Tone mapping FBO #%d rendering disabled due to create error.\n");
 		}
 	}
 
@@ -1169,7 +1172,7 @@ void GL_GenerateFBO(void)
 	if (qglCheckFramebufferStatusEXT(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		GL_FreeFBO(&s_CloakFBO);
-		g_pMetaSave->pEngineFuncs->Con_Printf("Cloak FBO rendering disabled due to create error.\n");
+		gEngfuncs.Con_Printf("Cloak FBO rendering disabled due to create error.\n");
 	}
 
 	qglBindFramebufferEXT(GL_FRAMEBUFFER, 0);
@@ -1274,7 +1277,7 @@ void R_RenderView(void)
 			//exp Luminance DownSample 4x4->1x1
 			R_LuminPass(&s_LuminFBO[2], &s_Lumin1x1FBO[2], 2);
 			//Luminance Adaptation
-			R_LuminAdaptation(&s_Lumin1x1FBO[2], &s_Lumin1x1FBO[!last_luminance], &s_Lumin1x1FBO[last_luminance], g_flFrameTime);
+			R_LuminAdaptation(&s_Lumin1x1FBO[2], &s_Lumin1x1FBO[!last_luminance], &s_Lumin1x1FBO[last_luminance], *cl_time - *cl_oldtime);
 			last_luminance = !last_luminance;
 			//Gaussian blur (1/16) image
 			R_PartialBlur(&s_DownSampleFBO[1], &s_BlurFBO[0], false);
@@ -1321,19 +1324,13 @@ void GL_EndRendering(void)
 			{
 				dstY = (windowH - 1.0 / videoAspect * windowW) / 2.0;
 				dstY2 = windowH - dstY;
-				if(videowindowaspect)
-					*videowindowaspect = videoAspect / windowAspect;
-				else
-					videowindowaspect_old = videoAspect / windowAspect;
+				*videowindowaspect = videoAspect / windowAspect;
 			}
 			else
 			{
 				dstX = (windowW - windowH * videoAspect) / 2.0;
 				dstX2 = windowW - dstX;
-				if(videowindowaspect)
-					*windowvideoaspect = windowAspect / videoAspect;
-				else
-					windowvideoaspect_old = windowAspect / videoAspect;
+				*windowvideoaspect = windowAspect / videoAspect;
 			}
 		}
 
@@ -1381,96 +1378,91 @@ void GL_EndRendering(void)
 		qglBindFramebufferEXT(GL_READ_FRAMEBUFFER, 0);
 	}
 
-	GL_SwapBuffer();
-}
-
-void GL_SwapBuffer(void)
-{
-	if(gRefFuncs.GL_SwapBuffer)
-		gRefFuncs.GL_SwapBuffer();
+	//this will call GL_SwapBuffer for us.
+	gRefFuncs.GL_EndRendering();
 }
 
 void R_InitCvars(void)
 {
 	static cvar_t s_gl_texsort = { "gl_texsort", "0", 0, 0, 0 };
 
-	r_bmodelinterp = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_bmodelinterp");
-	r_bmodelhighfrac = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_bmodelhighfrac");
-	r_norefresh = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_norefresh");
-	r_drawentities = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_drawentities");
-	r_drawviewmodel = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_drawviewmodel");
-	r_speeds = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_speeds");
-	r_fullbright = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_fullbright");
-	r_decals = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_decals");
-	r_lightmap = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_lightmap");
-	r_shadows = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_shadows");
-	r_mirroralpha = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_mirroralpha");
-	r_wateralpha = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_wateralpha");
-	r_dynamic = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_dynamic");
-	r_mmx = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_mmx");
-	r_traceglow = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_traceglow");
-	r_wadtextures = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_wadtextures");
-	r_glowshellfreq = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_glowshellfreq");
-	r_novis = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_novis");
+	r_bmodelinterp = gEngfuncs.pfnGetCvarPointer("r_bmodelinterp");
+	r_bmodelhighfrac = gEngfuncs.pfnGetCvarPointer("r_bmodelhighfrac");
+	r_norefresh = gEngfuncs.pfnGetCvarPointer("r_norefresh");
+	r_drawentities = gEngfuncs.pfnGetCvarPointer("r_drawentities");
+	r_drawviewmodel = gEngfuncs.pfnGetCvarPointer("r_drawviewmodel");
+	r_speeds = gEngfuncs.pfnGetCvarPointer("r_speeds");
+	r_fullbright = gEngfuncs.pfnGetCvarPointer("r_fullbright");
+	r_decals = gEngfuncs.pfnGetCvarPointer("r_decals");
+	r_lightmap = gEngfuncs.pfnGetCvarPointer("r_lightmap");
+	r_shadows = gEngfuncs.pfnGetCvarPointer("r_shadows");
+	r_mirroralpha = gEngfuncs.pfnGetCvarPointer("r_mirroralpha");
+	r_wateralpha = gEngfuncs.pfnGetCvarPointer("r_wateralpha");
+	r_dynamic = gEngfuncs.pfnGetCvarPointer("r_dynamic");
+	r_mmx = gEngfuncs.pfnGetCvarPointer("r_mmx");
+	r_traceglow = gEngfuncs.pfnGetCvarPointer("r_traceglow");
+	r_wadtextures = gEngfuncs.pfnGetCvarPointer("r_wadtextures");
+	r_glowshellfreq = gEngfuncs.pfnGetCvarPointer("r_glowshellfreq");
+	r_novis = gEngfuncs.pfnGetCvarPointer("r_novis");
 	r_novis->flags &= ~FCVAR_SPONLY;
 
-	r_detailtextures = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("r_detailtextures");
+	r_detailtextures = gEngfuncs.pfnGetCvarPointer("r_detailtextures");
 
-	gl_vsync = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_vsync");
+	gl_vsync = gEngfuncs.pfnGetCvarPointer("gl_vsync");
 
 	if (!gl_vsync)
-		gl_vsync = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("gl_vsync", "1", FCVAR_ARCHIVE);
+		gl_vsync = gEngfuncs.pfnRegisterVariable("gl_vsync", "1", FCVAR_ARCHIVE);
 
-	gl_ztrick = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_ztrick");
+	gl_ztrick = gEngfuncs.pfnGetCvarPointer("gl_ztrick");
 
 	if (!gl_ztrick)
-		gl_ztrick = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_ztrick_old");
+		gl_ztrick = gEngfuncs.pfnGetCvarPointer("gl_ztrick_old");
 
-	gl_finish = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_finish");
-	gl_clear = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_clear");
-	gl_cull = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_cull");
-	gl_texsort = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_texsort");
+	gl_finish = gEngfuncs.pfnGetCvarPointer("gl_finish");
+	gl_clear = gEngfuncs.pfnGetCvarPointer("gl_clear");
+	gl_cull = gEngfuncs.pfnGetCvarPointer("gl_cull");
+	gl_texsort = gEngfuncs.pfnGetCvarPointer("gl_texsort");
 
 	if (!gl_texsort)
 		gl_texsort = &s_gl_texsort;
 
-	gl_smoothmodels = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_smoothmodels");
-	gl_affinemodels = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_affinemodels");
-	gl_flashblend = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_flashblend");
-	gl_playermip = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_playermip");
-	gl_nocolors = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_nocolors");
-	gl_keeptjunctions = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_keeptjunctions");
-	gl_reporttjunctions = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_reporttjunctions");
-	gl_wateramp = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_wateramp");
-	gl_dither = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_dither");
-	gl_spriteblend = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_spriteblend");
-	gl_polyoffset = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_polyoffset");
-	gl_lightholes = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_lightholes");
-	gl_zmax = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_zmax");
-	gl_alphamin = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_alphamin");
-	gl_overdraw = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_overdraw");
-	gl_watersides = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_watersides");
-	gl_overbright = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_overbright");
-	gl_envmapsize = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_envmapsize");
-	gl_flipmatrix = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_flipmatrix");
-	gl_monolights = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_monolights");
-	gl_fog = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_fog");
+	gl_smoothmodels = gEngfuncs.pfnGetCvarPointer("gl_smoothmodels");
+	gl_affinemodels = gEngfuncs.pfnGetCvarPointer("gl_affinemodels");
+	gl_flashblend = gEngfuncs.pfnGetCvarPointer("gl_flashblend");
+	gl_playermip = gEngfuncs.pfnGetCvarPointer("gl_playermip");
+	gl_nocolors = gEngfuncs.pfnGetCvarPointer("gl_nocolors");
+	gl_keeptjunctions = gEngfuncs.pfnGetCvarPointer("gl_keeptjunctions");
+	gl_reporttjunctions = gEngfuncs.pfnGetCvarPointer("gl_reporttjunctions");
+	gl_wateramp = gEngfuncs.pfnGetCvarPointer("gl_wateramp");
+	gl_dither = gEngfuncs.pfnGetCvarPointer("gl_dither");
+	gl_spriteblend = gEngfuncs.pfnGetCvarPointer("gl_spriteblend");
+	gl_polyoffset = gEngfuncs.pfnGetCvarPointer("gl_polyoffset");
+	gl_lightholes = gEngfuncs.pfnGetCvarPointer("gl_lightholes");
+	gl_zmax = gEngfuncs.pfnGetCvarPointer("gl_zmax");
+	gl_alphamin = gEngfuncs.pfnGetCvarPointer("gl_alphamin");
+	gl_overdraw = gEngfuncs.pfnGetCvarPointer("gl_overdraw");
+	gl_watersides = gEngfuncs.pfnGetCvarPointer("gl_watersides");
+	gl_overbright = gEngfuncs.pfnGetCvarPointer("gl_overbright");
+	gl_envmapsize = gEngfuncs.pfnGetCvarPointer("gl_envmapsize");
+	gl_flipmatrix = gEngfuncs.pfnGetCvarPointer("gl_flipmatrix");
+	gl_monolights = gEngfuncs.pfnGetCvarPointer("gl_monolights");
+	gl_fog = gEngfuncs.pfnGetCvarPointer("gl_fog");
 
-	gl_wireframe = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_wireframe");
+	gl_wireframe = gEngfuncs.pfnGetCvarPointer("gl_wireframe");
 	gl_wireframe->flags &= ~FCVAR_SPONLY;
 
-	gl_round_down = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_round_down");
-	gl_picmip = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_picmip");
-	gl_max_size = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_max_size");
+	gl_round_down = gEngfuncs.pfnGetCvarPointer("gl_round_down");
+	gl_picmip = gEngfuncs.pfnGetCvarPointer("gl_picmip");
+	gl_max_size = gEngfuncs.pfnGetCvarPointer("gl_max_size");
 	gl_max_size->value = gl_max_texture_size;
 
-	developer = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("developer");
+	developer = gEngfuncs.pfnGetCvarPointer("developer");
 
-	g_pMetaSave->pEngineFuncs->Cvar_SetValue("r_detailtextures", 1);
+	gEngfuncs.Cvar_SetValue("r_detailtextures", 1);
 
-	gl_ansio = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gl_ansio");
+	gl_ansio = gEngfuncs.pfnGetCvarPointer("gl_ansio");
 	if (!gl_ansio)
-		gl_ansio = g_pMetaSave->pEngineFuncs->pfnRegisterVariable("gl_ansio", "1", FCVAR_ARCHIVE);
+		gl_ansio = gEngfuncs.pfnRegisterVariable("gl_ansio", "1", FCVAR_ARCHIVE);
 
 	const char *s_ansio;
 	gl_force_ansio = 0;
@@ -1484,9 +1476,9 @@ void R_InitCvars(void)
 		}
 	}
 
-	v_lightgamma = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("lightgamma");
-	v_brightness = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("brightness");
-	v_gamma = g_pMetaSave->pEngineFuncs->pfnGetCvarPointer("gamma");
+	v_lightgamma = gEngfuncs.pfnGetCvarPointer("lightgamma");
+	v_brightness = gEngfuncs.pfnGetCvarPointer("brightness");
+	v_gamma = gEngfuncs.pfnGetCvarPointer("gamma");
 }
 
 void R_InitScreen(void)
@@ -1499,8 +1491,6 @@ void R_Init(void)
 {
 	if(g_dwEngineBuildnum >= 5953)
 		gRefFuncs.FreeFBObjects();
-
-	save_refdefstack = 0;
 
 	R_InitCvars();
 	R_InitScreen();
@@ -1550,27 +1540,27 @@ void R_LoadRendererEntities(void)
 		}
 		else
 		{
-			strcpy( szFileName, g_pMetaSave->pEngineFuncs->pfnGetLevelName() );
+			strcpy( szFileName, gEngfuncs.pfnGetLevelName() );
 			if ( !strlen(szFileName) )
 			{
-				g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities failed to GetLevelName.\n");
+				gEngfuncs.Con_Printf("R_LoadRendererEntities failed to GetLevelName.\n");
 				continue;
 			}
 			szFileName[strlen(szFileName)-4] = 0;
 			strcat(szFileName, "_rent.txt");
 		}
 
-		pFile = (char *)g_pMetaSave->pEngineFuncs->COM_LoadFile(szFileName, 5, NULL);
+		pFile = (char *)gEngfuncs.COM_LoadFile(szFileName, 5, NULL);
 		if (!pFile)
 		{
-			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities failed to load %s.\n", szFileName);
+			gEngfuncs.Con_Printf("R_LoadRendererEntities failed to load %s.\n", szFileName);
 			continue;
 		}
 
 		cJSON *root = cJSON_Parse(pFile);
 		if (!root)
 		{
-			g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities failed to parse %s.\n", szFileName);
+			gEngfuncs.Con_Printf("R_LoadRendererEntities failed to parse %s.\n", szFileName);
 			continue;
 		}
 		//ent load
@@ -1583,36 +1573,8 @@ void R_LoadRendererEntities(void)
 			cJSON *type = cJSON_GetObjectItem(ent, "type");
 			if(!type || !type->valuestring)
 			{
-				g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities parse %s with error, entity #%d has no \"type\" component.\n", szFileName, j);
+				gEngfuncs.Con_Printf("R_LoadRendererEntities parse %s with error, entity #%d has no \"type\" component.\n", szFileName, j);
 				continue;
-			}
-
-			if(!strcmp(type->valuestring, "3dskybox"))
-			{
-				cJSON *camera = cJSON_GetObjectItem(ent, "camera");
-				
-				if(!camera || !camera->valuestring)
-				{
-					g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities parse %s with error, entity with type \"skycamera\" #%d has no \"camera\" component.\n", szFileName, j);
-					continue;
-				}
-				
-				cJSON *center = cJSON_GetObjectItem(ent, "center");
-				if(!center || !center->valuestring)
-				{
-					g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities parse %s with error, entity with type \"skycamera\" #%d has no \"center\" component.\n", szFileName, j);
-					continue;
-				}
-				sscanf(camera->valuestring, "%f %f %f", &_3dsky_camera[0], &_3dsky_camera[1], &_3dsky_camera[2]);
-
-				sscanf(center->valuestring, "%f %f %f", &_3dsky_center[0], &_3dsky_center[1], &_3dsky_center[2]);
-				
-				cJSON *scale = cJSON_GetObjectItem(ent, "scale");
-				if(scale && scale->valuestring)
-				{
-					_3dsky_scale = atof(scale->valuestring);
-				}
-				_3dsky_enable = true;
 			}
 
 			if(!strcmp(type->valuestring, "shadowmanager"))
@@ -1625,7 +1587,7 @@ void R_LoadRendererEntities(void)
 				cJSON *angles = cJSON_GetObjectItem(ent, "angles");
 				if(!affectmodel || !affectmodel->valuestring)
 				{
-					g_pMetaSave->pEngineFuncs->Con_Printf("R_LoadRendererEntities parse %s with error, entity with type \"shadowmanager\" #%d has no \"affectmodel\" component.\n", szFileName, j);
+					gEngfuncs.Con_Printf("R_LoadRendererEntities parse %s with error, entity with type \"shadowmanager\" #%d has no \"affectmodel\" component.\n", szFileName, j);
 					continue;
 				}
 				vec3_t angles2;
@@ -1665,7 +1627,7 @@ void R_LoadRendererEntities(void)
 		}
 		//load end
 		cJSON_Delete(root);
-		g_pMetaSave->pEngineFuncs->COM_FreeFile((void *) pFile );
+		gEngfuncs.COM_FreeFile((void *) pFile );
 	}
 }
 
@@ -1677,10 +1639,10 @@ void R_AllocObjects(int nMax)
 		return;
 	}
 	if (*transObjects)
-		g_pMetaSave->pEngineFuncs->Con_Printf("Transparent objects reallocate\n");
+		gEngfuncs.Con_Printf("Transparent objects reallocate\n");
 
 	*transObjects = (transObjRef *)gRefFuncs.Mem_Malloc(cl_maxvisedicts * sizeof(transObjRef));
 	memset(*transObjects, 0, cl_maxvisedicts * sizeof(transObjRef));
 	*maxTransObjs = cl_maxvisedicts;
-	numTransObjs = 0;
+	*numTransObjs = 0;
 }

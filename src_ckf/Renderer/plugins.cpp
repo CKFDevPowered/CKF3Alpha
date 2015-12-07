@@ -1,6 +1,7 @@
 #include <metahook.h>
 #include "gl_local.h"
 #include "exportfuncs.h"
+#include "command.h"
 #include <IRenderer.h>
 #include <IBTEClient.h>
 
@@ -33,9 +34,10 @@ void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engines
 	g_hInstance = GetModuleHandle(NULL);
 	g_bIsDebuggerPresent = IsDebuggerPresent() != FALSE;
 
-	g_pInterface->CommandLine->RemoveParm("-d3d");
-	g_pInterface->CommandLine->AppendParm("-gl", NULL);
-	g_pInterface->CommandLine->AppendParm("-32bpp", NULL);
+	//TODO: D3D Support
+	//g_pInterface->CommandLine->RemoveParm("-d3d");
+	//g_pInterface->CommandLine->AppendParm("-gl", NULL);
+	//g_pInterface->CommandLine->AppendParm("-32bpp", NULL);
 }
 
 void IPlugins::Shutdown(void)
@@ -47,13 +49,13 @@ void IPlugins::LoadEngine(void)
 	g_pFileSystem = g_pInterface->FileSystem;
 	g_iVideoMode = g_pMetaHookAPI->GetVideoMode(&g_iVideoWidth, &g_iVideoHeight, &g_iBPP, &g_bWindowed);
 	g_dwEngineBuildnum = g_pMetaHookAPI->GetEngineBuildnum();
-	g_iBPP = 32;
 
 	g_hEngineModule = g_pMetaHookAPI->GetEngineModule();
 	g_dwEngineBase = g_pMetaHookAPI->GetEngineBase();
 	g_dwEngineSize = g_pMetaHookAPI->GetEngineSize();
 
 	BTE_Init();
+	Memory_Init();
 	R_FillAddress();
 	R_InstallHook();
 }
@@ -61,22 +63,35 @@ void IPlugins::LoadEngine(void)
 void IPlugins::LoadClient(cl_exportfuncs_t *pExportFunc)
 {
 	memcpy(&gExportfuncs, pExportFunc, sizeof(gExportfuncs));
+	memcpy(&gEngfuncs, g_pMetaSave->pEngineFuncs, sizeof(gEngfuncs));
+
+	Cmd_GetCmdBase = *(cmd_function_t *(**)(void))((DWORD)g_pMetaSave->pEngineFuncs + 0x198);
+
+	if(g_dwEngineBuildnum < 5953)
+	{
+		g_pMetaHookAPI->InlineHook(gEngfuncs.pfnGetMousePos, hudGetMousePos, (void *&)gEngfuncs.pfnGetMousePos);
+		g_pMetaHookAPI->InlineHook(gEngfuncs.GetMousePosition, hudGetMousePosition, (void *&)gEngfuncs.GetMousePosition);
+	}
+
+	GL_Init();
+
+	pExportFunc->HUD_GetStudioModelInterface = HUD_GetStudioModelInterface;
+	pExportFunc->HUD_UpdateClientData = HUD_UpdateClientData;
+	pExportFunc->HUD_AddEntity = HUD_AddEntity;
+	pExportFunc->HUD_Redraw = HUD_Redraw;
+	pExportFunc->HUD_Init = HUD_Init;
+	pExportFunc->HUD_VidInit = HUD_VidInit;
+	pExportFunc->V_CalcRefdef = V_CalcRefdef;
 }
 
 void IPlugins::ExitGame(int iResult)
 {
+	R_Shutdown();
 }
 
 EXPOSE_SINGLE_INTERFACE(IPlugins, IPlugins, METAHOOK_PLUGIN_API_VERSION);
 
 //renderer exports
-
-extern cl_exportfuncs_t gClientfuncs;
-
-void IRenderer::GetClientFuncs(cl_exportfuncs_t *pExportFuncs)
-{
-	memcpy(pExportFuncs, &gClientfuncs, sizeof(cl_exportfuncs_t));
-}
 
 void IRenderer::GetInterface(ref_export_t *pRefExports, const char *version)
 {
@@ -86,7 +101,7 @@ void IRenderer::GetInterface(ref_export_t *pRefExports, const char *version)
 	}
 	else
 	{
-		g_pMetaSave->pEngineFuncs->Con_Printf("Meta Renderer interface version (%s) should be (%s)\n", version, META_RENDERER_VERSION);
+		Sys_ErrorEx("Meta Renderer interface version (%s) should be (%s)\n", version, META_RENDERER_VERSION);
 	}
 }
 

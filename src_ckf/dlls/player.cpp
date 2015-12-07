@@ -287,6 +287,7 @@ int CBasePlayer::PM_NoCollision(CBaseEntity *pEntity)
 	}
 	else if(classify == CLASS_PROJECTILE)
 	{
+		//player can walk through any projectiles
 		return 1;
 	}
 	else if(pEntity->IsBSPModel() && pEntity->pev->team != 0)
@@ -831,19 +832,16 @@ int CBasePlayer::TakeDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 	}
 
 	//show critical effects
-	if(iCrit >= 2)
+	if(m_iDisguise != DISGUISE_YES)
 	{
-		if(pAttacker->pev != pev)
-			EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/crit_hit.wav", VOL_NORM, ATTN_NORM);
-		if(m_iDisguise != DISGUISE_YES)
-			SendCriticalHit(bShowCritEffects);
-	}
-	else if(iCrit == 1)
-	{
-		if(pAttacker->pev != pev)
-			EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/crit_hit_mini.wav", VOL_NORM, ATTN_NORM);
-		if(m_iDisguise != DISGUISE_YES)
-			SendMiniCritHit(bShowCritEffects);
+		if(iCrit >= 2)
+		{
+			SendCriticalHit(bShowCritEffects, (pAttacker->pev != pev) ? true : false);
+		}
+		else if(iCrit == 1)
+		{			
+			SendMiniCritHit(bShowCritEffects, (pAttacker->pev != pev) ? true : false);
+		}
 	}
 
 	if (bitsDamageType & DMG_BLAST)
@@ -884,8 +882,11 @@ int CBasePlayer::TakeDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 
 		ALERT(at_console, "EXPLOSION DAMAGE %d\n", (int)flDamage);
 
+		//add hit damage to queue
 		if(bShowDmgFText && plAttacker && m_iDisguise != DISGUISE_YES && m_iCloak != CLOAK_YES)
-			plAttacker->SendHitDamage(pev, (int)flDamage);
+		{
+			AddHitDamage(pevAttacker, (int)flDamage, iCrit);
+		}
 
 		m_flLastDamagedTime = gpGlobals->time;
 		if(plAttacker && pevAttacker != pev)
@@ -937,7 +938,9 @@ int CBasePlayer::TakeDamage(entvars_t *pevInflictor, entvars_t *pevAttacker, flo
 	m_bitsDamageType |= bitsDamageType;
 
 	if(bShowDmgFText && plAttacker && m_iDisguise != DISGUISE_YES)
-		plAttacker->SendHitDamage(pev, (int)flDamage);
+	{
+		AddHitDamage(pevAttacker, (int)flDamage, iCrit);
+	}
 
 	m_flLastDamagedTime = gpGlobals->time;
 	if(plAttacker && pevAttacker != pev)
@@ -1245,10 +1248,7 @@ void CBasePlayer::Killed(entvars_t *pevAttacker, int iGib)
 
 	//清理粘弹
 	ClearSticky();
-
-	m_Cond.AfterBurn.Remove();
-	m_Cond.CritBoost.Remove();
-	m_Cond.Invulnerable.Remove();
+	Condition_Clear();
 
 	//解除隐身
 	m_iCloak = CLOAK_NO;
@@ -2441,7 +2441,13 @@ void CBasePlayer::JoiningThink(void)
 			else
 			{
 				pev->deadflag = DEAD_RESPAWNABLE;
+
+				if (pev->classname)
+					RemoveEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
+
 				pev->classname = MAKE_STRING("player");
+				AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
+
 				pev->flags &= FL_PROXY;
 				pev->flags |= (FL_SPECTATOR | FL_CLIENT);
 				
@@ -2449,6 +2455,9 @@ void CBasePlayer::JoiningThink(void)
 				entvars_t *pevSpot = VARS(pSpot);
 				StartObserver(pevSpot->origin, pevSpot->angles);
 				Observer_SetMode(OBS_ROAMING);
+
+				//shall we really check this? hack hack
+				g_pGameRules->CheckWinConditions();
 
 				MESSAGE_BEGIN(MSG_ALL, gmsgTeamInfo);
 				WRITE_BYTE(ENTINDEX(edict()));
@@ -3174,12 +3183,14 @@ void CBasePlayer::PreThink(void)
 		}
 	}
 
-	//CKF Think
 	CritChance_Think();
 	CritBuff_Think();
 	Respawn_Think();
 
 	Condition_Think();
+
+	//flush hit damage messages
+	FlushHitDamage();
 	
 	if(IsAlive())
 	{
@@ -3862,13 +3873,18 @@ void CBasePlayer::Spawn(void)
 	//清理Ubercharge
 	m_iUbercharge = 0;
 	//清理抛射物
-	ClearProjectile();
+	ClearSticky();
 	DmgRecord_Clear();
 
 	//close HUDMenu here
 	ShowHudMenu(this, MENU_CLOSE, 0, FALSE);
 	m_iHudMenu = 0;
+
+	if (pev->classname)
+		RemoveEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
+
 	pev->classname = MAKE_STRING("player");
+	AddEntityHashValue(pev, STRING(pev->classname), CLASSNAME);
 
 	//清理HUD
 	pev->armorvalue = 0;
@@ -4481,7 +4497,14 @@ int CBasePlayer::FShouldCollide(CBaseEntity *pHit)
 	}
 	if(!g_fIsTraceLine)
 	{
-		if(pHit->Classify() == CLASS_BUILDABLE && !g_fIsTraceLine)
+		if(pHit->IsPlayer())
+		{
+			CBasePlayer *pPlayer = (CBasePlayer *)pHit;
+			if(pPlayer->m_iTeam == m_iTeam && pev != pPlayer->pev)
+				return 0;
+			return 1;
+		}
+		else if(pHit->Classify() == CLASS_BUILDABLE)
 		{
 			CBaseBuildable *pBuild = (CBaseBuildable *)pHit;
 			if(!pBuild->m_pPlayer)
@@ -4492,12 +4515,9 @@ int CBasePlayer::FShouldCollide(CBaseEntity *pHit)
 				return 0;
 			return 1;
 		}
-		if(pHit->IsPlayer())
+		else if(pHit->Classify() == CLASS_PROJECTILE)//just walk through any projectiles
 		{
-			CBasePlayer *pPlayer = (CBasePlayer *)pHit;
-			if(pPlayer->m_iTeam == m_iTeam && pev != pPlayer->pev)
-				return 0;
-			return 1;
+			return 0;
 		}
 	}
 	return 1;
@@ -4950,18 +4970,19 @@ void CBasePlayer::SendAmmoUpdate(void)
 		}
 	}
 }
-//ckf
 
-void CBasePlayer::SendHitDamage(entvars_t *pevVictim, int iDamage)
+void CBasePlayer::SendHitDamage(entvars_t *pevVictim, int iDamage, int iCrit)
 {
-	if(m_fHitDamageTimer > gpGlobals->time)
+	if(m_flHitDamageTimer > gpGlobals->time)
 		return;
 
-	m_fHitDamageTimer = gpGlobals->time + 0.1;
+	m_flHitDamageTimer = gpGlobals->time + 0.1;
+
 	MESSAGE_BEGIN(MSG_ONE, gmsgDrawFX, NULL, pev);
 	WRITE_BYTE(FX_HITDAMAGE);
 	WRITE_SHORT(ENTINDEX(ENT(pevVictim)));
 	WRITE_SHORT(iDamage);
+	WRITE_BYTE(iCrit);
 	MESSAGE_END();
 }
 
@@ -4989,60 +5010,33 @@ void CBasePlayer::SendAddMetal(int iMetal)
 	MESSAGE_END();
 }
 
-void CBasePlayer::SendCriticalHit(BOOL bShowEffects)
+void CBasePlayer::SendCriticalHit(BOOL bShowEffects, BOOL bShowSound)
 {
-	EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/crit_received.wav", VOL_NORM, ATTN_NORM);
-	if(!bShowEffects) return;
+	if(m_flCritHitTimer > gpGlobals->time)
+		return;
+
+	m_flCritHitTimer = gpGlobals->time + 0.1;
 
 	MESSAGE_BEGIN(MSG_PVS, gmsgDrawFX, pev->origin);
 	WRITE_BYTE(FX_CRITHIT);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 32);
+	WRITE_SHORT(entindex());
+	WRITE_BYTE((bShowEffects & 1) | ((bShowSound & 1) << 1));
 	MESSAGE_END();
-
-	/*MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
-	WRITE_BYTE(TE_BUBBLES);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 16);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 32);
-	WRITE_COORD(192);
-	WRITE_SHORT(g_sModelIndexFTCritical);
-	WRITE_BYTE(1);
-	WRITE_COORD(30);
-	MESSAGE_END();		*/
 }
 
-void CBasePlayer::SendMiniCritHit(BOOL bShowEffects)
+void CBasePlayer::SendMiniCritHit(BOOL bShowEffects, BOOL bShowSound)
 {
-	if(!bShowEffects) return;
+	if(m_flCritHitTimer > gpGlobals->time)
+		return;
+
+	m_flCritHitTimer = gpGlobals->time + 0.1;
 
 	MESSAGE_BEGIN(MSG_PVS, gmsgDrawFX, pev->origin);
 	WRITE_BYTE(FX_MINICRITHIT);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 32);
+	WRITE_SHORT(entindex());
+	WRITE_BYTE((bShowEffects & 1) | ((bShowSound & 1) << 1));
 	MESSAGE_END();
-
-	/*MESSAGE_BEGIN(MSG_BROADCAST, SVC_TEMPENTITY);
-	WRITE_BYTE(TE_BUBBLES);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 16);
-	WRITE_COORD(pev->origin.x);
-	WRITE_COORD(pev->origin.y);
-	WRITE_COORD(pev->origin.z + 32);
-	WRITE_COORD(192);
-	WRITE_SHORT(g_sModelIndexFTMiniCrit);
-	WRITE_BYTE(1);
-	WRITE_COORD(30);
-	MESSAGE_END();*/
 }
-
-#define DISGUISE_HEALTH 5
 
 void CBasePlayer::UpdateClientData(void)
 {
@@ -5642,11 +5636,18 @@ void CBasePlayer::ThrowWeapon(char *pszWeaponName)
 
 void CBasePlayer::SwitchSlotWeapon(int iSlot)
 {
-	if(iSlot < 1 || iSlot > 5) return;
+	if(iSlot < 1 || iSlot > 5)
+		return;
+
 	CBasePlayerItem *pWeapon = m_rgpPlayerItems[iSlot];
-	if(m_pActiveItem == pWeapon) return;
-	if(!m_pActiveItem->CanHolster()) return;
-	if(pWeapon) SwitchWeapon(pWeapon);
+
+	if(!pWeapon)
+		return;
+
+	if(m_pActiveItem == pWeapon)
+		return;
+
+	SwitchWeapon(pWeapon);
 }
 
 BOOL CBasePlayer::HasPlayerItem(CBasePlayerItem *pCheckItem)
@@ -5736,6 +5737,9 @@ BOOL CBasePlayer::SwitchWeapon(CBasePlayerItem *pWeapon)
 
 	if (m_pActiveItem)
 	{
+		if(!m_pActiveItem->CanHolster())
+			return FALSE;
+
 		m_pLastItem = m_pActiveItem;
 		m_pActiveItem->Holster();
 	}
@@ -6238,6 +6242,13 @@ void CBasePlayer::SetPrefsFromUserinfo(char *infobuffer)
 	else
 		m_iAutoWepSwitch = 1;
 
+	const char *autoreload = g_engfuncs.pfnInfoKeyValue(infobuffer, "_cl_autoreload");
+
+	if (strcmp(autoreload, ""))
+		m_bAutoReload = (atoi(autoreload) > 0) ? true : false;
+	else
+		m_bAutoReload = true;
+
 	const char *vguimenu = g_engfuncs.pfnInfoKeyValue(infobuffer, "_vgui_menus");
 
 	if (strcmp(vguimenu, ""))
@@ -6316,20 +6327,34 @@ int CBasePlayer::GetCriticalFire(int iType, unsigned int iRandSeed)
 
 void CBasePlayer::CritChance_Think()
 {
-	if(m_fCritChanceTimer >= gpGlobals->time) return;
-	if(pev->deadflag != DEAD_NO) return;
+	if(m_fCritChanceTimer >= gpGlobals->time)
+		return;
+	if(pev->deadflag != DEAD_NO)
+		return;
+
 	m_fCritChance = 2.0f + 10.0f*m_iDmgDone_Recent/800.0f;
-	if(m_fCritChance > 12.0f) m_fCritChance = 12.0f;
-	if(m_fDmgDone_Decesase > 0) m_iDmgDone_Recent -= m_fDmgDone_Decesase;
-	if(m_iDmgDone_Recent) m_fDmgDone_Decesase = m_iDmgDone_Recent / 20.0f;
+
+	if(m_fCritChance > 12.0f)
+		m_fCritChance = 12.0f;
+
+	if(m_fDmgDone_Decesase > 0)
+		m_iDmgDone_Recent -= m_fDmgDone_Decesase;
+
+	if(m_iDmgDone_Recent)
+		m_fDmgDone_Decesase = m_iDmgDone_Recent / 20.0f;
+
 	m_fCritChanceTimer = gpGlobals->time + 1.0;
 }
 
 void CBasePlayer::CritBuff_Think()
 {
-	if(m_fCritBuffTimer >= gpGlobals->time) return;
-	if(pev->deadflag != DEAD_NO) return;
-	if(g_pGameRules->m_iRoundStatus == ROUND_END) return;
+	if(m_fCritBuffTimer >= gpGlobals->time)
+		return;
+	if(pev->deadflag != DEAD_NO)
+		return;
+	if(g_pGameRules->m_iRoundStatus == ROUND_END)
+		return;
+
 	if(m_bCritBuff)
 	{
 		m_bCritBuff = false;
@@ -6350,11 +6375,17 @@ void CBasePlayer::CritBuff_Think()
 
 void CBasePlayer::Respawn_Think()
 {
-	if(!m_iClass && !m_iNewClass) return;
-	if(!m_bIsRespawning) return;
-	if(m_fRespawnCounter >= gpGlobals->time) return;
-	if(pev->deadflag == DEAD_NO) return;
-	if(g_pGameRules->m_iRoundStatus == ROUND_END) return;
+	if(!m_iClass && !m_iNewClass)
+		return;
+	if(!m_bIsRespawning)
+		return;
+	if(m_fRespawnCounter >= gpGlobals->time)
+		return;
+	if(pev->deadflag == DEAD_NO)
+		return;
+	if(g_pGameRules->m_iRoundStatus == ROUND_END)
+		return;
+
 	int iDelta = int( ceil(m_fRespawnTimer - gpGlobals->time) );
  	if(iDelta >= 0)
 	{
@@ -6538,38 +6569,8 @@ void CBasePlayer::ClearSticky(void)
 	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_sticky")) != NULL)
 	{
 		if(pEntity->pev->owner != edict()) continue;
-		pEntity->pev->nextthink = gpGlobals->time + 0.02;
-		pEntity->SetThink(&CBaseEntity::SUB_Remove);
-	}
-}
-
-void CBasePlayer::ClearProjectile(void)
-{
-	CBaseEntity *pEntity = NULL;
-	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_sticky")) != NULL)
-	{
-		if(pEntity->pev->owner != edict()) continue;
-		UTIL_Remove(pEntity);
-	}
-	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_grenade")) != NULL)
-	{
-		if(pEntity->pev->owner != edict()) continue;
-		UTIL_Remove(pEntity);
-	}
-	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_rocket")) != NULL)
-	{
-		if(pEntity->pev->owner != edict()) continue;
-		UTIL_Remove(pEntity);
-	}
-	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_flame")) != NULL)
-	{
-		if(pEntity->pev->owner != edict()) continue;
-		UTIL_Remove(pEntity);
-	}
-	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "pj_syringe")) != NULL)
-	{
-		if(pEntity->pev->owner != edict()) continue;
-		UTIL_Remove(pEntity);
+		CSticky *pSticky = (CSticky *)pEntity;
+		pSticky->Killed(pev, -1);
 	}
 }
 
@@ -7308,15 +7309,12 @@ BOOL CBasePlayer::Build_PreDeploy(Vector &vecSrc)
 	vecMins = vecSrc+Vector(-16, -16, -height);
 	vecMaxs = vecSrc+Vector(16, 16, height);
 	//nobuildable zone check
-	if(!g_pGameRules->m_NoBuildZone.empty())
+	for(int i = 0; i < g_pGameRules->m_NoBuildZone.Count(); ++i)
 	{
-		for(entvector::iterator it = g_pGameRules->m_NoBuildZone.begin(); it != g_pGameRules->m_NoBuildZone.end(); it++)
-		{
-			if((*it)->v.team != 0 && (*it)->v.team != m_iTeam)
-				continue;
-			if(UTIL_IsHullInZone(*it, vecMins, vecMaxs))
-				return FALSE;
-		}
+		if(g_pGameRules->m_NoBuildZone[i]->v.team != 0 && g_pGameRules->m_NoBuildZone[i]->v.team != m_iTeam)
+			continue;
+		if(UTIL_IsHullInZone(g_pGameRules->m_NoBuildZone[i], vecMins, vecMaxs))
+			return FALSE;
 	}
 
 	//just in case of stucking
@@ -7576,6 +7574,9 @@ BOOL CBasePlayer::EatAmmoBox(float flAmmoPercent, float flMetalPercent, float fl
 void CBasePlayer::PlayerDisconnect(void)
 {
 	Build_DestroyAll();
+	ClearSticky();
+	ClearDominates();
+	ClearEffects();
 }
 
 void CBasePlayer::KnockBack(Vector vecDir, float flForce)
@@ -7665,27 +7666,32 @@ void CBasePlayer::SendScoreInfo(void)
 
 void CBasePlayer::DmgRecord_Add(CBasePlayer *pAttacker, int iDamage)
 {
-	std::vector<dmg_record_t>::iterator it;
-	for(it = m_DmgRecord.begin(); it != m_DmgRecord.end(); ++it)
+	int count = m_DmgRecord.Count();
+	if(count)
 	{
-		if(gpGlobals->time - it->flTime < 30)
-			break;
-		it = m_DmgRecord.erase(it);
+		int i;
+		for(i = 0; i < count; ++i)
+		{
+			if(gpGlobals->time - m_DmgRecord[i].flTime < 30)
+				break;
+		}
+		if(i > 0)
+		{
+			m_DmgRecord.RemoveMultiple(0, i);
+		}
 	}
-	
-	dmg_record_t dmg;
+
+	dmgrecord_t &dmg = m_DmgRecord[m_DmgRecord.AddToTail()];
 
 	dmg.pevAttacker = pAttacker->pev;
 	dmg.iDamage = iDamage;
 	dmg.flTime = gpGlobals->time;
-
-	m_DmgRecord.push_back(dmg);
 }
 
 int CBasePlayer::DmgRecord_Get(CBasePlayer *pAttacker, float flBefore)
 {
 	int iCount = 0;
-	for(int i = m_DmgRecord.size() - 1; i >= 0; --i)
+	for(int i = m_DmgRecord.Count() - 1; i >= 0; --i)
 	{
 		if(gpGlobals->time - m_DmgRecord[i].flTime > 30)
 			break;
@@ -7698,7 +7704,7 @@ int CBasePlayer::DmgRecord_Get(CBasePlayer *pAttacker, float flBefore)
 
 void CBasePlayer::DmgRecord_Clear(void)
 {
-	m_DmgRecord.clear();
+	m_DmgRecord.RemoveAll();
 }
 
 int CBasePlayer::GetCriticalHit(void)
@@ -7762,4 +7768,82 @@ void CBasePlayer::SendSpecHealth(bool bShowEntIndex, entvars_t *pevInflictor)
 			MESSAGE_END();
 		}
 	}
+}
+
+void CBasePlayer::UpdateDominate(void)
+{
+	int count = 0;
+	for(int i = 1; i < gpGlobals->maxClients; ++i)
+	{
+		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
+		if(m_Dominate[i] >= 4 && pPlayer && !pPlayer->IsDormant())
+		{
+			if(pPlayer->m_iTeam == 3 - m_iTeam)
+				count ++;
+		}
+	}
+	m_iDominates = count;
+}
+
+void CBasePlayer::ClearDominates(void)
+{
+	int myindex = entindex();
+	for(int i = 1; i <= gpGlobals->maxClients; ++i)
+	{
+		CBasePlayer *pPlayer = (CBasePlayer *)UTIL_PlayerByIndex(i);
+		if(pPlayer && !pPlayer->IsDormant() && pPlayer->m_Dominate[myindex] >= 4)
+		{
+			pPlayer->m_Dominate[myindex] = 0;
+			pPlayer->UpdateDominate();
+			pPlayer->SendScoreInfo();
+		}
+	}
+}
+
+void CBasePlayer::FlushHitDamage(void)
+{
+	for(int i = 0; i < m_HitDamage.Count(); ++i)
+	{
+		CBaseEntity *pEntity = CBaseEntity::Instance(m_HitDamage[i].pevAttacker);
+		if(pEntity && pEntity->IsPlayer() && !pEntity->IsDormant())
+		{
+			CBasePlayer *pPlayer = (CBasePlayer *)pEntity;
+			pPlayer->SendHitDamage(pev, m_HitDamage[i].iDamage, m_HitDamage[i].iCrit);
+		}
+	}
+	m_HitDamage.RemoveAll();
+}
+
+void CBasePlayer::AddHitDamage(entvars_t *pevAttacker, int iDamage, int iCrit)
+{
+	hitdamage_t *dmg = NULL;
+	for(int i = 0; i < m_HitDamage.Count(); ++i)
+	{
+		if(m_HitDamage[i].pevAttacker == pevAttacker)
+		{
+			dmg = &m_HitDamage[i];
+			break;
+		}
+	}
+	if(!dmg)//found an exist one
+	{
+		dmg = &m_HitDamage[m_HitDamage.AddToTail()];
+		dmg->pevAttacker = pevAttacker;
+		dmg->iDamage = iDamage;
+		dmg->iCrit = iCrit;
+	}
+	else
+	{
+		dmg->iDamage += iDamage;
+		if(iCrit > dmg->iCrit)
+			dmg->iCrit = iCrit;
+	}
+}
+
+void CBasePlayer::ClearEffects(void)
+{
+	MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
+	WRITE_BYTE(FX_KILLTRAIL);
+	WRITE_SHORT(entindex());
+	MESSAGE_END();
 }
