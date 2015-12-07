@@ -25,7 +25,7 @@ CTextWindow::CTextWindow(void) : Frame(NULL, PANEL_INFO)
 	m_szTitle[0] = '\0';
 	m_szMessage[0] = '\0';
 	m_szExitCommand[0] = '\0';
-	m_bIsChromeHTML = (g_dwEngineBuildnum > 5953) ? true : false;
+	m_bIsChromeHTML = (g_dwEngineBuildnum >= 5953) ? true : false;
 
 	SetScheme("ClientScheme");
 	SetMoveable(false);

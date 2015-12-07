@@ -10,7 +10,6 @@
 #include <cl_entity.h>
 #include <event_api.h>
 #include <cdll_dll.h>
-
 #include <ref_params.h>
 
 #include <VGUI/VGUI.h>
@@ -19,6 +18,7 @@
 #include <KeyValues.h>
 
 #include "hud_deathnotice.h"
+#include <ICKFClient.h>
 
 #include "CounterStrikeViewport.h"
 
@@ -370,24 +370,6 @@ void CTFHudDeathNotice::RetireExpiredDeathNotices()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Gets the localized name of the control point sent in the event
-//-----------------------------------------------------------------------------
-void CTFHudDeathNotice::GetLocalizedControlPointName( const char *name, char *namebuf, int namelen )
-{
-	// Cap point name ( MATTTODO: can't we find this from the point index ? )
-	const wchar_t *pLocalizedName = g_pVGuiLocalize->Find( name );
-
-	if ( pLocalizedName )
-	{
-		g_pVGuiLocalize->ConvertUnicodeToANSI( pLocalizedName, namebuf, namelen );
-	}
-	else
-	{
-		Q_strncpy( namebuf, name, namelen );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Adds a new death notice to the queue
 //-----------------------------------------------------------------------------
 int CTFHudDeathNotice::AddDeathNoticeItem()
@@ -566,22 +548,374 @@ int CTFHudDeathNotice::MsgFunc_DeathMsg(const char *pszName, int iSize, void *pb
 
 int CTFHudDeathNotice::MsgFunc_BuildDeath(const char *pszName, int iSize, void *pbuf)
 {
+	BEGIN_READ(pbuf, iSize);
+	int iKillerID = READ_BYTE();
+	int iAssisterID = READ_BYTE();
+	int iVictimID = READ_BYTE();
+	int iBuildClass = READ_BYTE();
+	char *szIconName = READ_STRING();
+
+	int iLocalPlayerIndex = engine->GetLocalPlayer()->index;
+
+	hud_player_info_t pi;
+
+	DeathNoticeItem &msg = m_DeathNotices[AddDeathNoticeItem()];
+
+	DEATHNOTICE_DISPLAY_TIME = CVAR_GET_FLOAT("hud_deathnotice_time");
+
+	bool bLocalPlayerInvolved = false;
+	if ( iLocalPlayerIndex == iKillerID || iLocalPlayerIndex == iAssisterID || iLocalPlayerIndex == iVictimID )
+	{
+		bLocalPlayerInvolved = true;
+	}
+	msg.bLocalPlayerInvolved = bLocalPlayerInvolved;
+
+	msg.bCritKilled = false;
+
+	msg.Killer.iTeam = gCKFVars.g_PlayerInfo[iKillerID].iTeam;
+	msg.Victim.iTeam = gCKFVars.g_PlayerInfo[iVictimID].iTeam;
+
+	if(iAssisterID)
+	{
+		char *pszKillerName = "";
+		char *pszAssisterName = "";
+
+		if(iKillerID)
+		{
+			engine->pfnGetPlayerInfo(iKillerID, &pi);
+			if(pi.name && pi.name[0])
+				pszKillerName = pi.name;
+		}
+		
+		engine->pfnGetPlayerInfo(iAssisterID, &pi);
+		if(pi.name && pi.name[0])
+			pszAssisterName = pi.name;
+
+		Q_snprintf( msg.Killer.szName, ARRAYSIZE( msg.Killer.szName ), "%s + %s", pszKillerName, pszAssisterName );
+	}
+	else
+	{
+		char *pszKillerName = "";
+
+		if(iKillerID)
+		{
+			engine->pfnGetPlayerInfo(iKillerID, &pi);
+			if(pi.name && pi.name[0])
+				pszKillerName = pi.name;			
+		}
+
+		Q_strncpy( msg.Killer.szName, pszKillerName, ARRAYSIZE( msg.Killer.szName ) );
+	}
+
+	char *pszVictimName = "";
+
+	if(iVictimID)
+	{
+		engine->pfnGetPlayerInfo(iVictimID, &pi);
+		if(pi.name && pi.name[0])
+			pszVictimName = pi.name;
+	}
+
+	// get the localized name for the object
+	char szLocalizedObjectName[MAX_PLAYER_NAME_LENGTH];
+	szLocalizedObjectName[ 0 ] = 0;
+	if(iBuildClass >= 1 && iBuildClass <= 5)
+	{
+		const wchar_t *wszLocalizedObjectName = g_pVGuiLocalize->Find( szLocalizedObjectNames[iBuildClass-1] );
+		if ( wszLocalizedObjectName )
+		{
+			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalizedObjectName, szLocalizedObjectName, ARRAYSIZE( szLocalizedObjectName ) );
+		}
+		else
+		{
+			Q_strncpy( szLocalizedObjectName, szLocalizedObjectNames[iBuildClass-1], sizeof( szLocalizedObjectName ) );
+		}
+	}
+
+	Q_snprintf( msg.Victim.szName, ARRAYSIZE( msg.Victim.szName ), "%s (%s)", szLocalizedObjectName, pszVictimName );
+
+	Q_strncpy( msg.szIcon, szIconName, ARRAYSIZE(msg.szIcon));
+
+	if ( !iKillerID || iKillerID == iVictimID )
+	{
+		msg.bSelfInflicted = true;
+		msg.Killer.szName[0] = 0;
+	}
+
+	msg.Icon = FindDeathIcon(msg.szIcon);
+
+	if(!msg.Icon)
+	{
+		Q_snprintf(msg.szIcon, ARRAYSIZE( msg.szIcon ), (msg.bLocalPlayerInvolved) ? "%s_d" : "%s_b", szIconName );
+		msg.Icon = FindDeathIcon(msg.szIcon);
+	}
+
+	if(!msg.Icon)
+	{
+		msg.Icon = FindDeathIcon("suicide");
+	}
 
 	return 1;
 }
 
 int CTFHudDeathNotice::MsgFunc_ObjectMsg(const char *pszName, int iSize, void *pbuf)
 {
+	BEGIN_READ(pbuf, iSize);
+	int iObjectIndex = READ_BYTE();
+	int iObjectAction = READ_BYTE();
+	int iKillerTeam = READ_BYTE();
+	int iVictimTeam = READ_BYTE();
+	int iCapturerNum = READ_BYTE();
+	int iCapturersID[5];
+	if(iCapturerNum > 100)
+	{
+		iCapturersID[0] = iCapturerNum - 100;
+		iCapturerNum = 1;
+	}
+	else
+	{
+		for(int i = 0; i < iCapturerNum; ++i)
+		{
+			iCapturersID[i] = READ_BYTE();
+		}
+	}
+
+	char *szIconName = "";
+
+	if(iObjectIndex < 1 || iObjectIndex > g_pCKFClient->GetControlPointCount())
+		return 1;
+
+	controlpoint_t *point = g_pCKFClient->GetControlPoint(iObjectIndex - 1);
+
+	int iLocalPlayerIndex = engine->GetLocalPlayer()->index;
+
+	hud_player_info_t pi;
+
+	DeathNoticeItem &msg = m_DeathNotices[AddDeathNoticeItem()];
+
+	DEATHNOTICE_DISPLAY_TIME = CVAR_GET_FLOAT("hud_deathnotice_time");
+
+	bool bLocalPlayerInvolved = false;
+	if ( gCKFVars.g_PlayerInfo[iLocalPlayerIndex].iTeam == iKillerTeam || gCKFVars.g_PlayerInfo[iLocalPlayerIndex].iTeam == iKillerTeam )
+	{
+		bLocalPlayerInvolved = true;
+	}
+	msg.bLocalPlayerInvolved = bLocalPlayerInvolved;
+
+	msg.bCritKilled = false;
+
+	msg.Killer.iTeam = iKillerTeam;
+	msg.Victim.iTeam = iVictimTeam;
+
+	for(int i = 0; i < iCapturerNum; ++i)
+	{
+		char *pszCapturerName = "";
+
+		engine->pfnGetPlayerInfo(iCapturersID[i], &pi);
+		if(pi.name && pi.name[0])
+			pszCapturerName = pi.name;
+
+		if(i != 0)
+		{
+			Q_strncat( msg.Killer.szName, " + ", ARRAYSIZE( msg.Killer.szName ));
+		}
+		Q_strncat( msg.Killer.szName, pszCapturerName, ARRAYSIZE( msg.Killer.szName ));
+	}
+
+	// get the localized name for the object
+	char szLocalizedObjectName[MAX_PLAYER_NAME_LENGTH];
+	szLocalizedObjectName[ 0 ] = 0;
+	if(iObjectIndex)
+	{
+		const wchar_t *wszLocalizedObjectName = g_pVGuiLocalize->Find( point->szName );
+		if ( wszLocalizedObjectName )
+		{
+			g_pVGuiLocalize->ConvertUnicodeToANSI( wszLocalizedObjectName, szLocalizedObjectName, ARRAYSIZE( szLocalizedObjectName ) );
+		}
+		else
+		{
+			Q_strncpy( szLocalizedObjectName, point->szName, sizeof( szLocalizedObjectName ) );
+		}
+	}
+
+	if(iObjectAction == 0)
+	{
+		szIconName = (iKillerTeam == TEAM_RED) ? "redcap" : "blucap";
+
+		V_wcsncpy( msg.wzInfoText, g_pVGuiLocalize->Find( "#Msg_Captured" ), sizeof( msg.wzInfoText ) );
+	}
+	else if(iObjectAction == 1)
+	{
+		szIconName = (iKillerTeam == TEAM_RED) ? "reddef" : "bludef";
+
+		V_wcsncpy( msg.wzInfoText, g_pVGuiLocalize->Find( "#Msg_Defended" ), sizeof( msg.wzInfoText ) );
+	}
+
+	Q_strncpy( msg.Victim.szName, szLocalizedObjectName, ARRAYSIZE( msg.Victim.szName ) );
+
+	Q_strncpy( msg.szIcon, szIconName, ARRAYSIZE(msg.szIcon));
+
+	msg.Icon = FindDeathIcon(msg.szIcon);
+
+	if(!msg.Icon)
+	{
+		Q_snprintf(msg.szIcon, ARRAYSIZE( msg.szIcon ), (msg.bLocalPlayerInvolved) ? "%s_d" : "%s_b", szIconName );
+		msg.Icon = FindDeathIcon(msg.szIcon);
+	}
+
+	if(!msg.Icon)
+	{
+		msg.Icon = FindDeathIcon("suicide");
+	}
+
 	return 1;
 }
 
 int CTFHudDeathNotice::MsgFunc_Dominate(const char *pszName, int iSize, void *pbuf)
 {
+	BEGIN_READ(pbuf, iSize);
+	int iKillerID = READ_BYTE();
+	int iVictimID = READ_BYTE();
+	char *szIconName = "dom";
+
+	int iLocalPlayerIndex = engine->GetLocalPlayer()->index;
+
+	hud_player_info_t pi;
+
+	DeathNoticeItem &msg = m_DeathNotices[AddDeathNoticeItem()];
+
+	DEATHNOTICE_DISPLAY_TIME = CVAR_GET_FLOAT("hud_deathnotice_time");
+
+	bool bLocalPlayerInvolved = false;
+	if ( iLocalPlayerIndex == iKillerID || iLocalPlayerIndex == iVictimID )
+	{
+		bLocalPlayerInvolved = true;
+	}
+	msg.bLocalPlayerInvolved = bLocalPlayerInvolved;
+
+	msg.bCritKilled = false;
+
+	msg.Killer.iTeam = gCKFVars.g_PlayerInfo[iKillerID].iTeam;
+	msg.Victim.iTeam = gCKFVars.g_PlayerInfo[iVictimID].iTeam;
+
+	char *pszKillerName = "";
+
+	if(iKillerID)
+	{
+		engine->pfnGetPlayerInfo(iKillerID, &pi);
+		if(pi.name && pi.name[0])
+			pszKillerName = pi.name;			
+	}
+
+	Q_strncpy( msg.Killer.szName, pszKillerName, ARRAYSIZE( msg.Killer.szName ) );
+
+	char *pszVictimName = "";
+
+	if(iVictimID)
+	{
+		engine->pfnGetPlayerInfo(iVictimID, &pi);
+		if(pi.name && pi.name[0])
+			pszVictimName = pi.name;
+	}
+
+	Q_strncpy( msg.Victim.szName, pszVictimName, ARRAYSIZE( msg.Victim.szName ) );
+
+	Q_strncpy( msg.szIcon, szIconName, ARRAYSIZE(msg.szIcon));
+
+	V_wcsncpy( msg.wzInfoText, g_pVGuiLocalize->Find( "#Msg_Dominating" ), sizeof( msg.wzInfoText ) );
+
+	msg.Icon = FindDeathIcon(msg.szIcon);
+
+	if(!msg.Icon)
+	{
+		Q_snprintf(msg.szIcon, ARRAYSIZE( msg.szIcon ), (msg.bLocalPlayerInvolved) ? "%s_d" : "%s_b", szIconName );
+		msg.Icon = FindDeathIcon(msg.szIcon);
+	}
+
+	if(!msg.Icon)
+	{
+		msg.Icon = FindDeathIcon("suicide");
+	}
+
+	if ( iLocalPlayerIndex == iKillerID )
+		engine->pEventAPI->EV_PlaySound(iLocalPlayerIndex, engine->GetLocalPlayer()->origin, CHAN_STATIC, "CKF_III/tf_domination.wav", 1, 1, 0, 100);
+
+	if ( iLocalPlayerIndex == iVictimID )
+		engine->pEventAPI->EV_PlaySound(iLocalPlayerIndex, engine->GetLocalPlayer()->origin, CHAN_STATIC, "CKF_III/tf_nemesis.wav", 1, 1, 0, 100);
+
 	return 1;
 }
 
 int CTFHudDeathNotice::MsgFunc_Revenge(const char *pszName, int iSize, void *pbuf)
 {
+	BEGIN_READ(pbuf, iSize);
+	int iKillerID = READ_BYTE();
+	int iVictimID = READ_BYTE();
+	char *szIconName = "dom";
+
+	int iLocalPlayerIndex = engine->GetLocalPlayer()->index;
+
+	hud_player_info_t pi;
+
+	DeathNoticeItem &msg = m_DeathNotices[AddDeathNoticeItem()];
+
+	DEATHNOTICE_DISPLAY_TIME = CVAR_GET_FLOAT("hud_deathnotice_time");
+
+	bool bLocalPlayerInvolved = false;
+	if ( iLocalPlayerIndex == iKillerID || iLocalPlayerIndex == iVictimID )
+	{
+		bLocalPlayerInvolved = true;
+	}
+	msg.bLocalPlayerInvolved = bLocalPlayerInvolved;
+
+	msg.bCritKilled = false;
+
+	msg.Killer.iTeam = gCKFVars.g_PlayerInfo[iKillerID].iTeam;
+	msg.Victim.iTeam = gCKFVars.g_PlayerInfo[iVictimID].iTeam;
+
+	char *pszKillerName = "";
+
+	if(iKillerID)
+	{
+		engine->pfnGetPlayerInfo(iKillerID, &pi);
+		if(pi.name && pi.name[0])
+			pszKillerName = pi.name;			
+	}
+
+	Q_strncpy( msg.Killer.szName, pszKillerName, ARRAYSIZE( msg.Killer.szName ) );
+
+	char *pszVictimName = "";
+
+	if(iVictimID)
+	{
+		engine->pfnGetPlayerInfo(iVictimID, &pi);
+		if(pi.name && pi.name[0])
+			pszVictimName = pi.name;
+	}
+
+	Q_strncpy( msg.Victim.szName, pszVictimName, ARRAYSIZE( msg.Victim.szName ) );
+
+	Q_strncpy( msg.szIcon, szIconName, ARRAYSIZE(msg.szIcon));
+
+	V_wcsncpy( msg.wzInfoText, g_pVGuiLocalize->Find( "#Msg_Revenge" ), sizeof( msg.wzInfoText ) );
+
+	msg.Icon = FindDeathIcon(msg.szIcon);
+
+	if(!msg.Icon)
+	{
+		Q_snprintf(msg.szIcon, ARRAYSIZE( msg.szIcon ), (msg.bLocalPlayerInvolved) ? "%s_d" : "%s_b", szIconName );
+		msg.Icon = FindDeathIcon(msg.szIcon);
+	}
+
+	if(!msg.Icon)
+	{
+		msg.Icon = FindDeathIcon("suicide");
+	}
+
+	if(bLocalPlayerInvolved)
+	{
+		engine->pEventAPI->EV_PlaySound(iLocalPlayerIndex, engine->GetLocalPlayer()->origin, CHAN_STATIC, "CKF_III/tf_revenge.wav", 1, 1, 0, 100);
+	}
 	return 1;
 }
 

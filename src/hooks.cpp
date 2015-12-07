@@ -41,7 +41,7 @@
 //3266
 #define LOADSTARTUPGRAPHIC_SIG "\x55\x8B\xEC\x81\xEC\x08\x02\x00\x00\x53\x56\x57\x68\x2A\x2A\x2A\x2A\x68"
 //4554
-#define LOADSTARTUPGRAPHIC_SIG2 "\x55\x8B\xEC\x81\xEC\x08\x02\x00\x00\x53\x56\x57\x8B\xF1\x68\x2A\x2A\x2A\x2A\x68"
+#define LOADSTARTUPGRAPHIC_SIG2 "\x55\x8B\xEC\x81\xEC\x2A\x02\x00\x00\x53\x56\x57\x8B\xF1\x68\x2A\x2A\x2A\x2A\x68"
 //6153
 #define LOADSTARTUPGRAPHIC_SIG_NEW "\x55\x8B\xEC\x81\xEC\x0C\x02\x00\x00\x53\x56\x57\x8B\xF1\x68\x2A\x2A\x2A\x2A\x68"
 //3266,4554
@@ -69,10 +69,9 @@ void Sys_ErrorEx(const char *fmt, ...)
 	va_end(argptr);
 
 	if(g_pMetaSave->pEngineFuncs)
-	{
 		g_pMetaSave->pEngineFuncs->pfnClientCmd("escape\n");
-	}
-	MessageBox((g_dwEngineBuildnum >= 5953) ? NULL :  g_hMainWnd, msg, "Error", MB_ICONERROR);
+
+	MessageBox(NULL, msg, "Error", MB_ICONERROR);
 	exit(0);
 }
 
@@ -88,10 +87,24 @@ void InstallHook(void)
 	if (g_dwEngineBuildnum >= 5953)
 	{
 		gHookFuncs.CL_GetModelByIndex = (struct model_s *(*)(int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_GETMODELBYINDEX_SIG_NEW, sizeof(CL_GETMODELBYINDEX_SIG_NEW) - 1);
+		if(!gHookFuncs.CL_GetModelByIndex)
+			SIG_NOT_FOUND("CL_GetModelByIndex");
+
 		gHookFuncs.CL_AddToResourceList = (void (*)(struct resource_s *, struct resource_s *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_ADDTORESOURCELIST_SIG_NEW, sizeof(CL_ADDTORESOURCELIST_SIG_NEW) - 1);
+		if(!gHookFuncs.CL_AddToResourceList)
+			SIG_NOT_FOUND("CL_AddToResourceList");
+		
 		gHookFuncs.CL_FindEventHook = (struct event_hook_s *(*)(char *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_FINDEVENTHOOK_SIG_NEW, sizeof(CL_FINDEVENTHOOK_SIG_NEW) - 1);
+		if(!gHookFuncs.CL_FindEventHook)
+			SIG_NOT_FOUND("CL_FindEventHook");
+		
 		gHookFuncs.Info_SetValueForKey = (void (*)(char *, char *, char *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, INFO_SETVALUEFORKEY_SIG_NEW, sizeof(INFO_SETVALUEFORKEY_SIG_NEW) - 1);
+		if(!gHookFuncs.Info_SetValueForKey)
+			SIG_NOT_FOUND("Info_SetValueForKey");
+		
 		gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG_NEW, sizeof(VIDEOMODE_CREATE_SIG_NEW) - 1);
+		if(!gHookFuncs.VideoMode_Create)
+			SIG_NOT_FOUND("VideoMode_Create");
 
 		gHookFuncs.LoadStartupGraphic = (void (__fastcall *)(void *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, LOADSTARTUPGRAPHIC_SIG_NEW, sizeof(LOADSTARTUPGRAPHIC_SIG_NEW)-1);
 		if(!gHookFuncs.LoadStartupGraphic)
@@ -107,14 +120,30 @@ void InstallHook(void)
 	else
 	{
 		gHookFuncs.CL_GetModelByIndex = (struct model_s *(*)(int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_GETMODELBYINDEX_SIG, sizeof(CL_GETMODELBYINDEX_SIG) - 1);
+		if(!gHookFuncs.CL_GetModelByIndex)
+			SIG_NOT_FOUND("CL_GetModelByIndex");
+
 		gHookFuncs.CL_AddToResourceList = (void (*)(struct resource_s *, struct resource_s *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_ADDTORESOURCELIST_SIG, sizeof(CL_ADDTORESOURCELIST_SIG) - 1);
+		if(!gHookFuncs.CL_AddToResourceList)
+			SIG_NOT_FOUND("CL_AddToResourceList");
+
 		gHookFuncs.CL_FindEventHook = (struct event_hook_s *(*)(char *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, CL_FINDEVENTHOOK_SIG, sizeof(CL_FINDEVENTHOOK_SIG) - 1);
+		if(!gHookFuncs.CL_FindEventHook)
+			SIG_NOT_FOUND("CL_FindEventHook");
+
 		gHookFuncs.Info_SetValueForKey = (void (*)(char *, char *, char *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, INFO_SETVALUEFORKEY_SIG, sizeof(INFO_SETVALUEFORKEY_SIG) - 1);
+		if(!gHookFuncs.Info_SetValueForKey)
+			SIG_NOT_FOUND("Info_SetValueForKey");
+
 		gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG, sizeof(VIDEOMODE_CREATE_SIG) - 1);
 		if (!gHookFuncs.VideoMode_Create)
 			gHookFuncs.VideoMode_Create = (CVideoMode_Common *(*)(void))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VIDEOMODE_CREATE_SIG2, sizeof(VIDEOMODE_CREATE_SIG2) - 1);
+		if(!gHookFuncs.VideoMode_Create)
+			SIG_NOT_FOUND("VideoMode_Create");
 
 		gHookFuncs.VID_EnumDisplayModesProc = (HRESULT (CALLBACK *)(void *, DWORD *))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, VID_ENUMDISPLAYMODESPROC_SIG, sizeof(VID_ENUMDISPLAYMODESPROC_SIG) - 1);
+		if(!gHookFuncs.VID_EnumDisplayModesProc)
+			SIG_NOT_FOUND("VID_EnumDisplayModesProc");
 
 		gHookFuncs.LoadStartupGraphic = (void (__fastcall *)(void *, int))g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, LOADSTARTUPGRAPHIC_SIG, sizeof(LOADSTARTUPGRAPHIC_SIG)-1);
 		if(!gHookFuncs.LoadStartupGraphic)

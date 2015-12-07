@@ -537,6 +537,8 @@ void CSpectatorGUI::Update(void)
 	m_bLastSpecPic = gHUD.m_Spectator.m_pip->value;
 	m_pPlayerLabel->SetVisible(ShouldShowPlayerLabel(specmode));
 
+	m_pPlayerLabel->SetText(L"");
+
 	if (playernum > 0 && playernum <= gEngfuncs.GetMaxClients())
 	{
 		Color c = g_pViewPort->GetTeamColor(g_PlayerExtraInfo[playernum].teamnumber);
@@ -549,28 +551,27 @@ void CSpectatorGUI::Update(void)
 
 		const char *oldName = g_PlayerInfoList[playernum].name;
 		Assert(oldName != NULL);
-		int bufsize = strlen(oldName) * 2 + 1;
-		char *newName = (char *)_alloca(bufsize);
-		gViewPortInterface->MakeSafeName(oldName, newName, bufsize);
-		g_pVGuiLocalize->ConvertANSIToUnicode(newName, playerName, sizeof(playerName));
-
-		int iHealth = g_PlayerExtraInfo[playernum].health;
-
-		if (iHealth > 0)
+		if(oldName && oldName[0])
 		{
-			_snwprintf(health, sizeof(health), L"%i", iHealth);
-			g_pVGuiLocalize->ConstructString(playerText, sizeof(playerText), g_pVGuiLocalize->Find("#Spec_PlayerItem_Team"), 2, playerName, health);
-		}
-		else
-		{
-			g_pVGuiLocalize->ConstructString(playerText, sizeof(playerText), g_pVGuiLocalize->Find("#Spec_PlayerItem"), 1, playerName);
-		}
+			int bufsize = strlen(oldName) * 2 + 1;
+			char *newName = (char *)_alloca(bufsize);
+			gViewPortInterface->MakeSafeName(oldName, newName, bufsize);
+			g_pVGuiLocalize->ConvertANSIToUnicode(newName, playerName, sizeof(playerName));
 
-		m_pPlayerLabel->SetText(playerText);
-	}
-	else
-	{
-		m_pPlayerLabel->SetText(L"");
+			int iHealth = g_PlayerExtraInfo[playernum].health;
+
+			if (iHealth > 0)
+			{
+				_snwprintf(health, sizeof(health), L"%i", iHealth);
+				g_pVGuiLocalize->ConstructString(playerText, sizeof(playerText), g_pVGuiLocalize->Find("#Spec_PlayerItem_Team"), 2, playerName, health);
+			}
+			else
+			{
+				g_pVGuiLocalize->ConstructString(playerText, sizeof(playerText), g_pVGuiLocalize->Find("#Spec_PlayerItem"), 1, playerName);
+			}
+
+			m_pPlayerLabel->SetText(playerText);
+		}
 	}
 
 	char tempstr[128];

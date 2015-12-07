@@ -97,7 +97,6 @@ public:
 
 	virtual void Paint();
 
-	void GetLocalizedControlPointName( const char *name, char *namebuf, int namelen );
 	void RetireExpiredDeathNotices();
 	int AddDeathNoticeItem();
 	void DrawText( int x, int y, HFont hFont, Color clr, const wchar_t *szText );

@@ -58,6 +58,10 @@ int CHudDeathNotice::Init(void)
 	gHUD.AddHudElem(this);
 
 	HOOK_MESSAGE(DeathMsg);
+	HOOK_MESSAGE(BuildDeath);
+	HOOK_MESSAGE(ObjectMsg);
+	HOOK_MESSAGE(Dominate);
+	HOOK_MESSAGE(Revenge);
 
 	return 1;
 }

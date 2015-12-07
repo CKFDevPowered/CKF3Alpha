@@ -24,13 +24,32 @@ bool (*g_pfnSteamAPI_IsSteamRunning)(void) = NULL;
 void (*g_pfnSteamAPI_RegisterCallback)(class CCallbackBase *pCallback, int iCallback) = NULL;
 void (*g_pfnSteamAPI_UnregisterCallback)(class CCallbackBase *pCallback) = NULL;
 
+void SteamAPI_Load(void)
+{
+	g_hSteamAPI = GetModuleHandle("steam_api.dll");
+	g_pfnSteamAPI_Init = (int (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_Init");
+	g_pfnSteamAPI_Shutdown = (void (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_Shutdown");
+	g_pfnSteamAPI_IsSteamRunning = (bool (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_IsSteamRunning");
+	g_pfnSteamAPI_RegisterCallback = (void (*)(class CCallbackBase *, int))GetProcAddress(g_hSteamAPI, "SteamAPI_RegisterCallback");
+	g_pfnSteamAPI_UnregisterCallback = (void (*)(class CCallbackBase *))GetProcAddress(g_hSteamAPI, "SteamAPI_UnregisterCallback");
+	g_pfnSteamUnifiedMessages = (ISteamUnifiedMessages *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUnifiedMessages");
+	g_pfnSteamHTTP = (ISteamHTTP *(*)(void))GetProcAddress(g_hSteamAPI, "SteamHTTP");
+	g_pfnSteamScreenshots = (ISteamScreenshots *(*)(void))GetProcAddress(g_hSteamAPI, "SteamScreenshots");
+	g_pfnSteamRemoteStorage = (ISteamRemoteStorage *(*)(void))GetProcAddress(g_hSteamAPI, "SteamRemoteStorage");
+	g_pfnSteamMatchmakingServers = (ISteamMatchmakingServers *(*)(void))GetProcAddress(g_hSteamAPI, "SteamMatchmakingServers");
+	g_pfnSteamNetworking = (ISteamNetworking *(*)(void))GetProcAddress(g_hSteamAPI, "SteamNetworking");
+	g_pfnSteamApps = (ISteamApps *(*)(void))GetProcAddress(g_hSteamAPI, "SteamApps");
+	g_pfnSteamUserStats = (ISteamUserStats *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUserStats");
+	g_pfnSteamMatchmaking = (ISteamMatchmaking *(*)(void))GetProcAddress(g_hSteamAPI, "SteamMatchmaking");
+	g_pfnSteamUtils = (ISteamUtils *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUtils");
+	g_pfnSteamFriends = (ISteamFriends *(*)(void))GetProcAddress(g_hSteamAPI, "SteamFriends");
+	g_pfnSteamUser = (ISteamUser *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUser");
+}
+
 ISteamUser *SteamUser(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamUser)
-		g_pfnSteamUser = (ISteamUser *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUser");
+		return NULL;
 
 	if (!g_pfnSteamUser)
 		return NULL;
@@ -41,10 +60,7 @@ ISteamUser *SteamUser(void)
 ISteamFriends *SteamFriends(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamFriends)
-		g_pfnSteamFriends = (ISteamFriends *(*)(void))GetProcAddress(g_hSteamAPI, "SteamFriends");
+		return NULL;
 
 	if (!g_pfnSteamFriends)
 		return NULL;
@@ -55,10 +71,7 @@ ISteamFriends *SteamFriends(void)
 ISteamUtils *SteamUtils(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamUtils)
-		g_pfnSteamUtils = (ISteamUtils *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUtils");
+		return NULL;
 
 	if (!g_pfnSteamUtils)
 		return NULL;
@@ -69,10 +82,7 @@ ISteamUtils *SteamUtils(void)
 ISteamMatchmaking *SteamMatchmaking(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamMatchmaking)
-		g_pfnSteamMatchmaking = (ISteamMatchmaking *(*)(void))GetProcAddress(g_hSteamAPI, "SteamMatchmaking");
+		return NULL;
 
 	if (!g_pfnSteamMatchmaking)
 		return NULL;
@@ -83,10 +93,7 @@ ISteamMatchmaking *SteamMatchmaking(void)
 ISteamUserStats *SteamUserStats(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamUserStats)
-		g_pfnSteamUserStats = (ISteamUserStats *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUserStats");
+		return NULL;	
 
 	if (!g_pfnSteamUserStats)
 		return NULL;
@@ -97,10 +104,7 @@ ISteamUserStats *SteamUserStats(void)
 ISteamApps *SteamApps(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamApps)
-		g_pfnSteamApps = (ISteamApps *(*)(void))GetProcAddress(g_hSteamAPI, "SteamApps");
+		return NULL;
 
 	if (!g_pfnSteamApps)
 		return NULL;
@@ -111,10 +115,7 @@ ISteamApps *SteamApps(void)
 ISteamNetworking *SteamNetworking(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamNetworking)
-		g_pfnSteamNetworking = (ISteamNetworking *(*)(void))GetProcAddress(g_hSteamAPI, "SteamNetworking");
+		return NULL;
 
 	if (!g_pfnSteamNetworking)
 		return NULL;
@@ -125,10 +126,7 @@ ISteamNetworking *SteamNetworking(void)
 ISteamMatchmakingServers *SteamMatchmakingServers(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamMatchmakingServers)
-		g_pfnSteamMatchmakingServers = (ISteamMatchmakingServers *(*)(void))GetProcAddress(g_hSteamAPI, "SteamMatchmakingServers");
+		return NULL;	
 
 	if (!g_pfnSteamMatchmakingServers)
 		return NULL;
@@ -139,10 +137,7 @@ ISteamMatchmakingServers *SteamMatchmakingServers(void)
 ISteamRemoteStorage *SteamRemoteStorage(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamRemoteStorage)
-		g_pfnSteamRemoteStorage = (ISteamRemoteStorage *(*)(void))GetProcAddress(g_hSteamAPI, "SteamRemoteStorage");
+		return NULL;
 
 	if (!g_pfnSteamRemoteStorage)
 		return NULL;
@@ -153,10 +148,7 @@ ISteamRemoteStorage *SteamRemoteStorage(void)
 ISteamScreenshots *SteamScreenshots(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamScreenshots)
-		g_pfnSteamScreenshots = (ISteamScreenshots *(*)(void))GetProcAddress(g_hSteamAPI, "SteamScreenshots");
+		return NULL;
 
 	if (!g_pfnSteamScreenshots)
 		return NULL;
@@ -167,10 +159,7 @@ ISteamScreenshots *SteamScreenshots(void)
 ISteamHTTP *SteamHTTP(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamHTTP)
-		g_pfnSteamHTTP = (ISteamHTTP *(*)(void))GetProcAddress(g_hSteamAPI, "SteamHTTP");
+		return NULL;
 
 	if (!g_pfnSteamHTTP)
 		return NULL;
@@ -181,10 +170,7 @@ ISteamHTTP *SteamHTTP(void)
 ISteamUnifiedMessages *SteamUnifiedMessages(void)
 {
 	if (!g_hSteamAPI)
-		g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
-	//if (!g_pfnSteamUnifiedMessages)
-		g_pfnSteamUnifiedMessages = (ISteamUnifiedMessages *(*)(void))GetProcAddress(g_hSteamAPI, "SteamUnifiedMessages");
+		return NULL;
 
 	if (!g_pfnSteamUnifiedMessages)
 		return NULL;
@@ -197,13 +183,8 @@ bool SteamAPI_Init(void)
 	if (!g_bIsUseSteam)
 		return false;
 
-	g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
 	if (!g_hSteamAPI)
 		return false;
-
-	//if (!g_pfnSteamAPI_Init)
-		g_pfnSteamAPI_Init = (int (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_Init");
 
 	if (!g_pfnSteamAPI_Init)
 		return false;
@@ -216,13 +197,8 @@ void SteamAPI_Shutdown(void)
 	if (!g_bIsUseSteam)
 		return;
 
-	g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
 	if (!g_hSteamAPI)
 		return;
-
-	//if (!g_pfnSteamAPI_Shutdown)
-		g_pfnSteamAPI_Shutdown = (void (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_Shutdown");
 
 	if (!g_pfnSteamAPI_Shutdown)
 		return;
@@ -235,13 +211,8 @@ bool SteamAPI_IsSteamRunning(void)
 	if (!g_bIsUseSteam)
 		return false;
 
-	g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
 	if (!g_hSteamAPI)
 		return false;
-
-	//if (!g_pfnSteamAPI_IsSteamRunning)
-		g_pfnSteamAPI_IsSteamRunning = (bool (*)(void))GetProcAddress(g_hSteamAPI, "SteamAPI_IsSteamRunning");
 
 	if (!g_pfnSteamAPI_IsSteamRunning)
 		return false;
@@ -254,13 +225,8 @@ void SteamAPI_RegisterCallback(class CCallbackBase *pCallback, int iCallback)
 	if (!g_bIsUseSteam)
 		return;
 
-	g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
 	if (!g_hSteamAPI)
 		return;
-
-	//if (!g_pfnSteamAPI_RegisterCallback)
-		g_pfnSteamAPI_RegisterCallback = (void (*)(class CCallbackBase *, int))GetProcAddress(g_hSteamAPI, "SteamAPI_RegisterCallback");
 
 	if (!g_pfnSteamAPI_RegisterCallback)
 		return;
@@ -273,13 +239,8 @@ void SteamAPI_UnregisterCallback(class CCallbackBase *pCallback)
 	if (!g_bIsUseSteam)
 		return;
 
-	g_hSteamAPI = GetModuleHandle("steam_api.dll");
-
 	if (!g_hSteamAPI)
 		return;
-
-	//if (!g_pfnSteamAPI_UnregisterCallback)
-		g_pfnSteamAPI_UnregisterCallback = (void (*)(class CCallbackBase *))GetProcAddress(g_hSteamAPI, "SteamAPI_UnregisterCallback");
 
 	if (!g_pfnSteamAPI_UnregisterCallback)
 		return;

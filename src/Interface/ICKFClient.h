@@ -17,6 +17,8 @@ public:
 	virtual void GetCKFVars(ckf_vars_t *pCKFVars);
 	virtual void DrawHudMask(int col, int x, int y, int w, int h);
 	virtual void BaseUI_Initalize(CreateInterfaceFn *factories, int count);
+	virtual controlpoint_t *GetControlPoint(int iIndex);
+	virtual int GetControlPointCount(void);
 };
 
 extern ICKFClient *g_pCKFClient;

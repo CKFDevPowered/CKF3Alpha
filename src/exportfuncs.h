@@ -1,6 +1,8 @@
 #include <r_studioint.h>
 #include <usercmd.h>
 
+void SteamAPI_Load(void);
+
 int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion);
 void *ClientFactory(void);
 

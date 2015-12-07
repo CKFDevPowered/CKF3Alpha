@@ -1,6 +1,54 @@
 #ifndef CKFVARS_DEFINED
 #define CKFVARS_DEFINED
 
+class CClientBuildable
+{
+public:
+	virtual void Init(void);
+	virtual bool IsBuilt(void);
+public:
+	int m_iLevel;
+	int m_iFlags;
+	float m_iHealth;
+	float m_iMaxHealth;
+	int m_iUpgrade;
+	float m_flProgress;
+	float m_flUpdateTime;
+};
+
+class CClientBuildable : public CClientSentry
+{
+public:
+	virtual void Init(void);
+public:
+	int m_iAmmo;
+	int m_iMaxAmmo;
+	int m_iRocket;
+	int m_iMaxRocket;	
+	int m_iKillCount;
+};
+
+class CClientBuildable : public CClientDispenser
+{
+public:
+	virtual void Init(void);
+public:
+	int m_iMetal;
+	int m_iMaxMetal;
+};
+
+class CClientTeleporter : public CClientDispenser
+{
+public:
+	virtual void Init(void);
+public:
+	float m_flCharge;
+	float m_flChargeRate;
+	float m_flChargeTime;
+	int m_iReady;
+	int m_iFrags;
+};
+
 typedef struct
 {
 	qboolean bIsDead;
@@ -35,7 +83,7 @@ typedef struct
 class CKFClientWeapon
 {
 public:
-	virtual BOOL CanDeploy( void ) { return TRUE; }
+	virtual BOOL CanDeploy( void ) { return IsUseable(); }
 	virtual BOOL Deploy( void ) { return TRUE; }
 	virtual BOOL ShouldWeaponIdle(void) { return FALSE; }
 	virtual BOOL CanHolster(void) { return TRUE; }
@@ -43,7 +91,8 @@ public:
 	virtual void ItemPostFrame( void );
 	virtual void PrimaryAttack( void ) {}
 	virtual void SecondaryAttack( void ) {}
-	virtual void Reload( void ) {}
+	virtual void Reload( void ){}
+	virtual void Reloaded( void );
 	virtual void WeaponIdle( void ) {}
 	virtual void Swing( void ) {}
 	virtual int iFlags(void){ return 0;}
@@ -57,6 +106,7 @@ public:
 	virtual BOOL GroupDeploy(char *szViewModel, char *szWeaponModel, int iViewAnim, int iViewBody, int iViewSkin, const char *szAnimExt);
 	virtual BOOL DefaultDeploy(char *szViewModel, char *szWeaponModel, int iAnim, const char *szAnimExt);
 	virtual BOOL DefaultReload( int iClipSize, int iAnim, float fDelay );
+	virtual BOOL IsUseable(void);
 
 public:
 	char m_szAnimExt[32];
@@ -135,6 +185,9 @@ public:
 
 	int m_bAllowAttack;
 
+	int m_bAutoReload;
+	int m_bHitDamage;
+
 	char m_szAnimExtention[32];
 };
 
@@ -162,6 +215,22 @@ enum
 	kRenderFxFireLayer,
 	kRenderFxInvulnLayer
 };
+
+#include <pm_defs.h>
+
+typedef struct
+{
+	int iHudPosition;
+	char szName[32];
+	int iState;
+	int iCapTeam;
+	int iTeam;
+	int iCapPlayers;
+	float flProgress;
+	float flCapRate;
+	float flMessageTime;
+	physent_t physent;
+}controlpoint_t;
 
 extern ckf_vars_t gCKFVars;
 

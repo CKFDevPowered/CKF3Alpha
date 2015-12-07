@@ -49,6 +49,7 @@ typedef struct
 	float end;
 	float density;
 	float fresnel;
+	qboolean active;
 }water_parm_t;
 
 typedef struct
@@ -126,7 +127,6 @@ typedef struct
 	float (*GlowBlend)(cl_entity_t *entity);
 	int (*CL_FxBlend)(cl_entity_t *entity);
 	int (*R_CullBox)(vec3_t mins, vec3_t maxs);
-	void (*GL_SwapBuffer)(void);
 }engrefapi_t;
 
 typedef struct
@@ -173,6 +173,8 @@ typedef struct
 	void (*R_BeginDrawHudMask)(int r, int g, int b);
 	//cloak
 	void (*R_RenderCloakTexture)(void);
+	int (*R_GetCloakTexture)(void);
+	void (*R_BeginRenderConc)(float flBlurFactor, float flRefractFactor);
 	//3dhud
 	int (*R_Get3DHUDTexture)(void);
 	void (*R_Draw3DHUDQuad)(int x, int y, int left, int top);
@@ -203,4 +205,4 @@ extern ref_export_t gRefExports;
 #define r_ext_shader (1<<3)
 #define r_ext_shadow (1<<4)
 
-#define META_RENDERER_VERSION "Meta Renderer 1.4b"
+#define META_RENDERER_VERSION "Meta Renderer 1.5"

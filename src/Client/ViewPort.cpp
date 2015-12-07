@@ -75,9 +75,6 @@ CViewport::CViewport(void) : Panel(NULL, "NewClientViewport")
 	m_iTeamScores[2] = 0;
 	m_iTeamScores[3] = 0;
 
-	m_iMousePos[0] = 0;
-	m_iMousePos[1] = 0;
-
 	// Attempt to load all hud animations
 	if ( LoadHudAnimations() == false )
 	{
@@ -455,6 +452,12 @@ void CViewport::HideScoreBoard(void)
 		return;
 
 	ShowPanel(m_pScoreBoard, false);
+}
+
+int CViewport::KeyInput(int down, int keynum, const char *pszCurrentBinding)
+{
+	
+	return 1;
 }
 
 CViewPortPanel *CViewport::AddNewPanel(CViewPortPanel *pPanel, char const *pchDebugName)

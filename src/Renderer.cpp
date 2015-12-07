@@ -4,12 +4,16 @@
 #include "plugins.h"
 #include "interface.h"
 
+//Audio.dll
+HINTERFACEMODULE g_hAudio;
+IAudio *g_pAudio = NULL;
+IPlugins *g_pAudioPlugins = NULL;
+aud_export_t gAudExports;
+
 //Renderer.dll
 HINTERFACEMODULE g_hRenderer;
 IRenderer *g_pRenderer = NULL;
 IPlugins *g_pRendererPlugins = NULL;
-cl_exportfuncs_t gRefClientFuncs;
-
 ref_export_t gRefExports;
 
 //ckf3.dll
@@ -65,8 +69,6 @@ void Renderer_Init(void)
 
 	g_hRenderer = Sys_LoadModule(filepath);
 
-	memset(&gRefClientFuncs, 0, sizeof(gRefClientFuncs));
-
 	if (!g_hRenderer)
 	{
 		gConfigs.bEnableRenderer = false;
@@ -84,9 +86,8 @@ void Renderer_Init(void)
 	{
 		gConfigs.bEnableRenderer = false;
 	}
-	if(gConfigs.bEnableRenderer)
+	if (g_pRenderer)
 	{
-		g_pRenderer->GetClientFuncs(&gRefClientFuncs);
 		g_pRenderer->GetInterface(&gRefExports, META_RENDERER_VERSION);
 	}
 }
@@ -116,6 +117,33 @@ void CKF_Init(void)
 	g_pCKFClient->GetCKFVars(&gCKFVars);
 }
 
+void Audio_Init(void)
+{
+	char filepath[MAX_PATH];
+	sprintf(filepath, "%s/audio.dll", gConfigs.szGameDir);
+
+	g_hAudio = Sys_LoadModule(filepath);
+
+	if (!g_hAudio)
+	{
+		return;
+	}
+
+	g_pAudio = (IAudio *)((CreateInterfaceFn)Sys_GetFactory(g_hAudio))(AUDIO_API_VERSION, NULL);
+	g_pAudioPlugins = (IPlugins *)((CreateInterfaceFn)Sys_GetFactory(g_hAudio))(METAHOOK_PLUGIN_API_VERSION, NULL);
+
+	if (!g_pAudio)
+	{
+		return;
+	}
+	if (!g_pAudioPlugins)
+	{
+		return;
+	}
+
+	g_pAudio->GetInterface(&gAudExports, META_AUDIO_VERSION);
+}
+
 void Renderer_Shutdown(void)
 {
 	if (g_pRenderer)
@@ -126,4 +154,10 @@ void CKF_Shutdown(void)
 {
 	if (g_pCKFClient)
 		Sys_FreeModule(g_hCKFClient);
+}
+
+void Audio_Shutdown(void)
+{
+	if (g_pAudio)
+		Sys_FreeModule(g_hAudio);
 }

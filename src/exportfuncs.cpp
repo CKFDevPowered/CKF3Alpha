@@ -82,8 +82,6 @@ int Initialize(struct cl_enginefuncs_s *pEnginefuncs, int iVersion)
 		IN_InstallHook();
 	}
 
-	if(gRefClientFuncs.Initialize)
-		gRefClientFuncs.Initialize(pEnginefuncs, iVersion);
 	if(gCkfClientFuncs.Initialize)
 		gCkfClientFuncs.Initialize(pEnginefuncs, iVersion);
 
@@ -108,8 +106,6 @@ void HUD_Init(void)
 	EV_Init();
 	gHUD.Init();
 
-	if(gRefClientFuncs.HUD_Init)
-		gRefClientFuncs.HUD_Init();
 	if(gCkfClientFuncs.HUD_Init)
 		gCkfClientFuncs.HUD_Init();
 }
@@ -121,8 +117,6 @@ int HUD_VidInit(void)
 	CL_VidInit();
 	gHUD.VidInit();
 
-	if(gRefClientFuncs.HUD_VidInit)
-		gRefClientFuncs.HUD_VidInit();
 	if(gCkfClientFuncs.HUD_VidInit)
 		gCkfClientFuncs.HUD_VidInit();
 	return result;
@@ -145,8 +139,7 @@ int HUD_Redraw(float time, int intermission)
 	}
 
 	gHUD.Redraw(time, intermission);
-	if(gRefClientFuncs.HUD_Redraw)
-		gRefClientFuncs.HUD_Redraw(time, intermission);
+
 	if(gCkfClientFuncs.HUD_Redraw)
 		gCkfClientFuncs.HUD_Redraw(time, intermission);
 	return 1;
@@ -157,8 +150,7 @@ int HUD_UpdateClientData(client_data_t *pcldata, float flTime)
 	IN_Commands();
 
 	gHUD.UpdateClientData(pcldata, flTime);
-	if(gRefClientFuncs.HUD_UpdateClientData)
-		gRefClientFuncs.HUD_UpdateClientData(pcldata, flTime);
+
 	if(gCkfClientFuncs.HUD_UpdateClientData)
 		gCkfClientFuncs.HUD_UpdateClientData(pcldata, flTime);
 
@@ -204,8 +196,6 @@ void HUD_Frame(double time)
 
 	GetClientVoice()->Frame(time);
 
-	if(gRefClientFuncs.HUD_Frame)
-		gRefClientFuncs.HUD_Frame(time);
 	if(gCkfClientFuncs.HUD_Frame)
 		gCkfClientFuncs.HUD_Frame(time);
 }
@@ -217,8 +207,6 @@ void HUD_Shutdown(void)
 	CL_Shutdown();
 	EVS_ReleaseAllScript();
 
-	if(gRefClientFuncs.HUD_Shutdown)
-		gRefClientFuncs.HUD_Shutdown();
 	if(gCkfClientFuncs.HUD_Shutdown)
 		gCkfClientFuncs.HUD_Shutdown();
 
@@ -227,8 +215,6 @@ void HUD_Shutdown(void)
 
 void HUD_TempEntUpdate(double frametime, double client_time, double cl_gravity, struct tempent_s **ppTempEntFree, struct tempent_s **ppTempEntActive, int (*Callback_AddVisibleEntity)(struct cl_entity_s *pEntity), void (*Callback_TempEntPlaySound)(struct tempent_s *pTemp, float damp))
 {
-	if(gRefClientFuncs.HUD_TempEntUpdate)
-		gRefClientFuncs.HUD_TempEntUpdate(frametime, client_time, cl_gravity, ppTempEntFree, ppTempEntActive, Callback_AddVisibleEntity, Callback_TempEntPlaySound);
 	if(gCkfClientFuncs.HUD_TempEntUpdate)
 		gCkfClientFuncs.HUD_TempEntUpdate(frametime, client_time, cl_gravity, ppTempEntFree, ppTempEntActive, Callback_AddVisibleEntity, Callback_TempEntPlaySound);
 

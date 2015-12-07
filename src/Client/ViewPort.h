@@ -111,6 +111,7 @@ public:
 	bool IsScoreBoardVisible(void);
 	void ShowScoreBoard(void);
 	void HideScoreBoard(void);
+	int KeyInput(int down, int keynum, const char *pszCurrentBinding);
 	CViewPortPanel *AddNewPanel(CViewPortPanel *pPanel, char const *pchDebugName = NULL);
 	CViewPortPanel *FindPanelByName(const char *szPanelName);
 	void PostMessageToPanel(CViewPortPanel *pPanel, KeyValues *pKeyValues);
@@ -160,7 +161,6 @@ private:
 	int m_iTeamScores[4];
 	char m_szServerName[MAX_SERVERNAME_LENGTH];
 	char m_szMOTD[MAX_MOTD_LENGTH];
-	int m_iMousePos[2];
 
 private:
 	CommandMenu *m_pCommandMenu;

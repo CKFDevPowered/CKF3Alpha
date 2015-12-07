@@ -37,6 +37,7 @@ protected:
 	cl_entity_t m_entity;
 	vec3_t m_origin;
 	vec3_t m_angles;
+	char m_currentmap[64];
 };
 
 }

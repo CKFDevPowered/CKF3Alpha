@@ -1371,9 +1371,6 @@ void V_CalcRefdef(struct ref_params_s *pparams)
 
 	gHUD.CalcRefdef(pparams);
 
-	if(gRefClientFuncs.V_CalcRefdef)
-		gRefClientFuncs.V_CalcRefdef(pparams);
-
 	if(gCkfClientFuncs.V_CalcRefdef)
 		gCkfClientFuncs.V_CalcRefdef(pparams);
 }

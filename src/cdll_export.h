@@ -50,5 +50,6 @@ typedef struct cl_exportfuncs_s
 cl_exportfuncs_t;
 
 extern cl_exportfuncs_t gExportfuncs;
+extern cl_exportfuncs_t gAudClientFuncs;
 extern cl_exportfuncs_t gRefClientFuncs;
 extern cl_exportfuncs_t gCkfClientFuncs;

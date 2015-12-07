@@ -7,8 +7,8 @@
 
 CFontTextureCache g_FontTextureCache;
 
-#define TEXTURE_PAGE_WIDTH 256
-#define TEXTURE_PAGE_HEIGHT 256
+#define TEXTURE_PAGE_WIDTH 512
+#define TEXTURE_PAGE_HEIGHT 512
 
 int CFontTextureCache::s_pFontPageSize[FONT_PAGE_SIZE_COUNT] =
 {
@@ -152,6 +152,8 @@ bool CFontTextureCache::GetTextureForChar(HFont font, wchar_t wch, int *textureI
 
 bool CFontTextureCache::AllocatePageForChar(int charWide, int charTall, int &pageIndex, int &drawX, int &drawY, int &twide, int &ttall)
 {
+	static unsigned char rgba[TEXTURE_PAGE_WIDTH * TEXTURE_PAGE_HEIGHT * 4];
+
 	int nPageType = ComputePageType(charTall);
 	pageIndex = m_pCurrPage[nPageType];
 
@@ -188,7 +190,6 @@ bool CFontTextureCache::AllocatePageForChar(int charWide, int charTall, int &pag
 
 		nNextX = charWide;
 
-		unsigned char rgba[TEXTURE_PAGE_WIDTH * TEXTURE_PAGE_HEIGHT * 4];
 		memset(rgba, 0, sizeof(rgba));
 		staticSurface->drawSetTextureRGBA(newPage.textureID, rgba, newPage.wide, newPage.tall, false, true);
 	}

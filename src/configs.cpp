@@ -30,14 +30,20 @@ void Config_Init(void)
 	gConfigs.bEnableMuzzleflash = true;
 	gConfigs.bDisableSteamClient = true;
 
+	g_szLanguage[0] = 0;
+
 	if (g_bIsUseSteam)
 	{
-		const char *pszLanguage = SteamApps()->GetCurrentGameLanguage();
-
-		if (pszLanguage)
-			strcpy(g_szLanguage, pszLanguage);
+		ISteamApps *app = SteamApps();
+		if(app)
+		{
+			const char *pszLanguage = SteamApps()->GetCurrentGameLanguage();
+			if (pszLanguage)
+				strcpy(g_szLanguage, pszLanguage);
+		}
 	}
-	else
+	
+	if(!g_szLanguage[0])
 	{
 		Sys_GetRegKeyValueUnderRoot("Software\\Valve\\Steam", "Language", g_szLanguage, sizeof(g_szLanguage), "english");
 	}

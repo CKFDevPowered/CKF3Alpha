@@ -1072,8 +1072,6 @@ int HUD_GetStudioModelInterface(int version, struct r_studio_interface_s **ppint
 */
 	if(gCkfClientFuncs.HUD_GetStudioModelInterface)
 		gCkfClientFuncs.HUD_GetStudioModelInterface(version, ppinterface, pstudio);
-	if(gRefClientFuncs.HUD_GetStudioModelInterface)
-		gRefClientFuncs.HUD_GetStudioModelInterface(version, ppinterface, pstudio);
 
 	memcpy(&IEngineStudio, pstudio, sizeof(IEngineStudio));
 	return 1;

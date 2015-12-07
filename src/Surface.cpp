@@ -21,6 +21,7 @@
 #include "Video.h"
 #include "LoadTGA.h"
 #include "qgl.h"
+#include "ref_int.h"
 #include "Clip2D.h"
 #include <VGUI/Vector.h>
 #include <cvardef.h>

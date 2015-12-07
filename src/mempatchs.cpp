@@ -75,6 +75,7 @@ void MemPatch_Start(MEMPATCH_STEP step)
 		case MEMPATCH_STEP_LOADENGINE:
 		{
 			MemPatch_HeapSizeLimitValue();
+			MemPatch_WideScreenLimit();
 			MemPatch_PatchSteamCheckSubscribed();
 			break;
 		}

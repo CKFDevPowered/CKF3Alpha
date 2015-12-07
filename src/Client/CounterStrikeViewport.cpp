@@ -227,6 +227,9 @@ void CCounterStrikeViewport::HideScoreBoard(void)
 
 int CCounterStrikeViewport::KeyInput(int down, int keynum, const char *pszCurrentBinding)
 {
+	if(!g_pViewPort->KeyInput(down, keynum, pszCurrentBinding))
+		return 0;
+
 	return m_pfnCounterStrikeViewpot_KeyInput(this, 0, down, keynum, pszCurrentBinding);
 }
 
@@ -476,6 +479,7 @@ void InstallCounterStrikeViewportHook(void)
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 9, (void *)pVFTable[9], (void *&)m_pfnCounterStrikeViewpot_UpdateSpectatorPanel);
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 10, (void *)pVFTable[10], (void *&)m_pfnCounterStrikeViewpot_IsScoreBoardVisible);
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 11, (void *)pVFTable[11], (void *&)m_pfnCounterStrikeViewpot_HideScoreBoard);
+	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 12, (void *)pVFTable[12], (void *&)m_pfnCounterStrikeViewpot_KeyInput);
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 13, (void *)pVFTable[13], (void *&)m_pfnCounterStrikeViewpot_ShowVGUIMenu);
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 14, (void *)pVFTable[14], (void *&)m_pfnCounterStrikeViewpot_HideVGUIMenu);
 	g_pMetaHookAPI->VFTHook(g_pCounterStrikeViewpot, 0, 20, (void *)pVFTable[20], (void *&)m_pfnCounterStrikeViewpot_ShowSpectatorGUI);

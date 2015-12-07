@@ -56,15 +56,19 @@ void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engines
 	g_bIsDebuggerPresent = IsDebuggerPresent() != FALSE;
 
 	Config_Init();
+	Audio_Init();
 	Renderer_Init();
 	CKF_Init();
 
-	CommandLine()->AppendParm("-nocdaudio", NULL);
+	//CommandLine()->AppendParm("-nocdaudio", NULL);
 	CommandLine()->AppendParm("-nomaster", NULL);
 	CommandLine()->AppendParm("-insecure", NULL);
 	CommandLine()->AppendParm("-forcevalve", NULL);
 
 	gPerformanceCounter.InitializePerformanceCounter();
+
+	if (g_pAudioPlugins)
+		g_pAudioPlugins->Init(pAPI, pInterface, pSave);
 
 	if (g_pRendererPlugins)
 		g_pRendererPlugins->Init(pAPI, pInterface, pSave);
@@ -75,6 +79,8 @@ void IPlugins::Init(metahook_api_t *pAPI, mh_interface_t *pInterface, mh_engines
 
 void IPlugins::Shutdown(void)
 {
+	if (g_pAudioPlugins)
+		g_pAudioPlugins->Shutdown();
 	if (g_pRendererPlugins)
 		g_pRendererPlugins->Shutdown();
 	if (g_pCKFClientPlugins)
@@ -82,6 +88,7 @@ void IPlugins::Shutdown(void)
 
 	CKF_Shutdown();
 	Renderer_Shutdown();
+	Audio_Shutdown();	
 	Module_Shutdown();
 }
 
@@ -93,6 +100,9 @@ void IPlugins::LoadEngine(void)
 	g_hEngineModule = g_pMetaHookAPI->GetEngineModule();
 	g_dwEngineBase = g_pMetaHookAPI->GetEngineBase();
 	g_dwEngineSize = g_pMetaHookAPI->GetEngineSize();
+
+	if (g_pAudioPlugins)
+		g_pAudioPlugins->LoadEngine();
 
 	if (g_pRendererPlugins)
 		g_pRendererPlugins->LoadEngine();
@@ -110,6 +120,7 @@ void IPlugins::LoadEngine(void)
 	MemPatch_Start(MEMPATCH_STEP_LOADENGINE);
 	Memory_Init();
 	Cvar_Init();
+	SteamAPI_Load();
 	SteamAPI_Init();
 
 	FileSystem_InstallHook(g_pInterface->FileSystem);
@@ -170,6 +181,9 @@ void IPlugins::LoadClient(cl_exportfuncs_t *pExportFunc)
 
 	MemPatch_Start(MEMPATCH_STEP_LOADCLIENT);
 
+	if (g_pAudioPlugins)
+		g_pAudioPlugins->LoadClient(pExportFunc);
+
 	if (g_pRendererPlugins)
 		g_pRendererPlugins->LoadClient(pExportFunc);
 
@@ -181,6 +195,9 @@ void IPlugins::ExitGame(int iResult)
 {
 	VID_Shutdown();
 	VGui_Shutdown();
+
+	if (g_pAudioPlugins)
+		g_pAudioPlugins->ExitGame(iResult);
 
 	if (g_pRendererPlugins)
 		g_pRendererPlugins->ExitGame(iResult);

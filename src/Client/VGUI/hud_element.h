@@ -12,6 +12,9 @@ public:
 	virtual void Reset(void) = 0;
 	virtual int FireMessage(const char *pszName, int iSize, void *pbuf) = 0;
 	virtual bool ShouldDraw( void ) = 0;
+
+	//hook keyinput, return 1 if handled
+	virtual bool KeyInput( int down, vgui::KeyCode keynum, const char *pszCurrentBinding ){ return 1; }
 public:
 	virtual vgui::VPANEL GetVPanel(void) = 0;
 	virtual bool IsVisible(void) = 0;

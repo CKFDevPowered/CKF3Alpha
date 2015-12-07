@@ -5,6 +5,9 @@
 #include <time.h>
 #include "sys.h"
 
+#include <metahook.h>
+#include "cmd.h"
+
 static qboolean s_com_token_unget = false;
 
 #define COM_TOKEN_MAX_LENGTH 1024
@@ -223,6 +226,17 @@ char *COM_BinPrintf(unsigned char *buf, int nLen)
 	return szReturn;
 }
 
+xcommand_t g_pfn_CD_Command_f;
+
+void CD_Command_f(void)
+{
+	if(gEngfuncs.CheckParm("-nosound", NULL))
+		return;
+
+	g_pfn_CD_Command_f();
+}
+
 void COM_Init(void)
 {
+	g_pfn_CD_Command_f = Cmd_HookCmd("cd", CD_Command_f);
 }

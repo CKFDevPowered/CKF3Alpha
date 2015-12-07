@@ -208,6 +208,7 @@ ChromeHTML::ChromeHTML(Panel *parent, const char *name, bool allowJavaScript, bo
 	{
 		Warning("Unable to access ChromeHTMLController");
 	}
+
 	m_iScrollBorderX=m_iScrollBorderY=0;
 	m_bScrollBarEnabled = true;
 	m_bContextMenuEnabled = true; 

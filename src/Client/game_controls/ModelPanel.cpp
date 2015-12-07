@@ -57,9 +57,16 @@ ModelPanel::ModelPanel( Panel *parent, const char *name ) : Panel( parent, name 
 void ModelPanel::OnTick( void )
 {
 	const char *mapname = gEngfuncs.pfnGetLevelName();
-	if(mapname && !mapname[0] && m_entity.model)
+	if(!mapname || !mapname[0])
 	{
 		m_entity.model = NULL;
+		m_entity.curstate.weaponmodel = 0;
+	}
+	else if(0 != Q_strcmp(mapname, m_currentmap))
+	{
+		m_entity.model = NULL;
+		m_entity.curstate.weaponmodel = 0;
+		Q_strncpy(m_currentmap, mapname, sizeof(m_currentmap));
 	}
 }
 

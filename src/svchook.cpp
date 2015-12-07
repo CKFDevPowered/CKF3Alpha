@@ -17,13 +17,21 @@ static svc_func_t *cl_parsefuncs = NULL;
 static sizebuf_t *net_message = NULL;
 static int *msg_readcount = NULL;
 
+#include "cmd.h"
+
 void SVC_Init(void)
 {
-	DWORD address = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, "\x55\x8B\xEC\x83\xE4\xF8\x51\x53\x56\x57\x68", 11);
+	DWORD addr_svc_bad = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, "svc_bad", sizeof("svc_bad")-1);
+	DWORD addr_svc_nop = (DWORD)g_pMetaHookAPI->SearchPattern((void *)addr_svc_bad, 0x100, "svc_nop", sizeof("svc_nop")-1);
 
-	if (address)
+	int svc[6] = {0, addr_svc_bad, 0, 1, addr_svc_nop, 0};
+	char *sig_svc = (char *)svc;
+
+	DWORD addr_cl_parsefuncs = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, sig_svc, sizeof(svc) );
+
+	if (addr_cl_parsefuncs)
 	{
-		cl_parsefuncs = (svc_func_t *)(*(DWORD *)(address + 0x1C) - 0x4);
+		cl_parsefuncs = (svc_func_t *)addr_cl_parsefuncs;
 
 		while (SVC_LASTMSG)
 		{
@@ -37,12 +45,11 @@ void SVC_Init(void)
 		}
 	}
 
-	address = (DWORD)g_pMetaHookAPI->SearchPattern((void *)g_dwEngineBase, g_dwEngineSize, "\xA1\x2A\x2A\x2A\x2A\x8B\x15\x2A\x2A\x2A\x2A\x8D\x48\x01\x3B\xCA\x2A\x2A\xC7\x05\x2A\x2A\x2A\x2A\x01\x00\x00\x00\x83\xC8\xFF\xC3", 32);
-
-	if (address)
+	DWORD addr_cl_parse_director = (DWORD)cl_parsefuncs[51].pfnParse;
+	if (addr_cl_parse_director)
 	{
-		msg_readcount = (int *)(*(DWORD *)(address + 0x1));
-		net_message = (sizebuf_t *)(*(DWORD *)(address + 0x7) - 0x10);
+		msg_readcount = (int *)(*(DWORD *)(addr_cl_parse_director + 8));
+		net_message = (sizebuf_t *)(*(DWORD *)(addr_cl_parse_director + 15) - 8);
 	}
 }
 

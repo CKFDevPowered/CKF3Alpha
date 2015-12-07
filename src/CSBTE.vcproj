@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\Test\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\MetaHook\CSBTE.dll&quot;"
+				CommandLine="copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;..\Test\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;copy &quot;$(OutDir)\$(ProjectName).dll&quot; &quot;F:\Steam\steamapps\common\Half-Life\ckf3\MetaHook\CSBTE.dll&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1222,6 +1222,30 @@
 						>
 					</File>
 					<File
+						RelativePath=".\Client\VGUI\hud_menu_engy_build.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\Client\VGUI\hud_menu_engy_build.h"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCustomBuildTool"
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath=".\Client\VGUI\hud_metalmeter.cpp"
 						>
 					</File>
@@ -2101,6 +2125,14 @@
 		<Filter
 			Name="Interface"
 			>
+			<File
+				RelativePath=".\Interface\aud_int.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Interface\IAudio.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Interface\IBaseUI.h"
 				>

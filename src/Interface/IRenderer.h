@@ -10,10 +10,10 @@
 #else
 	#include "ref_int_internal.h"
 #endif
+
 class IRenderer : public IBaseInterface
 {
 public:
-	virtual void GetClientFuncs(cl_exportfuncs_t *pExportfuncs);
 	virtual void GetInterface(ref_export_t *pRefExports, const char *version);
 };
 

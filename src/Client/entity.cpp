@@ -48,8 +48,7 @@ int HUD_AddEntity(int type, struct cl_entity_s *ent, const char *modelname)
 		if ((g_iUser1 == OBS_IN_EYE || gHUD.m_Spectator.m_pip->value == INSET_IN_EYE) && ent->index == g_iUser2)
 			return 0;
 	}
-	if(gRefClientFuncs.HUD_AddEntity)
-		gRefClientFuncs.HUD_AddEntity(type, ent, modelname);
+
 	if(gCkfClientFuncs.HUD_AddEntity)
 		gCkfClientFuncs.HUD_AddEntity(type, ent, modelname);
 
@@ -141,8 +140,6 @@ void HUD_CreateEntities(void)
 {
 	GetClientVoiceHud()->CreateEntities();
 
-	if(gRefClientFuncs.HUD_CreateEntities)
-		gRefClientFuncs.HUD_CreateEntities();
 	if(gCkfClientFuncs.HUD_CreateEntities)
 		gCkfClientFuncs.HUD_CreateEntities();
 }
