@@ -6,6 +6,7 @@ class CClientBuildable
 public:
 	virtual void Init(void);
 	virtual bool IsBuilt(void);
+	virtual int GetBuildClass(void) = 0;
 public:
 	int m_iLevel;
 	int m_iFlags;
@@ -16,10 +17,11 @@ public:
 	float m_flUpdateTime;
 };
 
-class CClientBuildable : public CClientSentry
+class CClientSentry : public CClientBuildable
 {
 public:
 	virtual void Init(void);
+	virtual int GetBuildClass(void);
 public:
 	int m_iAmmo;
 	int m_iMaxAmmo;
@@ -28,25 +30,35 @@ public:
 	int m_iKillCount;
 };
 
-class CClientBuildable : public CClientDispenser
+class CClientDispenser : public CClientBuildable
 {
 public:
 	virtual void Init(void);
+	virtual int GetBuildClass(void);
 public:
 	int m_iMetal;
 	int m_iMaxMetal;
 };
 
-class CClientTeleporter : public CClientDispenser
+class CClientTeleEntrance : public CClientBuildable
 {
 public:
 	virtual void Init(void);
+	virtual int GetBuildClass(void);
 public:
 	float m_flCharge;
 	float m_flChargeRate;
 	float m_flChargeTime;
 	int m_iReady;
 	int m_iFrags;
+};
+
+class CClientTeleExit : public CClientBuildable
+{
+public:
+	virtual void Init(void);
+	virtual int GetBuildClass(void);
+public:
 };
 
 typedef struct

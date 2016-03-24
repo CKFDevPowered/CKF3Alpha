@@ -20,24 +20,36 @@ size_t gMsgDataSize;
 pfnUserMsgHook gMsgFunction;
 const char *gMsgName;
 
+#define GetCallAddress(addr) (addr + (*(DWORD *)(addr+1)) + 5)
+
 void MSG_Init(void)
 {
+	//DWORD address = (DWORD)g_pMetaSave->pEngineFuncs->pfnHookUserMsg;
+
+	//if (*(BYTE *)(address + 0x1A) != 0xE8)
+	//	address += 0x19;
+	//else
+	//	address += 0x1A;
+
+	//address += 0x1;
+	//address += *(DWORD *)address + 0x4;
+
+	//if (*(BYTE *)(address + 0xC) != 0x35)
+	//	address += 0x9;
+	//else
+	//	address += 0xC;
+
+	//gClientUserMsgs = *(usermsg_t ***)(address + 0x1);
+
 	DWORD address = (DWORD)g_pMetaSave->pEngineFuncs->pfnHookUserMsg;
 
-	if (*(BYTE *)(address + 0x1A) != 0xE8)
-		address += 0x19;
-	else
-		address += 0x1A;
+	address = (DWORD)g_pMetaHookAPI->SearchPattern((void *)address, 0x50, "\xE8\x2A\x2A\x2A\x2A\x83\xC4", sizeof("\xE8\x2A\x2A\x2A\x2A\x83\xC4") - 1);
 
-	address += 0x1;
-	address += *(DWORD *)address + 0x4;
+	address = GetCallAddress(address);
 
-	if (*(BYTE *)(address + 0xC) != 0x35)
-		address += 0x9;
-	else
-		address += 0xC;
+	address = (DWORD)g_pMetaHookAPI->SearchPattern((void *)address, 0x20, "\x8B\x35", sizeof("\x8B\x35") - 1);
 
-	gClientUserMsgs = *(usermsg_t ***)(address + 0x1);
+	gClientUserMsgs = *(usermsg_t ***)(address + 0x2);
 }
 
 usermsg_t *MSG_FindUserMsgHook(char *szMsgName)

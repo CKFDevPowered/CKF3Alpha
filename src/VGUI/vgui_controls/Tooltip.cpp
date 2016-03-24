@@ -403,4 +403,3 @@ void TextTooltip::HideTooltip()
 
 	BaseTooltip::HideTooltip();
 }
-
