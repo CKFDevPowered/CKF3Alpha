@@ -14,8 +14,9 @@
 #define STUDIO_NF_ADDITIVE      0x0020
 #define STUDIO_NF_MASKED        0x0040
 
-SHADER_UNIFORM_BEGINDEF(studio)
+typedef struct
 {
+	int program;
 	int lightpos;
 	int eyepos;
 	int ambient;
@@ -24,22 +25,17 @@ SHADER_UNIFORM_BEGINDEF(studio)
 	int shiness;
 	int basemap;
 	int normalmap;
-}
-SHADER_UNIFORM_ENDDEF(studio)
-
-SHADER_UNIFORM_BEGINDEF(invuln)
-{
-	int basemap;
-	int normalmap;
-	int time;
-}
-SHADER_UNIFORM_ENDDEF(invuln)
+	int tangent;
+	int binormal;
+}studio_program_t;
 
 typedef struct
 {
-	int tangent;
-	int binormal;
-}studio_attrib_t;
+	int program;
+	int basemap;
+	int normalmap;
+	int time;
+}invuln_program_t;
 
 typedef struct
 {

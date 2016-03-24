@@ -1,11 +1,10 @@
 #include "gl_local.h"
 
 int cloak_texture = 0;
-int cloak_program = 0;
-cloak_uniform_t cloak_uniform;
 
-int conc_program = 0;
-conc_uniform_t conc_uniform;
+SHADER_DEFINE(cloak);
+
+SHADER_DEFINE(conc);
 
 cvar_t *r_cloak_debug;
 
@@ -17,13 +16,13 @@ void R_InitCloak(void)
 		const char *cloak_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\cloak_shader.fsh", 5, 0);
 		if(cloak_vscode && cloak_fscode)
 		{
-			cloak_program = R_CompileShader(cloak_vscode, cloak_fscode, "cloak_shader.vsh", "cloak_shader.fsh");
-			if(cloak_program)
+			cloak.program = R_CompileShader(cloak_vscode, cloak_fscode, "cloak_shader.vsh", "cloak_shader.fsh");
+			if(cloak.program)
 			{
-				SHADER_UNIFORM_INIT(cloak, refract, "refract");
-				SHADER_UNIFORM_INIT(cloak, eyepos, "eyepos");
-				SHADER_UNIFORM_INIT(cloak, cloakfactor, "cloakfactor");
-				SHADER_UNIFORM_INIT(cloak, refractamount, "refractamount");
+				SHADER_UNIFORM(cloak, refract, "refract");
+				SHADER_UNIFORM(cloak, eyepos, "eyepos");
+				SHADER_UNIFORM(cloak, cloakfactor, "cloakfactor");
+				SHADER_UNIFORM(cloak, refractamount, "refractamount");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *)cloak_vscode);
@@ -33,12 +32,12 @@ void R_InitCloak(void)
 		const char *conc_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\conc_shader.fsh", 5, 0);
 		if(conc_vscode && conc_fscode)
 		{
-			conc_program = R_CompileShader(conc_vscode, conc_fscode, "conc_shader.vsh", "conc_shader.fsh");
-			if(conc_program)
+			conc.program = R_CompileShader(conc_vscode, conc_fscode, "conc_shader.vsh", "conc_shader.fsh");
+			if(conc.program)
 			{
-				SHADER_UNIFORM_INIT(conc, refractmap, "refractmap");
-				SHADER_UNIFORM_INIT(conc, normalmap, "normalmap");
-				SHADER_UNIFORM_INIT(conc, packedfactor, "packedfactor");
+				SHADER_UNIFORM(conc, refractmap, "refractmap");
+				SHADER_UNIFORM(conc, normalmap, "normalmap");
+				SHADER_UNIFORM(conc, packedfactor, "packedfactor");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *)conc_vscode);
@@ -90,10 +89,10 @@ void R_RenderCloakTexture(void)
 
 void R_BeginRenderConc(float flBlurFactor, float flRefractFactor)
 {
-	qglUseProgramObjectARB(conc_program);
-	qglUniform1iARB(conc_uniform.normalmap, 0);
-	qglUniform1iARB(conc_uniform.refractmap, 1);
-	qglUniform2fARB(conc_uniform.packedfactor, flBlurFactor, flRefractFactor);
+	qglUseProgramObjectARB(conc.program);
+	qglUniform1iARB(conc.normalmap, 0);
+	qglUniform1iARB(conc.refractmap, 1);
+	qglUniform2fARB(conc.packedfactor, flBlurFactor, flRefractFactor);
 }
 
 int R_GetCloakTexture(void)

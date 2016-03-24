@@ -32,10 +32,7 @@ void GL_MultiTexCoord3f(GLenum target, float s, float t, float r);
 
 #define clamp(value, mi, ma) min(max(value, mi), ma)
 
-#define SHADER_UNIFORM_BEGINDEF(name) typedef struct name##_uniform_s
-#define SHADER_UNIFORM_ENDDEF(name) name##_uniform_t;
-#define SHADER_DEFINE_UNIFORM(name) int name##_program = 0;\
-name##_uniform_t name##_uniform;
+#define SHADER_DEFINE(name) name##_program_t name;
 
-#define SHADER_UNIFORM_INIT(name, loc, locstring) name##_uniform.loc = qglGetUniformLocationARB(name##_program, locstring);
-#define SHADER_ATTRIB_INIT(name, loc, locstring) name##_attrib.loc = qglGetAttribLocationARB(name##_program, locstring);
+#define SHADER_UNIFORM(name, loc, locstring) name##.loc = qglGetUniformLocationARB(name.program, locstring);
+#define SHADER_ATTRIB(name, loc, locstring) name##.loc = qglGetAttribLocationARB(name.program, locstring);

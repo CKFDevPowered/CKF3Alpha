@@ -90,29 +90,35 @@ void EmitWaterPolys(msurface_t *fa, int direction)
 
 	float clientTime = (*cl_time);
 
+	//if(strcmp(fa->texinfo->texture->name, "!waterblue"))
+	//	return gRefFuncs.EmitWaterPolys(fa, direction);
+
 	tempVert[0] = fa->polys->verts[0][0];
 	tempVert[1] = fa->polys->verts[0][1];
 	tempVert[2] = fa->polys->verts[0][2];
 
-	if(r_water->value && water_program && gl_mtexable > 2)
+	if(r_water->value && water.program && gl_mtexable > 2)
 	{
 		R_AddWater((*currententity), tempVert);
 		if(curwater)
 		{
-			qglUseProgramObjectARB(water_program);
+			qglUseProgramObjectARB(water.program);
 
-			qglUniform4fARB(water_uniform.waterfogcolor, water_parm.color[0], water_parm.color[1], water_parm.color[2], water_parm.color[3]);
-			qglUniform3fARB(water_uniform.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
-			qglUniform1fARB(water_uniform.time, (*cl_time));
-			if(water_parm.active)
-				qglUniform1fARB(water_uniform.fresnel, clamp(water_parm.fresnel, 0.0, 10000.0));
-			else
-				qglUniform1fARB(water_uniform.fresnel, clamp(r_water_fresnel->value, 0.0, 10000.0));
-			qglUniform1fARB(water_uniform.abovewater, (r_refdef->vieworg[2] > curwater->vecs[2]) ? 1.0f : 0.0f);
+			qglUniform4fARB(water.waterfogcolor, water_parm.color[0], water_parm.color[1], water_parm.color[2], water_parm.color[3]);
+			qglUniform3fARB(water.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
+			qglUniform3fARB(water.eyedir, vpn[0], vpn[1], vpn[2]);
+			qglUniform1fARB(water.zmax, (r_params.movevars) ? r_params.movevars->zmax : 4096);
+			qglUniform1fARB(water.time, (*cl_time));
+			//if(water_parm.active)
+			//	qglUniform1fARB(water.fresnel, clamp(water_parm.fresnel, 0.0, 10000.0));
+			//else
+				qglUniform1fARB(water.fresnel, clamp(r_water_fresnel->value, 0.0, 1.0));
+			qglUniform1fARB(water.abovewater, (r_refdef->vieworg[2] > curwater->vecs[2]) ? 1.0f : 0.0f);
 
-			qglUniform1iARB(water_uniform.normalmap, 0);
-			qglUniform1iARB(water_uniform.refractmap, 1);
-			qglUniform1iARB(water_uniform.reflectmap, 2);
+			qglUniform1iARB(water.normalmap, 0);
+			qglUniform1iARB(water.refractmap, 1);
+			qglUniform1iARB(water.reflectmap, 2);
+			qglUniform1iARB(water.depthrefrmap, 3);
 
 			qglDisable(GL_BLEND);
 
@@ -127,6 +133,10 @@ void EmitWaterPolys(msurface_t *fa, int direction)
 			GL_SelectTexture(TEXTURE2_SGIS);
 			qglEnable(GL_TEXTURE_2D);
 			GL_Bind(curwater->reflectmap);
+
+			GL_SelectTexture(TEXTURE3_SGIS);
+			qglEnable(GL_TEXTURE_2D);
+			GL_Bind(curwater->depthrefrmap);
 
 			useProgram = 1;
 		}
@@ -206,6 +216,10 @@ void EmitWaterPolys(msurface_t *fa, int direction)
 
 	if(useProgram)
 	{
+		GL_SelectTexture(TEXTURE3_SGIS);
+		GL_Bind(0);
+		qglDisable(GL_TEXTURE_2D);
+
 		GL_SelectTexture(TEXTURE2_SGIS);
 		GL_Bind(0);
 		qglDisable(GL_TEXTURE_2D);

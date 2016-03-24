@@ -45,11 +45,23 @@ void S_FreeCache(sfx_t *sfx)
 	if(!sc)
 		return;
 
+	//2015-12-12 fixed a bug that a buffer in use is freed
+	if(SND_IsPlaying(sfx))
+		return;
+
 	if(openal_enabled)
 	{
+		qalGetError();
+
 		if(sc->albuffer)
 		{
 			qalDeleteBuffers(1, &sc->albuffer);
+		}
+
+		int err;
+		if ((err = qalGetError()) != AL_NO_ERROR)
+		{
+			gEngfuncs.Con_DPrintf("S_CheckWavEnd: got an error %d.\n", err);
 		}
 
 		if(sc->file)
@@ -200,8 +212,8 @@ void S_CheckWavEnd(aud_channel_t *ch, aud_sfxcache_t *sc)
 	{
 		if(sc->loopstart < ch->end)
 		{
-			qalSourcePlay(ch->source);
 			qalSourcei(ch->source, AL_SAMPLE_OFFSET, sc->loopstart);
+			qalSourcePlay(ch->source);
 		}
 		return;
 	}
@@ -218,11 +230,14 @@ void S_CheckWavEnd(aud_channel_t *ch, aud_sfxcache_t *sc)
 			qalSourcePlay(ch->source);
 			return;
 		}
-	}	
+	}
 
 	if (ch->isentence >= 0)
 	{
 		sfx_t *sfx;
+
+		//2015-12-12 fixed, stop the channel before free buffer
+		qalSourceStop(ch->source);
 
 		if (rgrgvoxword[ch->isentence][ch->iword].sfx && !rgrgvoxword[ch->isentence][ch->iword].fKeepCached)
 			S_FreeCache(rgrgvoxword[ch->isentence][ch->iword].sfx);
@@ -240,12 +255,14 @@ void S_CheckWavEnd(aud_channel_t *ch, aud_sfxcache_t *sc)
 				ch->iword++;
 
 				VOX_TrimStartEndTimes(ch, sc);
+				qalSourcei(ch->source, AL_SAMPLE_OFFSET, ch->start);
+				qalSourcePlay(ch->source);
 				return;
 			}
 		}
-	}
 
-	S_FreeChannel(ch);
+		S_FreeChannel(ch);
+	}
 }
 
 void SND_Spatialize(aud_channel_t *ch, qboolean init)
@@ -399,7 +416,7 @@ void S_FreeChannel(aud_channel_t *ch)
 	{
 		// Stop the Source and reset the Buffer
 		qalSourceStop(ch->source);
-		qalSourcei(ch->source, AL_BUFFER, 0);	
+		qalSourcei(ch->source, AL_BUFFER, 0);
 	}
 
 	if (ch->alstreambuffers[0])
@@ -489,7 +506,7 @@ int S_AlterChannel(int entnum, int entchannel, sfx_t *sfx, float fvol, float pit
 	return FALSE;
 }
 
-int SND_IsPlaying(sfx_t *sfx)
+qboolean SND_IsPlaying(sfx_t *sfx)
 {
 	int ch_idx;
 
@@ -641,6 +658,16 @@ void S_StartDynamicSound(int entnum, int entchannel, sfx_t *sfx, float *origin, 
 	if (!ch)
 		return;
 
+	qalGetError();
+
+	VectorCopy(origin, ch->origin);
+	ch->attenuation = attenuation;
+	ch->volume = fvol;
+	ch->entnum = entnum;
+	ch->entchannel = entchannel;
+	ch->pitch = fpitch;
+	ch->isentence = -1;
+
 	if (sfx->name[0] == '!' || sfx->name[0] == '#')
 	{
 		char name[MAX_QPATH];
@@ -667,14 +694,6 @@ void S_StartDynamicSound(int entnum, int entchannel, sfx_t *sfx, float *origin, 
 		qalGenSources(1, &ch->source);
 	}
 
-	VectorCopy(origin, ch->origin);
-	ch->attenuation = attenuation;
-	ch->volume = fvol;
-	ch->entnum = entnum;
-	ch->entchannel = entchannel;
-	ch->pitch = fpitch;
-	ch->isentence = -1;
-
 	ch->start = 0;
 	ch->end = sc->length;
 
@@ -699,10 +718,11 @@ void S_StartDynamicSound(int entnum, int entchannel, sfx_t *sfx, float *origin, 
 
 	qalSourcePlay(ch->source);
 
-	/* Do not play broken channels */
-	if (qalGetError() != AL_NO_ERROR)
+	int err;
+	if ((err = qalGetError()) != AL_NO_ERROR)
 	{
 		S_FreeChannel(ch);
+		gEngfuncs.Con_DPrintf("S_StartStaticSound: got an error 0x%X on %s.\n", err, ch->sfx ? ch->sfx->name : "");
 	}
 }
 
@@ -792,6 +812,16 @@ void S_StartStaticSound(int entnum, int entchannel, sfx_t *sfx, float *origin, f
 	if (!ch)
 		return;
 
+	qalGetError();
+
+	VectorCopy(origin, ch->origin);
+	ch->attenuation = attenuation;
+	ch->volume = fvol;
+	ch->entnum = entnum;
+	ch->entchannel = entchannel;
+	ch->pitch = fpitch;
+	ch->isentence = -1;
+
 	if (sfx->name[0] == '!' || sfx->name[0] == '#')
 	{
 		char name[MAX_QPATH];
@@ -818,14 +848,6 @@ void S_StartStaticSound(int entnum, int entchannel, sfx_t *sfx, float *origin, f
 		qalGenSources(1, &ch->source);
 	}
 
-	VectorCopy(origin, ch->origin);
-	ch->attenuation = attenuation;
-	ch->volume = fvol;
-	ch->entnum = entnum;
-	ch->entchannel = entchannel;
-	ch->pitch = fpitch;
-	ch->isentence = -1;
-
 	ch->start = 0;
 	ch->end = sc->length;
 
@@ -848,10 +870,11 @@ void S_StartStaticSound(int entnum, int entchannel, sfx_t *sfx, float *origin, f
 
 	qalSourcePlay(ch->source);
 
-	/* Do not play broken channels */
-	if (qalGetError() != AL_NO_ERROR)
+	int err;
+	if ((err = qalGetError()) != AL_NO_ERROR)
 	{
 		S_FreeChannel(ch);
+		gEngfuncs.Con_DPrintf("S_StartStaticSound: got an error 0x%X on %s.\n", err, ch->sfx ? ch->sfx->name : "");
 	}
 }
 

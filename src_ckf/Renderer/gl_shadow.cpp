@@ -18,8 +18,7 @@ shadow_manager_t sdmanager_player;
 int numsdmanagers;
 
 //shader
-int shadow_program;
-shadow_uniform_t shadow_uniform;
+SHADER_DEFINE(shadow);
 
 //cvar
 cvar_t *r_shadow = NULL;
@@ -57,14 +56,14 @@ void R_InitShadow(void)
 		const char *shadow_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\shadow_shader.fsh", 5, 0);
 		if(shadow_vscode && shadow_fscode)
 		{
-			shadow_program = R_CompileShader(shadow_vscode, shadow_fscode, "shadow_shader.vsh", "shadow_shader.fsh");
-			if(shadow_program)
+			shadow.program = R_CompileShader(shadow_vscode, shadow_fscode, "shadow_shader.vsh", "shadow_shader.fsh");
+			if(shadow.program)
 			{
-				SHADER_UNIFORM_INIT(shadow, texoffset, "texoffset");
-				SHADER_UNIFORM_INIT(shadow, depthmap, "depthmap");
-				SHADER_UNIFORM_INIT(shadow, entorigin, "entorigin");
-				SHADER_UNIFORM_INIT(shadow, radius, "radius");
-				SHADER_UNIFORM_INIT(shadow, fard, "fard");
+				SHADER_UNIFORM(shadow, texoffset, "texoffset");
+				SHADER_UNIFORM(shadow, depthmap, "depthmap");
+				SHADER_UNIFORM(shadow, entorigin, "entorigin");
+				SHADER_UNIFORM(shadow, radius, "radius");
+				SHADER_UNIFORM(shadow, fard, "fard");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *)shadow_vscode);
@@ -550,7 +549,7 @@ void R_RecursiveWorldNodeShadow(mnode_t *node)
 
 void R_RenderAllShadowScenes(void)
 {
-	if(!r_shadow->value || !shadow_program)
+	if(!r_shadow->value || !shadow.program)
 		return;
 	if(!sdlights_active)
 		return;
@@ -606,8 +605,8 @@ void R_RenderAllShadowScenes(void)
 	qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
 	qglColor4f(0.1, 0.1, 0.1, 0.5);
 
-	qglUseProgramObjectARB(shadow_program);
-	qglUniform1iARB(shadow_uniform.depthmap, 0);
+	qglUseProgramObjectARB(shadow.program);
+	qglUniform1iARB(shadow.depthmap, 0);
 
 	cl_entity_t *curentity = (*currententity);
 	drawshadowscene = true;
@@ -620,10 +619,10 @@ void R_RenderAllShadowScenes(void)
 			continue;
 		cursdlight = slight;
 
-		qglUniform1fARB(shadow_uniform.texoffset, 1 / cursdlight->texsize);
-		qglUniform1fARB(shadow_uniform.radius, cursdlight->radius);
-		qglUniform1fARB(shadow_uniform.fard, cursdlight->fard);
-		qglUniform3fvARB(shadow_uniform.entorigin, 1, cursdlight->origin);
+		qglUniform1fARB(shadow.texoffset, 1 / cursdlight->texsize);
+		qglUniform1fARB(shadow.radius, cursdlight->radius);
+		qglUniform1fARB(shadow.fard, cursdlight->fard);
+		qglUniform3fvARB(shadow.entorigin, 1, cursdlight->origin);
 
 		GL_Bind(cursdlight->depthmap);
 

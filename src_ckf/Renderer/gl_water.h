@@ -4,26 +4,31 @@
 
 typedef struct
 {
+	int program;
 	int waterfogcolor;
 	int eyepos;
+	int eyedir;
+	int zmax;
 	int time;
 	int fresnel;
 	int abovewater;
-	int reflectmap;
-	int refractmap;
 	int normalmap;
-}water_uniform_t;
+	int refractmap;
+	int reflectmap;	
+	int depthrefrmap;
+}water_program_t;
 
 typedef struct
 {
-	int tangent;
-	int binormal;
-}water_attrib_t;
+	int program;
+	int depthmap;
+}drawdepth_program_t;
 
 typedef struct r_water_s
 {
 	GLuint refractmap;
 	GLuint reflectmap;
+	GLuint depthrefrmap;
 	vec3_t vecs;
 	float distances;
 	cl_entity_t *ent;
@@ -39,17 +44,16 @@ extern mplane_t custom_frustum[4];
 extern int water_update_counter;
 extern int water_texture_size;
 //water
-extern r_water_t water[MAX_WATERS];
 extern r_water_t *curwater;
 extern r_water_t *waters_free;
 extern r_water_t *waters_active;
 
 //shader
-extern int water_program;
-extern water_uniform_t water_uniform;
-extern water_attrib_t water_attrib;
+extern SHADER_DEFINE(water);
 extern int water_normalmap;
 extern int water_normalmap_default;
+
+extern SHADER_DEFINE(drawdepth);
 
 //water fog
 extern int *g_bUserFogOn;

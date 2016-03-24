@@ -5,7 +5,7 @@ extern DWORD g_dwEngineBase, g_dwEngineSize;
 extern DWORD g_dwEngineBuildnum;
 extern DWORD g_iVideoMode;
 extern bool g_bIsNewEngine;
-extern int g_iVideoWidth, g_iVideoHeight;
+extern int g_iVideoWidth, g_iVideoHeight, g_iBPP;
 extern bool g_bWindowed;
 extern bool g_bIsDebuggerPresent;
 extern IFileSystem *g_pFileSystem;

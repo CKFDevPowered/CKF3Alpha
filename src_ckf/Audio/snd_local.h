@@ -117,6 +117,7 @@ void S_Update(float *origin, float *forward, float *right, float *up);
 void S_FreeChannel(aud_channel_t *ch);
 void S_FreeCache(sfx_t *sfx);
 void S_FlushCaches(void);
+qboolean SND_IsPlaying(sfx_t *sfx);
 
 //snd_wav.cpp
 qboolean GetWavinfo(wavinfo_t *info, char *name, byte *wav, int wavlength);

@@ -286,43 +286,45 @@ void HUD_DrawTransparentTriangles(void)
 
 int HUD_Redraw(float time, int intermission)
 {
-	if(waters_active && r_water_debug->value > 0 && r_water_debug->value <= 2)
+	if(waters_active && r_water_debug->value > 0 && r_water_debug->value <= 3)
 	{
 		qglDisable(GL_BLEND);
 		qglDisable(GL_ALPHA_TEST);
 		qglColor4f(1,1,1,1);
 
 		qglEnable(GL_TEXTURE_2D);
+		int debugTextureID = 0;
 		switch((int)r_water_debug->value)
 		{
 		case 1:
-			qglBindTexture(GL_TEXTURE_2D, waters_active->reflectmap);
-			qglBegin(GL_QUADS);
-			qglTexCoord2f(0,1);
-			qglVertex3f(0,0,0);
-			qglTexCoord2f(1,1);
-			qglVertex3f(glwidth/2,0,0);
-			qglTexCoord2f(1,0);
-			qglVertex3f(glwidth/2,glheight/2,0);
-			qglTexCoord2f(0,0);
-			qglVertex3f(0,glheight/2,0);
-			qglEnd();
+			debugTextureID = waters_active->reflectmap;
 			break;
 		case 2:
-			qglBindTexture(GL_TEXTURE_2D, waters_active->refractmap);
-			qglBegin(GL_QUADS);
-			qglTexCoord2f(0,1);
-			qglVertex3f(0,0,0);
-			qglTexCoord2f(1,1);
-			qglVertex3f(glwidth/2,0,0);
-			qglTexCoord2f(1,0);
-			qglVertex3f(glwidth/2,glheight/2,0);
-			qglTexCoord2f(0,0);
-			qglVertex3f(0,glheight/2,0);
-			qglEnd();
+			debugTextureID = waters_active->refractmap;
+			break;
+		case 3:
+			debugTextureID = waters_active->depthrefrmap;
+			qglUseProgramObjectARB(drawdepth.program);
 			break;
 		default:
 			break;
+		}
+		if(debugTextureID)
+		{
+			qglBindTexture(GL_TEXTURE_2D, debugTextureID);
+			qglBegin(GL_QUADS);
+			qglTexCoord2f(0,1);
+			qglVertex3f(0,0,0);
+			qglTexCoord2f(1,1);
+			qglVertex3f(glwidth/2,0,0);
+			qglTexCoord2f(1,0);
+			qglVertex3f(glwidth/2,glheight/2,0);
+			qglTexCoord2f(0,0);
+			qglVertex3f(0,glheight/2,0);
+			qglEnd();
+
+			if(debugTextureID = waters_active->depthrefrmap)
+				qglUseProgramObjectARB(0);
 		}
 	}
 	else if(sdlights_active && r_shadow_debug->value)
@@ -387,6 +389,57 @@ int HUD_Redraw(float time, int intermission)
 		qglVertex3f(0,glheight/2,0);
 		qglEnd();
 		qglEnable(GL_ALPHA_TEST);
+	}
+	else if(r_hdr_debug->value)
+	{
+		qglDisable(GL_BLEND);
+		qglDisable(GL_ALPHA_TEST);
+		qglColor4f(1,1,1,1);
+
+		qglEnable(GL_TEXTURE_2D);
+		FBO_Container_t *pFBO = NULL;
+		switch((int)r_hdr_debug->value)
+		{
+		case 1:
+			pFBO = &s_DownSampleFBO[0];break;
+		case 2:
+			pFBO = &s_DownSampleFBO[1];break;
+		case 3:
+			pFBO = &s_BrightPassFBO;break;
+		case 4:
+			pFBO = &s_BlurPassFBO[0][0];break;
+		case 5:
+			pFBO = &s_BlurPassFBO[0][1];break;
+		case 6:
+			pFBO = &s_BlurPassFBO[1][0];break;
+		case 7:
+			pFBO = &s_BlurPassFBO[1][1];break;
+		case 8:
+			pFBO = &s_BlurPassFBO[2][0];break;
+		case 9:
+			pFBO = &s_BlurPassFBO[2][1];break;
+		case 10:
+			pFBO = &s_BrightAccumFBO;break;
+		case 11:
+			pFBO = &s_ToneMapFBO;break;
+		default:
+			break;
+		}
+
+		if(pFBO)
+		{
+			qglBindTexture(GL_TEXTURE_2D, pFBO->s_hBackBufferTex);
+			qglBegin(GL_QUADS);
+			qglTexCoord2f(0,1);
+			qglVertex3f(0,0,0);
+			qglTexCoord2f(1,1);
+			qglVertex3f(glwidth/2, 0,0);
+			qglTexCoord2f(1,0);
+			qglVertex3f(glwidth/2, glheight/2,0);
+			qglTexCoord2f(0,0);
+			qglVertex3f(0, glheight/2,0);
+			qglEnd();
+		}
 	}
 	return gExportfuncs.HUD_Redraw(time, intermission);
 }
@@ -459,7 +512,7 @@ int HUD_UpdateClientData(client_data_t *pcldata, float flTime)
 
 int HUD_AddEntity(int type, cl_entity_t *ent, const char *model)
 {
-	if(r_shadow->value && shadow_program && (ent->curstate.effects & EF_SHADOW))
+	if(r_shadow->value && shadow.program && (ent->curstate.effects & EF_SHADOW))
 	{
 		R_AddEntityShadow(ent, model);
 	}

@@ -30,9 +30,7 @@ vec3_t r_plightvec;
 int r_ambientlight;
 float r_shadelight;
 
-int studio_program;
-studio_uniform_t studio_uniform;
-studio_attrib_t studio_attrib;
+SHADER_DEFINE(studio);
 
 cvar_t *gl_studionormal;
 cvar_t *r_pplightambient;
@@ -47,8 +45,7 @@ int Q_stricmp_slash(const char *s1, const char *s2);
 void VectorIRotate(const vec3_t in1, const float in2[3][4], vec3_t out);
 void VectorRotate(const vec3_t in1, const float in2[3][4], vec3_t out);
 
-int invuln_program;
-invuln_uniform_t invuln_uniform;
+SHADER_DEFINE(invuln);
 
 extern int water_normalmap;
 
@@ -236,19 +233,19 @@ void R_InitStudio(void)
 
 		if(studio_vscode && studio_fscode)
 		{
-			studio_program = R_CompileShader(studio_vscode, studio_fscode, "studio_shader.vsh", "studio_shader.fsh");
-			if(studio_program)
+			studio.program = R_CompileShader(studio_vscode, studio_fscode, "studio_shader.vsh", "studio_shader.fsh");
+			if(studio.program)
 			{
-				SHADER_UNIFORM_INIT(studio, lightpos, "lightpos");
-				SHADER_UNIFORM_INIT(studio, eyepos, "eyepos");
-				SHADER_UNIFORM_INIT(studio, basemap, "basemap");
-				SHADER_UNIFORM_INIT(studio, normalmap, "normalmap");
-				SHADER_UNIFORM_INIT(studio, ambient, "ambient");
-				SHADER_UNIFORM_INIT(studio, diffuse, "diffuse");
-				SHADER_UNIFORM_INIT(studio, specular, "specular");
-				SHADER_UNIFORM_INIT(studio, shiness, "shiness");
-				SHADER_ATTRIB_INIT(studio, tangent, "tangent");
-				SHADER_ATTRIB_INIT(studio, binormal, "binormal");
+				SHADER_UNIFORM(studio, lightpos, "lightpos");
+				SHADER_UNIFORM(studio, eyepos, "eyepos");
+				SHADER_UNIFORM(studio, basemap, "basemap");
+				SHADER_UNIFORM(studio, normalmap, "normalmap");
+				SHADER_UNIFORM(studio, ambient, "ambient");
+				SHADER_UNIFORM(studio, diffuse, "diffuse");
+				SHADER_UNIFORM(studio, specular, "specular");
+				SHADER_UNIFORM(studio, shiness, "shiness");
+				SHADER_ATTRIB(studio, tangent, "tangent");
+				SHADER_ATTRIB(studio, binormal, "binormal");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *) studio_vscode);
@@ -256,15 +253,14 @@ void R_InitStudio(void)
 
 		char *invuln_vscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\invuln_shader.vsh", 5, 0);
 		char *invuln_fscode = (char *)gEngfuncs.COM_LoadFile("resource\\shader\\invuln_shader.fsh", 5, 0);
-
 		if(invuln_vscode && invuln_fscode)
 		{
-			invuln_program = R_CompileShader(invuln_vscode, invuln_fscode, "invuln_shader.vsh", "invuln_shader.fsh");
-			if(invuln_program)
+			invuln.program = R_CompileShader(invuln_vscode, invuln_fscode, "invuln_shader.vsh", "invuln_shader.fsh");
+			if(invuln.program)
 			{
-				SHADER_UNIFORM_INIT(invuln, basemap, "basemap");
-				SHADER_UNIFORM_INIT(invuln, normalmap, "normalmap");
-				SHADER_UNIFORM_INIT(invuln, time, "time");
+				SHADER_UNIFORM(invuln, basemap, "basemap");
+				SHADER_UNIFORM(invuln, normalmap, "normalmap");
+				SHADER_UNIFORM(invuln, time, "time");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *) invuln_vscode);
@@ -617,11 +613,11 @@ void R_GLStudioDrawPointsEx(void)
 		{
 			GL_DisableMultitexture();
 			GL_Bind(cloak_texture);
-			qglUseProgramObjectARB(cloak_program);
-			qglUniform1iARB(cloak_uniform.refract, 0);
-			qglUniform3fARB(cloak_uniform.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);			
-			qglUniform1fARB(cloak_uniform.cloakfactor, clamp((255 - (*currententity)->curstate.renderamt) / 255.0, 0, 1));
-			qglUniform1fARB(cloak_uniform.refractamount, 2.0f);
+			qglUseProgramObjectARB(cloak.program);
+			qglUniform1iARB(cloak.refract, 0);
+			qglUniform3fARB(cloak.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);			
+			qglUniform1fARB(cloak.cloakfactor, clamp((255 - (*currententity)->curstate.renderamt) / 255.0, 0, 1));
+			qglUniform1fARB(cloak.refractamount, 2.0f);
 
 			while (i = *(ptricmds++))
 			{
@@ -716,11 +712,11 @@ void R_GLStudioDrawPointsEx(void)
 					qglEnable(GL_TEXTURE_2D);
 					GL_Bind(normal_texture);
 
-					qglUseProgramObjectARB(invuln_program);
+					qglUseProgramObjectARB(invuln.program);
 
-					qglUniform1iARB(invuln_uniform.basemap, 0);
-					qglUniform1iARB(invuln_uniform.normalmap, 1);
-					qglUniform1fARB(invuln_uniform.time, (*cl_time) * 0.3f);
+					qglUniform1iARB(invuln.basemap, 0);
+					qglUniform1iARB(invuln.normalmap, 1);
+					qglUniform1fARB(invuln.time, (*cl_time) * 0.3f);
 				}
 			}
 
@@ -835,22 +831,22 @@ void R_GLStudioDrawPointsEx(void)
 						qglEnable(GL_TEXTURE_2D);
 						GL_Bind(normal_texture);
 
-						qglUseProgramObjectARB(studio_program);
+						qglUseProgramObjectARB(studio.program);
 
 						vec3_t vlightpos;
 						VectorMA((*currententity)->origin, -10000, r_plightvec, vlightpos);
-						qglUniform3fARB(studio_uniform.lightpos, vlightpos[0], vlightpos[1], vlightpos[2]);
-						qglUniform3fARB(studio_uniform.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
-						qglUniform1iARB(studio_uniform.basemap, 0);
-						qglUniform1iARB(studio_uniform.normalmap, 1);
+						qglUniform3fARB(studio.lightpos, vlightpos[0], vlightpos[1], vlightpos[2]);
+						qglUniform3fARB(studio.eyepos, r_refdef->vieworg[0], r_refdef->vieworg[1], r_refdef->vieworg[2]);
+						qglUniform1iARB(studio.basemap, 0);
+						qglUniform1iARB(studio.normalmap, 1);
 						float ambient, diffuse, specular;
 						ambient = max(r_pplightambient->value, 0.0);
 						diffuse = max(r_pplightdiffuse->value, 0.0);
 						specular = max(r_pplightspecular->value, 0.0);
-						qglUniform4fARB(studio_uniform.ambient, r_colormix[0]*ambient, r_colormix[1]*ambient, r_colormix[2]*ambient, 1);
-						qglUniform4fARB(studio_uniform.diffuse, r_colormix[0]*diffuse, r_colormix[1]*diffuse, r_colormix[2]*diffuse, 1);
-						qglUniform4fARB(studio_uniform.specular, specular, specular, specular, 1);
-						qglUniform1fARB(studio_uniform.shiness, max(r_pplightshiness->value, 0.0));
+						qglUniform4fARB(studio.ambient, r_colormix[0]*ambient, r_colormix[1]*ambient, r_colormix[2]*ambient, 1);
+						qglUniform4fARB(studio.diffuse, r_colormix[0]*diffuse, r_colormix[1]*diffuse, r_colormix[2]*diffuse, 1);
+						qglUniform4fARB(studio.specular, specular, specular, specular, 1);
+						qglUniform1fARB(studio.shiness, max(r_pplightshiness->value, 0.0));
 						qglDisable(GL_BLEND);
 					}
 				}
@@ -908,7 +904,7 @@ void R_GLStudioDrawPointsEx(void)
 						//if (iFlippedVModel)
 						//	VectorInverse(r_studionormal[ptricmds[0]]);
 
-						qglVertexAttrib3fv(studio_attrib.tangent, r_studiotangent[ptricmds[0]]);
+						qglVertexAttrib3fv(studio.tangent, r_studiotangent[ptricmds[0]]);
 						qglNormal3fv(r_studionormal[ptricmds[0]]);
 					}
 

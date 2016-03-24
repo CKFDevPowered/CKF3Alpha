@@ -101,3 +101,11 @@ typedef struct
 	unsigned short voicebytes;
 	unsigned short msgbytes;
 }frame_t;
+
+#define TEX_TYPE_NONE	0
+#define TEX_TYPE_ALPHA	1
+#define TEX_TYPE_LUM	2
+#define TEX_TYPE_ALPHA_GRADIENT 3
+#define TEX_TYPE_RGBA	4
+
+#define TEX_IS_ALPHA(type)		((type)==TEX_TYPE_ALPHA||(type)==TEX_TYPE_ALPHA_GRADIENT||(type)==TEX_TYPE_RGBA)

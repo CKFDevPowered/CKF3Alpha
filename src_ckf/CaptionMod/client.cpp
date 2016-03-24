@@ -142,6 +142,26 @@ bool CClientBuildable::IsBuilt(void)
 	return (m_iLevel > 0);
 }
 
+int CClientSentry::GetBuildClass(void)
+{
+	return BUILDABLE_SENTRY;
+}
+
+int CClientDispenser::GetBuildClass(void)
+{
+	return BUILDABLE_DISPENSER;
+}
+
+int CClientTeleEntrance::GetBuildClass(void)
+{
+	return BUILDABLE_ENTRANCE;
+}
+
+int CClientTeleExit::GetBuildClass(void)
+{
+	return BUILDABLE_EXIT;
+}
+
 void CL_BottleBroken(cl_entity_t *pEntity)
 {
 	if(pEntity == gEngfuncs.GetLocalPlayer())

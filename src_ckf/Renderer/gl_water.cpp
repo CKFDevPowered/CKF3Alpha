@@ -15,11 +15,12 @@ r_water_t *waters_free;
 r_water_t *waters_active;
 
 //shader
-int water_program;
-water_uniform_t water_uniform;
-water_attrib_t water_attrib;
+SHADER_DEFINE(water);
+
 int water_normalmap;
 int water_normalmap_default;
+
+SHADER_DEFINE(drawdepth);
 
 int save_userfogon;
 int waterfog_on;
@@ -41,7 +42,7 @@ void R_SetWaterParm(water_parm_t *parm)
 	water_parm.start = max(parm->start, 0);
 	water_parm.end = max(parm->end, 0);
 	water_parm.density = clamp(parm->density, 0, 1);
-	water_parm.fresnel = clamp(parm->fresnel, 0, 10000);
+	water_parm.fresnel = clamp(parm->fresnel, 0, 1);
 	water_parm.color[0] = clamp(parm->color[0], 0, 1);
 	water_parm.color[1] = clamp(parm->color[1], 0, 1);
 	water_parm.color[2] = clamp(parm->color[2], 0, 1);
@@ -53,7 +54,7 @@ void R_RenderWaterFog(void)
 {
 	if(water_parm.fog)
 	{
-		save_userfogon = *g_bUserFogOn;
+		/*save_userfogon = *g_bUserFogOn;
 		*g_bUserFogOn = 1;
 		waterfog_on = 1;
 		qglEnable(GL_FOG);
@@ -65,7 +66,7 @@ void R_RenderWaterFog(void)
 		qglFogf(GL_FOG_END, (*cl_waterlevel > 2) ? water_parm.end / 4 : water_parm.end);
 		qglFogfv(GL_FOG_COLOR, water_parm.color);
 
-		qglFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV);
+		qglFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV);*/
 	}
 	else
 	{
@@ -78,8 +79,9 @@ void R_FinalWaterFog(void)
 	if(waterfog_on)
 	{
 		waterfog_on = 0;
-		*g_bUserFogOn = save_userfogon;
-		qglDisable(GL_FOG);
+		//*g_bUserFogOn = save_userfogon;
+		//if(!save_userfogon)
+		//	qglDisable(GL_FOG);
 	}
 }
 
@@ -94,6 +96,24 @@ void R_ClearWater(void)
 	memcpy(&water_parm, &default_water_parm, sizeof(water_parm));
 }
 
+const char *drawdepth_vscode = 
+"varying vec4 projpos;"
+"void main(void)"
+"{"
+"	projpos = gl_ModelViewProjectionMatrix * gl_Vertex;"
+"	gl_Position = ftransform();"
+"}";
+
+const char *drawdepth_fscode = 
+"uniform sampler2D depthmap;"
+"varying vec4 projpos;"
+"void main(void)"
+"{"
+"	vec2 vBaseTexCoord = projpos.xy / projpos.w * 0.5 + 0.5;"
+"	float flDepth = texture2D(depthmap, vBaseTexCoord);"
+"	gl_FragColor = vec4(vec3(pow(flDepth, 50.0)), 1.0);"
+"}";
+
 void R_InitWater(void)
 {
 	if(gl_shader_support)
@@ -102,22 +122,34 @@ void R_InitWater(void)
 		const char *water_fscode = (const char *)gEngfuncs.COM_LoadFile("resource\\shader\\water_shader.fsh", 5, 0);
 		if(water_vscode && water_fscode)
 		{
-			water_program = R_CompileShader(water_vscode, water_fscode, "water_shader.vsh", "water_shader.fsh");
-			if(water_program)
+			water.program = R_CompileShader(water_vscode, water_fscode, "water_shader.vsh", "water_shader.fsh");
+			if(water.program)
 			{
-				SHADER_UNIFORM_INIT(water, waterfogcolor, "waterfogcolor");
-				SHADER_UNIFORM_INIT(water, eyepos, "eyepos");
-				SHADER_UNIFORM_INIT(water, time, "time");
-				SHADER_UNIFORM_INIT(water, fresnel, "fresnel");
-				SHADER_UNIFORM_INIT(water, abovewater, "abovewater");
+				SHADER_UNIFORM(water, waterfogcolor, "waterfogcolor");
+				SHADER_UNIFORM(water, eyepos, "eyepos");
+				SHADER_UNIFORM(water, eyedir, "eyedir");
+				SHADER_UNIFORM(water, zmax, "zmax");
+				SHADER_UNIFORM(water, time, "time");
+				SHADER_UNIFORM(water, fresnel, "fresnel");
+				SHADER_UNIFORM(water, abovewater, "abovewater");
 				
-				SHADER_UNIFORM_INIT(water, normalmap, "normalmap");
-				SHADER_UNIFORM_INIT(water, refractmap, "refractmap");
-				SHADER_UNIFORM_INIT(water, reflectmap, "reflectmap");
+				SHADER_UNIFORM(water, normalmap, "normalmap");
+				SHADER_UNIFORM(water, refractmap, "refractmap");
+				SHADER_UNIFORM(water, reflectmap, "reflectmap");
+				SHADER_UNIFORM(water, depthrefrmap, "depthrefrmap");
 			}
 		}
 		gEngfuncs.COM_FreeFile((void *)water_vscode);
 		gEngfuncs.COM_FreeFile((void *)water_fscode);
+
+		if(drawdepth_vscode && drawdepth_fscode)
+		{
+			drawdepth.program = R_CompileShader(drawdepth_vscode, drawdepth_fscode, "drawdepth_shader.vsh", "drawdepth_shader.fsh");
+			if(drawdepth.program)
+			{
+				SHADER_UNIFORM(drawdepth, depthmap, "depthmap");
+			}
+		}
 	}
 
 	water_normalmap_default = R_LoadTextureEx("resource\\tga\\water_normalmap.tga", "resource\\tga\\water_normalmap.tga", NULL, NULL, GLT_SYSTEM, false, false);
@@ -128,7 +160,7 @@ void R_InitWater(void)
 
 	r_water = gEngfuncs.pfnRegisterVariable("r_water", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 	r_water_debug = gEngfuncs.pfnRegisterVariable("r_water_debug", "0", FCVAR_CLIENTDLL);
-	r_water_fresnel = gEngfuncs.pfnRegisterVariable("r_water_fresnel", "1", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
+	r_water_fresnel = gEngfuncs.pfnRegisterVariable("r_water_fresnel", "0", FCVAR_ARCHIVE | FCVAR_CLIENTDLL);
 
 	water_update_counter = 0;
 	curwater = NULL;
@@ -186,6 +218,11 @@ void R_AddWater(cl_entity_t *ent, vec3_t p)
 
 	if (!curwater->refractmap)
 		curwater->refractmap = R_GLGenTexture(water_texture_size, water_texture_size);
+
+	if (!curwater->depthrefrmap)
+		curwater->depthrefrmap = R_GLGenDepthTexture(water_texture_size, water_texture_size);
+
+	GL_Bind(0);
 
 	VectorCopy(p, curwater->vecs);
 	curwater->ent = ent;
@@ -288,9 +325,14 @@ void R_SetupReflect(void)
 
 	*r_viewleaf = Mod_PointInLeaf(water_view, r_worldmodel);
 
+	float flNoVIS = r_novis->value;
+	r_novis->value = 1;
+
 	R_SetCustomFrustum();
 	R_SetupGL();
 	R_MarkLeaves();
+
+	r_novis->value = flNoVIS;
 
 	r_refdef->viewangles[2] = -r_refdef->viewangles[2];
 	R_UpdateRefDef();
@@ -304,7 +346,10 @@ void R_SetupReflect(void)
 	R_RenderWaterFog();
 
 	if(s_WaterFBO.s_hBackBufferFBO)
+	{
 		qglFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curwater->reflectmap, 0);
+		qglFramebufferRenderbufferEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, s_WaterFBO.s_hBackBufferDB);
+	}
 
 	qglClearColor(water_parm.color[0], water_parm.color[1], water_parm.color[2], 1);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -348,9 +393,14 @@ void R_SetupRefract(void)
 	*r_oldviewleaf = *r_viewleaf;
 	*r_viewleaf = Mod_PointInLeaf(water_view, r_worldmodel);
 
+	float flNoVIS = r_novis->value;
+	r_novis->value = 1;
+
 	R_SetCustomFrustum();
 	R_SetupGL();
 	R_MarkLeaves();
+
+	r_novis->value = flNoVIS;
 
 	qglViewport(0, 0, water_texture_size, water_texture_size);
 
@@ -361,7 +411,10 @@ void R_SetupRefract(void)
 	R_RenderWaterFog();
 
 	if(s_WaterFBO.s_hBackBufferFBO)
+	{
 		qglFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curwater->refractmap, 0);
+		qglFramebufferTexture2DEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, curwater->depthrefrmap, 0);
+	}
 
 	qglClearColor(water_parm.color[0], water_parm.color[1], water_parm.color[2], 1);
 	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -377,6 +430,9 @@ void R_FinishRefract(void)
 	{
 		GL_Bind(curwater->refractmap);
 		qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, water_texture_size, water_texture_size, 0);
+
+		GL_Bind(curwater->depthrefrmap);
+		qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, 0, water_texture_size, water_texture_size, 0);
 	}
 
 	R_PopRefDef();

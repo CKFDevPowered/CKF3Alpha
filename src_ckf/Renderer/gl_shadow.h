@@ -36,12 +36,13 @@ typedef struct
 
 typedef struct
 {
+	int program;
 	int texoffset;
 	int depthmap;
 	int entorigin;
 	int radius;
 	int fard;
-}shadow_uniform_t;
+}shadow_program_t;
 
 //renderer 
 extern qboolean drawshadow;
@@ -62,8 +63,7 @@ extern shadow_manager_t sdmanager_player;
 extern int numsdmanagers;
 
 //shader
-extern int shadow_program;
-extern shadow_uniform_t shadow_uniform;
+extern SHADER_DEFINE(shadow);
 extern vec3_t shadow_light_mins;
 extern vec3_t shadow_light_maxs;
 
