@@ -27,8 +27,8 @@ CUtlVector<controlpoint_t> g_ControlPoints;
 
 CClientSentry g_Sentry;
 CClientDispenser g_Dispenser;
-CClientTeleporter g_TeleEntrance;
-CClientTeleporter g_TeleExit;
+CClientTeleEntrance g_TeleEntrance;
+CClientTeleExit g_TeleExit;
 
 int g_iHealth;
 int g_iMaxHealth;
@@ -135,6 +135,40 @@ void CClientBuildable::Init(void)
 	m_iUpgrade = 0;
 	m_flProgress = 0;
 	m_flUpdateTime = 0;
+}
+
+void CClientSentry::Init(void)
+{
+	CClientBuildable::Init();
+	m_iAmmo = 0;
+	m_iMaxAmmo = 0;
+	m_iRocket = 0;
+	m_iMaxHealth = 0;
+	m_iMaxRocket = 0;
+	m_iKillCount = 0;
+}
+
+void CClientDispenser::Init(void)
+{
+	CClientBuildable::Init();
+	m_iMetal = 0;
+	m_iMaxMetal = 0;
+
+}
+
+void CClientTeleEntrance::Init(void)
+{
+	CClientBuildable::Init();
+	m_flCharge = 0;
+	m_flChargeRate = 0;
+	m_flChargeTime = 0;
+	m_iReady = 0;
+	m_iFrags = 0;
+}
+
+void CClientTeleExit::Init(void)
+{
+	CClientBuildable::Init();
 }
 
 bool CClientBuildable::IsBuilt(void)

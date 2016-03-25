@@ -392,8 +392,8 @@ extern CUtlVector<controlpoint_t> g_ControlPoints;
 
 extern CClientSentry g_Sentry;
 extern CClientDispenser g_Dispenser;
-extern CClientTeleporter g_TeleEntrance;
-extern CClientTeleporter g_TeleExit;
+extern CClientTeleEntrance g_TeleEntrance;
+extern CClientTeleExit g_TeleExit;
 
 extern int g_iClass;
 extern int g_iDesiredClass;
