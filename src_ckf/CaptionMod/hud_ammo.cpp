@@ -179,7 +179,7 @@ void HudAmmo_DrawMask(void)
 		{
 			float flTime = g_flClientTime * 2;
 			float flDelta = flTime - (float)((int)flTime);
-			int u = abs(flDelta - 0.5f) * 2 * 127 + 128;
+			int u = fabs(flDelta - 0.5f) * 2 * 127 + 128;
 			g_pSurface->DrawSetColor(u, u, u, 255);
 			g_pSurface->DrawFilledRect(x,y,x+w,y+h);
 		}

@@ -1,0 +1,6 @@
+hudanimations_manifest
+{
+
+	"file"		"resource/hudanimations.txt"
+	"file"		"resource/hudanimations_tf.txt"
+}

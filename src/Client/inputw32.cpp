@@ -796,7 +796,7 @@ void IN_JoyMove(float frametime, usercmd_t *cmd)
 		{
 			if (dwAxisMap[i] == AxisTurn)
 			{
-				fTemp = 300.0 * pow(abs(fAxisValue) / 800.0, 1.3);
+				fTemp = 300.0 * pow(fabs(fAxisValue) / 800.0, 1.3);
 
 				if (fTemp > 14000.0)
 					fTemp = 14000.0;

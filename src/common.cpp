@@ -1,4 +1,6 @@
+#include "winsani_in.h"
 #include <windows.h>
+#include "winsani_out.h"
 #include "tier1/strtools.h"
 #include "common.h"
 #include <stdio.h>

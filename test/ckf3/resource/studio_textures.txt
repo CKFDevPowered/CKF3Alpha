@@ -1,0 +1,26 @@
+[
+	{
+		"modelname" : "models/CKF_III/ui_selteam_doors.mdl",
+		"textures" : 
+		[
+			{
+				"base" : "door1.bmp", 
+				"replace" : "resource/tga/btn_selran_1440_0.tga"
+			},
+			{
+				"base" : "door2.bmp", 
+				"replace" : "resource/tga/btn_selblu_1440_0.tga"
+			},
+			{
+				"base" : "door3.bmp", 
+				"replace" : "resource/tga/btn_selred_1440_0.tga"
+			}
+		]
+	},
+	{
+		"modelname" : "models/CKF_III/ui_selteam_tv.mdl",
+		"textures" : 
+		[
+		]
+	}
+]

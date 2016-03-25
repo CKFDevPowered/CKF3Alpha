@@ -1,0 +1,4 @@
+gfx/vgui/console/background_gravelpit_widescreen.jpg	0	scaled		c-426.66	0		853.33		f0
+gfx/vgui/console/background_2fort_widescreen.jpg		0	scaled		c-426.66	0		853.33		f0
+gfx/vgui/console/background_upward_widescreen.jpg		0	scaled		c-426.66	0		853.33		f0
+gfx/vgui/console/startup_loading.tga					1	noscale		f-128		f-64	128			64

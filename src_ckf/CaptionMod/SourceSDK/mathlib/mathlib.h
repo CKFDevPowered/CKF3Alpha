@@ -180,15 +180,6 @@ static inline float FLerp(float f1, float f2, float i1, float i2, float x)
   return f1+(f2-f1)*(x-i1)/(i2-i1);
 }
 
-// Swap two of anything.
-template <class T> 
-FORCEINLINE void swap( T& x, T& y )
-{
-	T temp = x;
-	x = y;
-	y = temp;
-}
-
 template <class T> FORCEINLINE T AVG(T a, T b)
 {
 	return (a+b)/2;
