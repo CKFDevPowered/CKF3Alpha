@@ -90,7 +90,7 @@ void EV_GetGunPosition(int idx, int attachment, float *origin)
 		return;
 
 	studiohdr_t *pstudiohdr = (studiohdr_t *)gpEngineStudio->Mod_Extradata(ent->model);
-	if(!pstudiohdr)
+	if(!pstudiohdr || attachment >= pstudiohdr->numattachments)
 		return;
 
 	mstudioattachment_t	*pattachment = (mstudioattachment_t *)((byte *)pstudiohdr + pstudiohdr->attachmentindex);
