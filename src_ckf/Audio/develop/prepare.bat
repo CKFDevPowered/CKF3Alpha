@@ -1,0 +1,3 @@
+@echo off
+echo Preparing Project Audio...
+copy .\template\** .\

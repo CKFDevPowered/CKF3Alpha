@@ -1,0 +1,92 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{6f89f062-c6a4-4efa-b2d9-630aa0c06f48}</UniqueIdentifier>
+      <Extensions>c;cpp</Extensions>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{95dbcb5e-9c49-4f98-8fe7-97347dec93d2}</UniqueIdentifier>
+      <Extensions>h;hpp</Extensions>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{fabe4e14-7ab7-40f0-9983-81fbd56dd4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{84a2d9e3-6e9b-468d-8aa7-3d4e01e6d991}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\enginedef.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\exportfuncs.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FileSystem.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\plat.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\plugins.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qal.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\snd_local.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\util.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\zone.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\aud_int_internal.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\IAudio.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\exportfuncs.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\plugins.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qal.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_dma.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_fx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_hook.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_mem.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_voice.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_vox..cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\snd_wav.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\zone.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\interface.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

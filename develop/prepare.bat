@@ -1,0 +1,3 @@
+@echo off
+echo Preparing Solution...
+copy .\template\** .\
