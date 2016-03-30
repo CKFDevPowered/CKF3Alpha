@@ -1,3 +1,4 @@
-#binary
-Release
-Debug
+/develop/**
+!/develop/prepare.bat
+!/develop/template/
+!/develop/template/**

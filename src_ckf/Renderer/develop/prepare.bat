@@ -1,0 +1,3 @@
+@echo off
+echo Preparing Project Renderer...
+copy .\template\** .\
