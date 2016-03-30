@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configuration", "Configurat
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Audio", "..\src_ckf\Audio\develop\Audio.vcxproj", "{63124CB9-9D75-4589-B60C-401D0005302C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Renderer", "..\src_ckf\Renderer\develop\Renderer.vcxproj", "{7F8FCF23-8177-432A-9A52-BD708F2A6C61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -20,6 +22,10 @@ Global
 		{63124CB9-9D75-4589-B60C-401D0005302C}.Debug|x86.Build.0 = Debug|Win32
 		{63124CB9-9D75-4589-B60C-401D0005302C}.Release|x86.ActiveCfg = Release|Win32
 		{63124CB9-9D75-4589-B60C-401D0005302C}.Release|x86.Build.0 = Release|Win32
+		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Debug|x86.ActiveCfg = Debug|Win32
+		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Debug|x86.Build.0 = Debug|Win32
+		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Release|x86.ActiveCfg = Release|Win32
+		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
