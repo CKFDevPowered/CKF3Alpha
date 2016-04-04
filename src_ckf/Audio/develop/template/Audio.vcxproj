@@ -75,10 +75,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\..\common;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <PreprocessorDefinitions>AUDIO_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;AUDIO_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
       <Command>if "$(ChickenFortressInstallPath)" neq "" copy "$(OutDir)\$(TargetName)$(TargetExt)" "$(ChickenFortressInstallPath)\$(TargetName)$(TargetExt)"</Command>
@@ -90,10 +89,9 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\..\common;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <PreprocessorDefinitions>AUDIO_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;AUDIO_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
