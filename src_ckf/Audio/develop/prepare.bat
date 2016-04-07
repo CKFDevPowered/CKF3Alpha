@@ -1,3 +1,10 @@
 @echo off
-echo Preparing Project Audio...
-copy .\template\** .\
+setlocal
+    call :main
+endlocal
+goto :eof
+
+:main
+    echo Preparing Project Audio...
+    copy %~dp0template\** %~dp0
+goto :eof

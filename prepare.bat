@@ -1,21 +1,18 @@
 @echo off
-echo Generating solution and project from template...
-echo=
+setlocal
+    call :main
+endlocal
+goto :eof
 
-cd .\develop\
-call .\prepare
-cd %~dp0
-echo=
+:main
+    echo Generating solution and project from template...
+    echo=
+    
+    for /F %%i in (prepare.list) do (
+        call %~dp0%%i
+        echo=
+    )
 
-cd .\src_ckf\Audio\develop
-call .\prepare
-cd %~dp0
-echo=
-
-cd .\src_ckf\Renderer\develop
-call .\prepare
-cd %~dp0
-echo=
-
-echo Done. Press any key to continue...
-pause>nul
+    echo Done. Press any key to continue...
+    pause > nul
+goto :eof
