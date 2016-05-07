@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Audio", "..\src_ckf\Audio\d
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Renderer", "..\src_ckf\Renderer\develop\Renderer.vcxproj", "{7F8FCF23-8177-432A-9A52-BD708F2A6C61}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CaptionMod", "..\src_ckf\CaptionMod\develop\CaptionMod.vcxproj", "{E68B513D-7E91-4673-AB41-774BE96ECFDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -26,6 +28,10 @@ Global
 		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Debug|x86.Build.0 = Debug|Win32
 		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Release|x86.ActiveCfg = Release|Win32
 		{7F8FCF23-8177-432A-9A52-BD708F2A6C61}.Release|x86.Build.0 = Release|Win32
+		{E68B513D-7E91-4673-AB41-774BE96ECFDD}.Debug|x86.ActiveCfg = Debug|Win32
+		{E68B513D-7E91-4673-AB41-774BE96ECFDD}.Debug|x86.Build.0 = Debug|Win32
+		{E68B513D-7E91-4673-AB41-774BE96ECFDD}.Release|x86.ActiveCfg = Release|Win32
+		{E68B513D-7E91-4673-AB41-774BE96ECFDD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
