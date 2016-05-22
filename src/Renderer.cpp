@@ -65,7 +65,7 @@ void Renderer_Init(void)
 		return;
 
 	char filepath[MAX_PATH];
-	sprintf(filepath, "%s/renderer.dll", gConfigs.szGameDir);
+	sprintf(filepath, "%s/Renderer.dll", gConfigs.szGameDir);
 
 	g_hRenderer = Sys_LoadModule(filepath);
 
@@ -95,7 +95,7 @@ void Renderer_Init(void)
 void CKF_Init(void)
 {
 	char filepath[MAX_PATH];
-	sprintf(filepath, "%s/ckf3.dll", gConfigs.szGameDir);
+	sprintf(filepath, "%s/CaptionMod.dll", gConfigs.szGameDir);
 
 	g_hCKFClient = Sys_LoadModule(filepath);
 
@@ -120,7 +120,7 @@ void CKF_Init(void)
 void Audio_Init(void)
 {
 	char filepath[MAX_PATH];
-	sprintf(filepath, "%s/audio.dll", gConfigs.szGameDir);
+	sprintf(filepath, "%s/Audio.dll", gConfigs.szGameDir);
 
 	g_hAudio = Sys_LoadModule(filepath);
 

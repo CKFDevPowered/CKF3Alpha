@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CaptionMod", "..\src_ckf\Ca
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mp", "..\src_ckf\dlls\develop\mp.vcxproj", "{CB2DC9CB-C6AA-484D-9847-2649DE572169}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CSBTE", "..\src\develop\CSBTE.vcxproj", "{A6026039-E884-4437-9EF6-D4B4231E7208}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -38,6 +40,10 @@ Global
 		{CB2DC9CB-C6AA-484D-9847-2649DE572169}.Debug|x86.Build.0 = Debug|Win32
 		{CB2DC9CB-C6AA-484D-9847-2649DE572169}.Release|x86.ActiveCfg = Release|Win32
 		{CB2DC9CB-C6AA-484D-9847-2649DE572169}.Release|x86.Build.0 = Release|Win32
+		{A6026039-E884-4437-9EF6-D4B4231E7208}.Debug|x86.ActiveCfg = Debug|Win32
+		{A6026039-E884-4437-9EF6-D4B4231E7208}.Debug|x86.Build.0 = Debug|Win32
+		{A6026039-E884-4437-9EF6-D4B4231E7208}.Release|x86.ActiveCfg = Release|Win32
+		{A6026039-E884-4437-9EF6-D4B4231E7208}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
