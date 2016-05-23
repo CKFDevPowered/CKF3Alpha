@@ -141,6 +141,11 @@ void R_DrawTGASprite(cl_entity_t *e, tgasprite_t *tgaspr)
 	mcolor24_t col;
 	pmtrace_t pmtrace;
 
+	if (!tgaspr->isValid)
+	{
+		return;
+	}
+
 	*CurrentEntity = e;
 	gRefExports.RefAPI.R_SpriteColor(&col, e, e->curstate.renderamt);
 

@@ -1,5 +1,4 @@
-/_UpgradeReport_Files
-/Debug
-/Release
-ClientProxy.ncb
-ClientProxy.sdf
+/develop/**
+!/develop/prepare.bat
+!/develop/template/
+!/develop/template/**

@@ -45,6 +45,10 @@ qboolean GL_IsShaderError(GLuint shader, const char *filename)
 
 GLuint R_CompileShader(const char *vscode, const char *fscode, const char *vsfile, const char *fsfile)
 {
+	if (numshaders + 1 >= MAX_SHADERS)
+	{
+		return 0;
+	}
 	GLuint vs = qglCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
 	qglShaderSourceARB(vs, 1, &vscode, NULL);
 	qglCompileShaderARB(vs);

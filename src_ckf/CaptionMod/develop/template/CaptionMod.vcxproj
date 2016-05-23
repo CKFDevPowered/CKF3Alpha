@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\metahook\HLSDK\common\interface.cpp" />
+    <ClCompile Include="..\..\pm_shared\pm_debug.c" />
+    <ClCompile Include="..\..\pm_shared\pm_math.c" />
+    <ClCompile Include="..\..\pm_shared\pm_shared.c" />
+    <ClCompile Include="..\BaseUI.cpp" />
+    <ClCompile Include="..\cJSON.c" />
+    <ClCompile Include="..\client.cpp" />
+    <ClCompile Include="..\command.cpp" />
+    <ClCompile Include="..\cvar.cpp" />
+    <ClCompile Include="..\Debug.cpp" />
+    <ClCompile Include="..\Encode.cpp" />
+    <ClCompile Include="..\engfuncs.cpp" />
+    <ClCompile Include="..\event.cpp" />
+    <ClCompile Include="..\exportfuncs.cpp" />
+    <ClCompile Include="..\GameStudioModelRenderer.cpp" />
+    <ClCompile Include="..\gl_rmain.cpp" />
+    <ClCompile Include="..\hud_ammo.cpp" />
+    <ClCompile Include="..\hud_base.cpp" />
+    <ClCompile Include="..\hud_build.cpp" />
+    <ClCompile Include="..\hud_buildmenu.cpp" />
+    <ClCompile Include="..\hud_class.cpp" />
+    <ClCompile Include="..\hud_common.cpp" />
+    <ClCompile Include="..\hud_crosshair.cpp" />
+    <ClCompile Include="..\hud_deathmsg.cpp" />
+    <ClCompile Include="..\hud_demolishmenu.cpp" />
+    <ClCompile Include="..\hud_disguisemenu.cpp" />
+    <ClCompile Include="..\hud_floattext.cpp" />
+    <ClCompile Include="..\hud_health.cpp" />
+    <ClCompile Include="..\hud_localize.cpp" />
+    <ClCompile Include="..\hud_object.cpp" />
+    <ClCompile Include="..\hud_overlay.cpp" />
+    <ClCompile Include="..\hud_statusbar.cpp" />
+    <ClCompile Include="..\KeyValues.cpp" />
+    <ClCompile Include="..\KeyValuesSystem.cpp" />
+    <ClCompile Include="..\message.cpp" />
+    <ClCompile Include="..\parsemsg.cpp" />
+    <ClCompile Include="..\particle.cpp" />
+    <ClCompile Include="..\plugins.cpp" />
+    <ClCompile Include="..\pt_burning.cpp" />
+    <ClCompile Include="..\pt_critical.cpp" />
+    <ClCompile Include="..\pt_disguise.cpp" />
+    <ClCompile Include="..\pt_explosion.cpp" />
+    <ClCompile Include="..\pt_flamethrow.cpp" />
+    <ClCompile Include="..\pt_floattext.cpp" />
+    <ClCompile Include="..\pt_grenade.cpp" />
+    <ClCompile Include="..\pt_medibeam.cpp" />
+    <ClCompile Include="..\pt_multijump.cpp" />
+    <ClCompile Include="..\pt_muzzle.cpp" />
+    <ClCompile Include="..\pt_rocket.cpp" />
+    <ClCompile Include="..\pt_tracer.cpp" />
+    <ClCompile Include="..\qgl.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
+      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
+    </ClCompile>
+    <ClCompile Include="..\qgl.cpp" />
+    <ClCompile Include="..\SourceSDK\tier0\mem.cpp" />
+    <ClCompile Include="..\SourceSDK\tier1\strtools.cpp" />
+    <ClCompile Include="..\SourceSDK\tier1\utlbuffer.cpp" />
+    <ClCompile Include="..\StudioModelRenderer.cpp" />
+    <ClCompile Include="..\studio_util.cpp" />
+    <ClCompile Include="..\tent.cpp" />
+    <ClCompile Include="..\util.cpp" />
+    <ClCompile Include="..\vgui2.cpp" />
+    <ClCompile Include="..\weapon.cpp" />
+    <ClCompile Include="..\wpn_bat.cpp" />
+    <ClCompile Include="..\wpn_bonesaw.cpp" />
+    <ClCompile Include="..\wpn_bottle.cpp" />
+    <ClCompile Include="..\wpn_buildpda.cpp" />
+    <ClCompile Include="..\wpn_butterfly.cpp" />
+    <ClCompile Include="..\wpn_destroypda.cpp" />
+    <ClCompile Include="..\wpn_disguisekit.cpp" />
+    <ClCompile Include="..\wpn_fireaxe.cpp" />
+    <ClCompile Include="..\wpn_fist.cpp" />
+    <ClCompile Include="..\wpn_flamethrower.cpp" />
+    <ClCompile Include="..\wpn_grenadelauncher.cpp" />
+    <ClCompile Include="..\wpn_kukri.cpp" />
+    <ClCompile Include="..\wpn_medigun.cpp" />
+    <ClCompile Include="..\wpn_minigun.cpp" />
+    <ClCompile Include="..\wpn_pistol.cpp" />
+    <ClCompile Include="..\wpn_revolver.cpp" />
+    <ClCompile Include="..\wpn_rocketlauncher.cpp" />
+    <ClCompile Include="..\wpn_sapper.cpp" />
+    <ClCompile Include="..\wpn_scattergun.cpp" />
+    <ClCompile Include="..\wpn_shotgun.cpp" />
+    <ClCompile Include="..\wpn_shovel.cpp" />
+    <ClCompile Include="..\wpn_smg.cpp" />
+    <ClCompile Include="..\wpn_sniperifle.cpp" />
+    <ClCompile Include="..\wpn_stickylauncher.cpp" />
+    <ClCompile Include="..\wpn_syringegun.cpp" />
+    <ClCompile Include="..\wpn_wrench.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\Interface\ckfvars.h" />
+    <ClInclude Include="..\..\..\src\Interface\IBTEClient.h" />
+    <ClInclude Include="..\..\..\src\Interface\ICKFClient.h" />
+    <ClInclude Include="..\..\..\src\Interface\irenderer.h" />
+    <ClInclude Include="..\..\..\src\Interface\ref_int.h" />
+    <ClInclude Include="..\..\common\interface.h" />
+    <ClInclude Include="..\..\pm_shared\pm_debug.h" />
+    <ClInclude Include="..\..\pm_shared\pm_defs.h" />
+    <ClInclude Include="..\..\pm_shared\pm_info.h" />
+    <ClInclude Include="..\..\pm_shared\pm_materials.h" />
+    <ClInclude Include="..\..\pm_shared\pm_movevars.h" />
+    <ClInclude Include="..\..\pm_shared\pm_shared.h" />
+    <ClInclude Include="..\BaseUI.h" />
+    <ClInclude Include="..\cJSON.h" />
+    <ClInclude Include="..\client.h" />
+    <ClInclude Include="..\Color.h" />
+    <ClInclude Include="..\cvar.h" />
+    <ClInclude Include="..\Debug.h" />
+    <ClInclude Include="..\Encode.h" />
+    <ClInclude Include="..\engfuncs.h" />
+    <ClInclude Include="..\event.h" />
+    <ClInclude Include="..\exportfuncs.h" />
+    <ClInclude Include="..\FileSystem.h" />
+    <ClInclude Include="..\GameStudioModelRenderer.h" />
+    <ClInclude Include="..\gl_model.h" />
+    <ClInclude Include="..\hud_base.h" />
+    <ClInclude Include="..\hud_localize.h" />
+    <ClInclude Include="..\KeyValues.h" />
+    <ClInclude Include="..\KeyValuesSystem.h" />
+    <ClInclude Include="..\localize.h" />
+    <ClInclude Include="..\message.h" />
+    <ClInclude Include="..\parsemsg.h" />
+    <ClInclude Include="..\particle.h" />
+    <ClInclude Include="..\plugins.h" />
+    <ClInclude Include="..\qgl.h" />
+    <ClInclude Include="..\StudioModelRenderer.h" />
+    <ClInclude Include="..\studio_util.h" />
+    <ClInclude Include="..\surface.h" />
+    <ClInclude Include="..\tent.h" />
+    <ClInclude Include="..\util.h" />
+    <ClInclude Include="..\vgui_internal.h" />
+    <ClInclude Include="..\weapon.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E68B513D-7E91-4673-AB41-774BE96ECFDD}</ProjectGuid>
+    <RootNamespace>CaptionMod</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\develop\global.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\develop\global.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\VGUI\;..\SourceSDK\;..\..\common;..\.;..\SourceSDK\tier1;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>if "$(ChickenFortressInstallPath)" neq "" copy "$(OutDir)\$(TargetName)$(TargetExt)" "$(ChickenFortressInstallPath)\$(TargetName)$(TargetExt)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\VGUI\;..\SourceSDK\;..\..\common;..\.;..\SourceSDK\tier1;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PostBuildEvent>
+      <Command>if "$(ChickenFortressInstallPath)" neq "" copy "$(OutDir)\$(TargetName)$(TargetExt)" "$(ChickenFortressInstallPath)\$(TargetName)$(TargetExt)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,476 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{c1907c69-7eb9-48c7-863f-c89c006c3db5}</UniqueIdentifier>
+      <Extensions>c;cpp</Extensions>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{4ce98cd1-899b-46c4-a689-419e2cf46800}</UniqueIdentifier>
+      <Extensions>h;hpp</Extensions>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{cdd802fd-4d08-4c00-a7cd-92f3ffcc1e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detours">
+      <UniqueIdentifier>{c6942183-013a-4324-bf8c-c50cf0e72c6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\pm_shared">
+      <UniqueIdentifier>{7152952b-a186-48e2-afe1-e59784c63178}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\crashhandler">
+      <UniqueIdentifier>{1ba4b55b-d192-44ad-99ce-9666cc2a338b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\pm_shared">
+      <UniqueIdentifier>{d59e6d4e-27e9-43d3-97dd-8fda0514d553}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\weapons">
+      <UniqueIdentifier>{3fb1a8cc-0a17-4c10-9068-c2005ec250e2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\airtank.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ammo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\animating.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\animation.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\animation_blending.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bmodels.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\buildable.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\buttons.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cbase.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\client.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\combat.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\doors.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\effects.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\explode.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\func_break.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\func_tank.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gamerules.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ggrenade.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\globals.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\h_ai.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\h_battery.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\h_cycler.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\h_export.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\healthkit.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hintmessage.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hook.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\items.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lights.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mapinfo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\maprules.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MemPool.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\metarender.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mortar.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\mpstubb.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\multiplay_gamerules.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\observer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pathcorner.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\perf_counter.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\plane.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\plats.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\player.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\singleplay_gamerules.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skill.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\sound.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\soundent.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\spectator.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\subs.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\training_gamerules.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\triggers.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\util.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vehicle.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\game_shared\voice_gamemgr.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\weapons.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\world.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bat.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bonesaw.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bottle.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_buildpda.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_butterfly.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_destroypda.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_disuisekit.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_fireaxe.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_fist.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_flamethrower.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_grenadelauncher.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_kukri.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_medigun.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_minigun.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_pistol.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_revolver.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_rocketlauncher.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_sapper.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_scattergun.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_shotgun.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_shovel.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_smg.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_sniperifle.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_stickylauncher.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_syringegun.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_wrench.cpp">
+      <Filter>Source\weapons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_debug.c">
+      <Filter>Source\pm_shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_math.c">
+      <Filter>Source\pm_shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_shared.c">
+      <Filter>Source\pm_shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crashhandler.cpp">
+      <Filter>Source\crashhandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\minidump.cpp">
+      <Filter>Source\crashhandler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detours\creatwth.cpp">
+      <Filter>Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detours\detours.cpp">
+      <Filter>Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detours\disasm.cpp">
+      <Filter>Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detours\image.cpp">
+      <Filter>Detours</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Detours\modules.cpp">
+      <Filter>Detours</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\minidump.h">
+      <Filter>Source\crashhandler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\activity.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\activitymap.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\animation.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\basemonster.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\buildable.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cbase.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cdll_dll.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\client.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decals.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\doors.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\effects.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\enginecallback.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\enginedef.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\explode.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extdll.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\func_break.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gamerules.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hintmessage.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hook.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\items.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\locus.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\mapinfo.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\maprules.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MemPool.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\metarender.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\monsterevent.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\monsters.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\nodes.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\perf_counter.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\plane.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\player.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\saverestore.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\schedule.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scriptevent.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skill.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\soundent.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\spectator.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\subs.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\talkmonster.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\training_gamerules.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\trains.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\trigger.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\util.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vector.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vehicle.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\weapons.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_debug.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_defs.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_info.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_materials.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_movevars.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_shared.h">
+      <Filter>Header\pm_shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Detours\detours.h">
+      <Filter>Detours</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Detours\detver.h">
+      <Filter>Detours</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -6,8 +6,6 @@ extern "C"
 #include "FreeImage/FreeImage.h"
 };
 
-#pragma comment(lib,"FreeImage/FreeImage.lib")
-
 GLenum TEXTURE0_SGIS;
 GLenum TEXTURE1_SGIS;
 GLenum TEXTURE2_SGIS;

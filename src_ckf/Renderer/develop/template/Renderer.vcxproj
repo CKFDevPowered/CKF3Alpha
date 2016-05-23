@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\common\interface.cpp" />
+    <ClCompile Include="..\cJSON.c" />
+    <ClCompile Include="..\command.cpp" />
+    <ClCompile Include="..\exportfuncs.cpp" />
+    <ClCompile Include="..\gl_3dsky.cpp" />
+    <ClCompile Include="..\gl_backend.cpp" />
+    <ClCompile Include="..\gl_cloak.cpp" />
+    <ClCompile Include="..\gl_draw.cpp" />
+    <ClCompile Include="..\gl_hooks.cpp" />
+    <ClCompile Include="..\gl_hud.cpp" />
+    <ClCompile Include="..\gl_rmain.cpp" />
+    <ClCompile Include="..\gl_rmisc.cpp" />
+    <ClCompile Include="..\gl_rsurf.cpp" />
+    <ClCompile Include="..\gl_shader.cpp" />
+    <ClCompile Include="..\gl_shadow.cpp" />
+    <ClCompile Include="..\gl_studio.cpp" />
+    <ClCompile Include="..\gl_warp.cpp" />
+    <ClCompile Include="..\gl_water.cpp" />
+    <ClCompile Include="..\gl_wsurf.cpp" />
+    <ClCompile Include="..\mathlib.cpp" />
+    <ClCompile Include="..\parsemsg.cpp" />
+    <ClCompile Include="..\plugins.cpp" />
+    <ClCompile Include="..\qgl.cpp" />
+    <ClCompile Include="..\zone.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\bspfile.h" />
+    <ClInclude Include="..\cJSON.h" />
+    <ClInclude Include="..\command.h" />
+    <ClInclude Include="..\enginedef.h" />
+    <ClInclude Include="..\exportfuncs.h" />
+    <ClInclude Include="..\gl_3dsky.h" />
+    <ClInclude Include="..\gl_cloak.h" />
+    <ClInclude Include="..\gl_const.h" />
+    <ClInclude Include="..\gl_draw.h" />
+    <ClInclude Include="..\gl_hud.h" />
+    <ClInclude Include="..\gl_local.h" />
+    <ClInclude Include="..\gl_model.h" />
+    <ClInclude Include="..\gl_model2.h" />
+    <ClInclude Include="..\gl_shader.h" />
+    <ClInclude Include="..\gl_shadow.h" />
+    <ClInclude Include="..\gl_studio.h" />
+    <ClInclude Include="..\gl_util.h" />
+    <ClInclude Include="..\gl_warp_sin.h" />
+    <ClInclude Include="..\gl_water.h" />
+    <ClInclude Include="..\gl_wsurf.h" />
+    <ClInclude Include="..\mathlib.h" />
+    <ClInclude Include="..\parsemsg.h" />
+    <ClInclude Include="..\plugins.h" />
+    <ClInclude Include="..\qgl.h" />
+    <ClInclude Include="..\spritegn.h" />
+    <ClInclude Include="..\zone.h" />
+    <ClInclude Include="..\..\..\src\Interface\IBTEClient.h" />
+    <ClInclude Include="..\..\..\src\Interface\IRenderer.h" />
+    <ClInclude Include="..\ref_int_internal.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7F8FCF23-8177-432A-9A52-BD708F2A6C61}</ProjectGuid>
+    <RootNamespace>Renderer</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\develop\global.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\..\..\develop\global.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\VGUI\;..\SourceSDK\;..\..\common;..\SourceSDK\tier1;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PreprocessorDefinitions>WIN32;RENDERER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <PostBuildEvent>
+      <Command>if "$(ChickenFortressInstallPath)" neq "" copy "$(OutDir)\$(TargetName)$(TargetExt)" "$(ChickenFortressInstallPath)\$(TargetName)$(TargetExt)"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>..\FreeImage\FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\metahook;..\..\metahook\Interface;..\..\metahook\HLSDK\cl_dll;..\..\metahook\HLSDK\common;..\..\metahook\HLSDK\engine;..\..\metahook\HLSDK\pm_shared;..\..\metahook\HLSDK\public;..\VGUI\;..\SourceSDK\;..\..\common;..\SourceSDK\tier1;..\..\..\src\Interface;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PreprocessorDefinitions>WIN32;RENDERER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>..\FreeImage\FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>if "$(ChickenFortressInstallPath)" neq "" copy "$(OutDir)\$(TargetName)$(TargetExt)" "$(ChickenFortressInstallPath)\$(TargetName)$(TargetExt)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

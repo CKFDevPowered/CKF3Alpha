@@ -7,6 +7,7 @@ typedef struct
 
 typedef struct
 {
+	bool isValid;
 	tgasprite_frame_t *frame;
 	int numframes;
 	int w, h;

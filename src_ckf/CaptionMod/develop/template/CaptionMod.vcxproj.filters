@@ -1,0 +1,434 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header">
+      <UniqueIdentifier>{5287523e-3fd5-496e-bb48-8febad427016}</UniqueIdentifier>
+      <Extensions>h;hpp</Extensions>
+    </Filter>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{95bef9a8-5a76-47ec-b70e-18d94e9d895a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{8aa69602-6c9f-4aff-8436-caed26858216}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{42e65107-2bd1-4c4e-a664-f34735cd904e}</UniqueIdentifier>
+      <Extensions>c;cpp</Extensions>
+    </Filter>
+    <Filter Include="Source\HUD">
+      <UniqueIdentifier>{cf6cc58a-e739-4257-921c-ecb86c34702f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\VGUI">
+      <UniqueIdentifier>{c1c3cee6-c943-42aa-b9fc-5d8f22b9fd5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\StudioRenderer">
+      <UniqueIdentifier>{e1ed8344-3474-41a7-a309-107264e9f1e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\CURL">
+      <UniqueIdentifier>{620e67ca-b866-4afb-8794-a89990884c18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\CJSON">
+      <UniqueIdentifier>{6705a884-eabc-44fe-86b2-f7a4ee054de5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\pm">
+      <UniqueIdentifier>{85155f25-8bb2-4d84-92a5-535f681daf44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\weapon">
+      <UniqueIdentifier>{5c07be81-47d4-4f35-b7de-04bf20bcdcec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\particle">
+      <UniqueIdentifier>{06ab08a7-04ed-4cbf-a759-1d26e94680e6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\client.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\command.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cvar.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engfuncs.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\exportfuncs.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\gl_rmain.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\metahook\HLSDK\common\interface.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\message.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\parsemsg.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\plugins.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qgl.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\qgl.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tent.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\util.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_ammo.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_base.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_build.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_buildmenu.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_class.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_common.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_crosshair.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_deathmsg.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_demolishmenu.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_disguisemenu.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_floattext.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_health.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_localize.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_object.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_overlay.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hud_statusbar.cpp">
+      <Filter>Source\HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="..\BaseUI.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Debug.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Encode.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KeyValues.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\KeyValuesSystem.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SourceSDK\tier0\mem.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SourceSDK\tier1\strtools.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SourceSDK\tier1\utlbuffer.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\vgui2.cpp">
+      <Filter>Source\VGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\GameStudioModelRenderer.cpp">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\studio_util.cpp">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\StudioModelRenderer.cpp">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cJSON.c">
+      <Filter>Source\CJSON</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_debug.c">
+      <Filter>Source\pm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_math.c">
+      <Filter>Source\pm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\pm_shared\pm_shared.c">
+      <Filter>Source\pm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\event.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\weapon.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bat.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bonesaw.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_bottle.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_buildpda.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_butterfly.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_destroypda.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_disguisekit.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_fireaxe.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_fist.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_flamethrower.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_grenadelauncher.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_kukri.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_medigun.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_minigun.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_pistol.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_revolver.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_rocketlauncher.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_sapper.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_scattergun.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_shotgun.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_shovel.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_smg.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_sniperifle.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_stickylauncher.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_syringegun.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpn_wrench.cpp">
+      <Filter>Source\weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\particle.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_burning.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_critical.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_disguise.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_explosion.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_flamethrow.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_floattext.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_grenade.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_medibeam.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_multijump.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_muzzle.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_rocket.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pt_tracer.cpp">
+      <Filter>Source\particle</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\hud_base.h">
+      <Filter>Source\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hud_localize.h">
+      <Filter>Source\HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BaseUI.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Color.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Debug.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Encode.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FileSystem.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KeyValues.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\KeyValuesSystem.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\vgui_internal.h">
+      <Filter>Source\VGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\GameStudioModelRenderer.h">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\studio_util.h">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\StudioModelRenderer.h">
+      <Filter>Source\StudioRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cJSON.h">
+      <Filter>Source\CJSON</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_debug.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_defs.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_info.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_materials.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_movevars.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\pm_shared\pm_shared.h">
+      <Filter>Source\pm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\event.h">
+      <Filter>Source\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\weapon.h">
+      <Filter>Source\weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\particle.h">
+      <Filter>Source\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="..\client.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cvar.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\engfuncs.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\exportfuncs.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\gl_model.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\interface.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\localize.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\message.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\parsemsg.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\plugins.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\qgl.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\surface.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tent.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\util.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\ckfvars.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\IBTEClient.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\ICKFClient.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\irenderer.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\Interface\ref_int.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
