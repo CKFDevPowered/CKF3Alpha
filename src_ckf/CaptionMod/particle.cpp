@@ -36,45 +36,60 @@ std::vector<CParticleSystem *> g_partsystems;
 
 void R_LoadTGASprite(tgasprite_t *tga, const char *path, int xsplit, int ysplit, int startframe, int numframes)
 {
-	int i, x, y, w, h;
+	int i, x, y, width, height;
+	int tex, w, h;
+	tgasprite_frame_t *frame;
 
-	if(xsplit < 1 || ysplit < 1 || numframes < 1)
-		return;
-
-	w = 0;
-	h = 0;
-
-	tga->tex = gRefExports.R_LoadTextureEx(path, path, &w, &h, GLT_SYSTEM, false, false);
-
-	if(!tga->tex || !w || !h)
-		return;
-
-	tga->w = w / xsplit;
-	tga->h = h / ysplit;
-	tga->numframes = numframes;
-
-	tga->frame = new tgasprite_frame_t[numframes];
-	i = 0;
-	for(y = 0; y < ysplit; ++y)
+	if (xsplit < 1 || ysplit < 1 || startframe < 0 || numframes < 1)
 	{
-		for(x = 0; x < xsplit; ++x)
-		{
-			if(y * xsplit + x < startframe)
-				continue;
-			tga->frame[i].texcoord[0][0] = (float)x / xsplit;
-			tga->frame[i].texcoord[0][1] = (float)(y + 1) / ysplit;
-			tga->frame[i].texcoord[1][0] = (float)x / xsplit;
-			tga->frame[i].texcoord[1][1] = (float)y / ysplit;
-			tga->frame[i].texcoord[2][0] = (float)(x + 1) / xsplit;
-			tga->frame[i].texcoord[2][1] = (float)y / ysplit;
-			tga->frame[i].texcoord[3][0] = (float)(x + 1) / xsplit;
-			tga->frame[i].texcoord[3][1] = (float)(y + 1) / ysplit;
-
-			i++;
-			if(i >= numframes)
-				return;
-		}
+		tga->isValid = false;
+		return;
 	}
+	if (xsplit * ysplit - startframe < numframes)
+	{
+		tga->isValid = false;
+		return;
+	}
+
+	width = 0;
+	height = 0;
+
+	tex = gRefExports.R_LoadTextureEx(path, path, &width, &height, GLT_SYSTEM, false, false);
+
+	if (!tex || !width || !height)
+	{
+		tga->isValid = false;
+		return;
+	}
+
+	w = width / xsplit;
+	h = height / ysplit;
+	if (w <= 0 || h <= 0)
+	{
+		tga->isValid = false;
+		return;
+	}
+
+	frame = new tgasprite_frame_t[numframes];
+	for (i = 0; i < numframes; i++)
+	{
+		x = (i + startframe) % xsplit;
+		y = (i + startframe) / ysplit;
+		frame[i].texcoord[0][0] = (float)x / xsplit;
+		frame[i].texcoord[0][1] = (float)(y + 1) / ysplit;
+		frame[i].texcoord[1][0] = (float)x / xsplit;
+		frame[i].texcoord[1][1] = (float)y / ysplit;
+		frame[i].texcoord[2][0] = (float)(x + 1) / xsplit;
+		frame[i].texcoord[2][1] = (float)y / ysplit;
+		frame[i].texcoord[3][0] = (float)(x + 1) / xsplit;
+		frame[i].texcoord[3][1] = (float)(y + 1) / ysplit;
+	}
+	tga->isValid = true;
+	tga->tex = tex;
+	tga->w = w;
+	tga->h = h;
+	tga->numframes = numframes;
+	tga->frame = frame;
 }
 
 void R_Particles_VidInit(void)
@@ -87,7 +102,7 @@ void R_Particles_VidInit(void)
 		R_LoadTGASprite(&g_texTracer[2], "resource/tga/tracer3.tga", 1, 1, 0, 1);
 
 		for(i = 0; i < 5; ++i)
-			R_LoadTGASprite(&g_texRocketSmoke[i], "resource/tga/smokelit.tga", 4, 2, i, 5);
+			R_LoadTGASprite(&g_texRocketSmoke[i], "resource/tga/smokelit.tga", 4, 2, i,	1);
 
 		for(i = 0; i < 5; ++i)
 			R_LoadTGASprite(&g_texMultiJumpSmoke[i], "resource/tga/smoke2lit.tga", 8, 1, i, 1);
