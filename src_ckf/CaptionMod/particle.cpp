@@ -42,11 +42,13 @@ void R_LoadTGASprite(tgasprite_t *tga, const char *path, int xsplit, int ysplit,
 
 	if (xsplit < 1 || ysplit < 1 || startframe < 0 || numframes < 1)
 	{
+		gEngfuncs.Con_Printf("R_LoadTGASprite failed to load %s. (Invalid parameters)\n", path);
 		tga->isValid = false;
 		return;
 	}
 	if (xsplit * ysplit - startframe < numframes)
 	{
+		gEngfuncs.Con_Printf("R_LoadTGASprite failed to load %s. (Invalid frame)\n", path);
 		tga->isValid = false;
 		return;
 	}
@@ -58,6 +60,7 @@ void R_LoadTGASprite(tgasprite_t *tga, const char *path, int xsplit, int ysplit,
 
 	if (!tex || !width || !height)
 	{
+		gEngfuncs.Con_Printf("R_LoadTGASprite failed to load %s. (Invalid TGA file)\n", path);
 		tga->isValid = false;
 		return;
 	}
@@ -66,6 +69,7 @@ void R_LoadTGASprite(tgasprite_t *tga, const char *path, int xsplit, int ysplit,
 	h = height / ysplit;
 	if (w <= 0 || h <= 0)
 	{
+		gEngfuncs.Con_Printf("R_LoadTGASprite failed to load %s. (Invalid frame size)\n", path);
 		tga->isValid = false;
 		return;
 	}
