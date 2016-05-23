@@ -10,7 +10,7 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-    <ItemGroup>
+  <ItemGroup>
     <ResourceCompile Include="..\CSBTE.rc" />
   </ItemGroup>
   <ItemGroup>
