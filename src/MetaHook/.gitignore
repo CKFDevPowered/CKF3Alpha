@@ -1,0 +1,4 @@
+/develop/**
+!/develop/prepare.bat
+!/develop/template/
+!/develop/template/**

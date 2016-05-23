@@ -7,7 +7,7 @@
     </Filter>
     <Filter Include="Source">
       <UniqueIdentifier>{a0b9dc6c-c586-4c05-9e02-0beba1fd9305}</UniqueIdentifier>
-      <Extensions>cpp;c</Extensions>
+      <Extensions>c;cpp</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>

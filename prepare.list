@@ -5,3 +5,4 @@ src_ckf\CaptionMod\develop\prepare
 src_ckf\dlls\develop\prepare
 src\develop\prepare
 src\ClientProxy\develop\prepare
+src\MetaHook\develop\prepare

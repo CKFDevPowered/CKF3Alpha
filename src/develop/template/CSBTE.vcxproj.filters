@@ -79,7 +79,7 @@
     </Filter>
     <Filter Include="Source">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c</Extensions>
+      <Extensions>c;cpp</Extensions>
     </Filter>
     <Filter Include="Library">
       <UniqueIdentifier>{2ea6dab2-ad7f-4aae-9901-297b650dc50f}</UniqueIdentifier>
