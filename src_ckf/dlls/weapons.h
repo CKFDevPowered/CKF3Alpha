@@ -702,6 +702,7 @@ public:
 	void CKFDeflectReset(void);
 	void CKFDetonate(void);
 public:
+	BOOL m_bDetonating;
 	float m_fDeploy;
 };
 

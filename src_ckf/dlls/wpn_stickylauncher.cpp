@@ -184,11 +184,12 @@ void CStickyLauncher::SecondaryAttack(void)
 		if(pEntity->pev->owner != m_pPlayer->edict())
 			continue;
 		pSticky = (CSticky *)pEntity;
-		if(pSticky->m_fDeploy > gpGlobals->time)
+		if(pSticky->m_bDetonating || pSticky->m_fDeploy > gpGlobals->time)
 			continue;
 
+		pSticky->m_bDetonating = true;
 		pSticky->SetThink(&CSticky::CKFDetonate);
-		pSticky->pev->nextthink = gpGlobals->time + 0.1;
+		pSticky->pev->nextthink = gpGlobals->time + 0.125f;
 		iDetonate ++;
 	}
 
@@ -225,7 +226,7 @@ void CStickyLauncher::StickyLauncherFire(void)
 	CSticky *pSticky = CSticky::CreatePjSticky( vecSrc, m_pPlayer->pev->v_angle, m_pPlayer);
 	pSticky->m_iTeam = m_pPlayer->m_iTeam;
 	pSticky->m_iCrit = iCrit;
-	pSticky->m_fDeploy = gpGlobals->time + 0.92;
+	pSticky->m_fDeploy = gpGlobals->time + 0.6;
 	pSticky->m_fGCharge = m_fCharge;
 	pSticky->pev->frame = (iCrit>=2) ? 1 : 0;
 	pSticky->pev->skin = m_pPlayer->m_iTeam-1;
