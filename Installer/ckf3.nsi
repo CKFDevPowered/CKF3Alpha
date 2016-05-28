@@ -1,5 +1,5 @@
 !define PRODUCT_NAME "Chicken Fortress 3"
-!define PRODUCT_VERSION "(Alpha 5)"
+!define PRODUCT_VERSION "(Alpha 5.rev1)"
 !define PRODUCT_PUBLISHER "hzqst"
 !define PRODUCT_WEB_SITE "http://www.moddb.com/mods/chicken-fortress-3"
 
@@ -21,7 +21,7 @@
 !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "CKF3_Alpha5_Setup.exe"
+OutFile "CKF3_Alpha5_rev1_Update.exe"
 InstallDir "$PROGRAMFILES\CKF3"
 ShowInstDetails show
 ShowUnInstDetails show
