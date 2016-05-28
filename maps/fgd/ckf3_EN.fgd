@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------------
 // CKF 3 Game Definition (.fgd)
-// Version: 0.0.0.3
-// Last Update at£ºMay. 24th 2015 by stay
+// Version: 0.0.0.4
+// Last Update at£ºMay. 28th 2016 by stay
 //   this is for mod Chicken Fortress 3
 // -------------------------------------------------------------------------------
 //
@@ -12,6 +12,7 @@
 // ver 0.0.0.1 by hzqst (113660872@qq.com)
 // ver 0.0.0.2 by stay (344233108@qq.com)
 // ver 0.0.0.3 by hzqst (113660872@qq.com)
+// ver 0.0.0.4 by yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
 //   Don't edit edit file unless you know what you are doing.
@@ -19,11 +20,16 @@
 //
 // -----------------------------------------------------------------------
 // History
+// May. 28th 2016 - yuxuanchiadm (0.0.0.4)
 // Jun. 3rd 2015 - hzqst (0.0.0.3)
 // May. 24th 2015 - stay (0.0.0.2)
 // Dec. 25th 2010 - hzqst (0.0.0.1)
 //
 // --------------------------------------------------------------------------------
+
+//
+// Set entity color here
+//
 
 @BaseClass color(0 255 0) = color_player []
 @BaseClass color(64 128 0) = color_cs []
@@ -37,6 +43,255 @@
 @BaseClass color(255 0 0) = color_compile []
 @BaseClass color(255 0 128) = color_trigger []
 @BaseClass color(255 64 128) = color_game []
+
+//
+// BaseClasses
+//
+
+@BaseClass = Targetname 
+[
+	targetname(target_source) : "Name"
+]
+
+@BaseClass = Global 
+[
+//-	globalname(string) : "Global Entity Name" 
+]
+
+@BaseClass = Target 
+[
+	target(target_destination) : "Target" 
+]
+
+@BaseClass = Angles
+[
+	angles(choices) : "Pitch Yaw Roll (Y Z X)" : "0 0 0" =
+	[
+		"-90 0 0" : "-90 0 0 (Up)"
+		"90 0 0" : "90 0 0 (Down)"
+	]
+]
+
+@BaseClass = Appearflags
+[
+	spawnflags(Flags) =
+	[
+		2048 : "Not in Deathmatch" : 0
+	]
+]
+
+@BaseClass = Effects
+[
+	effects(choices) : "Entity effects (Numbers can be added together)": "" =
+	[
+		"" : "None"
+		1 : "1 (Particle vortex)"
+		2 : "2 (Muzzle flame)"
+		4 : "4 (Strong light)"
+		8 : "8 (Weak light)"
+		16 : "16 (Assuming environment light up)"
+		32 : "32 (Do not insert to next frame)"
+		64 : "64 (Shine sprite)"
+		128 : "128 (Invisible/No network transmission)"
+	]
+]
+
+@BaseClass = RenderFields 
+[
+	rendermode(choices) : "Render Mode" : "" =
+	[
+		"": "Normal - no light"
+		//*   For BSP objects, the object will be rendered as a pure area of whatever
+		//* color is specified in FX Color.
+		//*   For models and sprites, this is the same as Normal mode.
+		//* MDLs which contain transparent part do NOT use this render mode. Otherwise, sometimes it will cause the object in the back invisible.
+
+		1: "Pure Color"
+		//*   For BSP objects, the object will be rendered without shadows.
+		//*   For models and sprites, this is the same as Normal mode, except that the Pulse
+		//* renderfx settings work.
+
+		2: "Texture - some light"
+		//*   Like additive, but as the player gets further from the sprite, it gets
+		//* progressively larger and more transparent. The sprite is also not obscured by
+		//* intervening models, which can sometimes look bad.
+		//*   Alphatest sprites won't use their masks in this mode.
+
+		3: "Glow (sprites only)"
+		//*   For BSP objects, this only affects textures beginning with {. Blue pixels
+		//*   will be transparent; non-blue pixels will be solid.
+		//*   For models, this mode is the same as Normal mode.
+		//*   For sprites, this mode is for displaying sprites in Indexalpha mode - i.e.
+		//* the palette positions are used as opacity settings; 0 for fully transparent,
+		//* and 255 for fully opaque, regardless of what the palette colors actually are.
+		//* The only palette colour that will be used is the last one, which sets the
+		//* colour for the whole sprite. (Needless to say, this will look odd unless the
+		//* sprite is designed to be displayed this way!)
+		//*   Oddly, Alphatest sprites won't use their masks in this mode.
+
+		4: "Solid - no light"
+		//*   Only bright parts of the object are visible; darker parts are just more
+		//* transparent, and black is not drawn. Useful for making lighting or hologram
+		//* effects.
+
+		5: "Additive"
+	]
+
+	renderfx(choices) : "Render FX" : "" =
+	[
+		"": "Normal"
+		//* Additive or Texture mode only.
+		1: "Slow Pulse"
+		//* Additive or Texture mode only.
+		2: "Fast Pulse"
+		//* Additive or Texture mode only.
+		3: "Slow Wide Pulse"
+		//* Additive or Texture mode only.
+		4: "Fast Wide Pulse"
+		9: "Slow Strobe"
+		10: "Fast Strobe"
+		11: "Faster Strobe"
+		12: "Slow Flicker"
+		13: "Fast Flicker"
+//*These don't seem to do anything. Correct me if I'm wrong... 
+//*		5: "Slow Fade Away"
+//*		6: "Fast Fade Away"
+//*		7: "Slow Become Solid"
+//*		8: "Fast Become Solid"
+//* Constant Glow only affects the Glow rendermode. With this setting, Glow mode behaves
+//* exactly like Additive mode - except that (as is usual for Glow mode) the sprite isn't
+//* obscured by intervening sprites or models. (Hmm. Call me slow, but..... how is this
+//* useful?)
+		14: "Constant Glow (Sprites)"
+		15: "Distort (Models)"
+		16: "Hologram (Distort + fade)"
+//* Strange effect. As seen, briefly, when a Gargantua dies.
+		19: "Light shell (Models)"
+	]
+
+	renderamt(integer) : "FX Amount (0 - 255)" : 255
+	//* When Render FX is 19. FX Amount will determine the thickness of light shell.
+
+	rendercolor(color255) : "FX Color (R G B)" : ""
+	//* When using scroll texture(Texture name start with "scroll"). FX Color determine the scrolling speed:
+	//* R is the sign of speed. R=0 is positive. R=1 is negative.
+	//* G is the highbits of speed. When G increase 1 speed increase 16.
+	//* B is the lowbits of speed. When B increase 1 speed increase 1 / 16.
+]
+
+// LRCHLT Texture light additions
+// these will only work with advanced compiling tools that allow 
+// switchable texture lighting.  note that lighting used by
+// moveable entitys may be left behind!
+//
+@BaseClass = TexLightType
+[
+	style(choices) : "Texture Light Style" : "" =
+	[
+		"" : "Normal"
+		-3: "Switch with TL@name"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12: "underwater weird & buggy"
+	]
+]
+
+@BaseClass = Minlight
+[
+	_minlight(string) : "Minimum light level (0.0-2.0)"
+]
+
+@BaseClass = ZHLT
+[
+	zhlt_invisible(choices) : "Invisible" : "" =
+	[
+		"": "no"
+		1: "yes"
+	]
+	zhlt_noclip(choices) : "Non solid" : "" =
+	[
+		"": "no"
+		1: "yes"
+	]
+	zhlt_lightflags(choices) : "Light Flags (Zhlt 2.2+)" : "" =
+	[
+		"": "Normal"
+		2: "Opaque (Blocks Light)"
+		10: "Opaque + Embedded Fix + Concave Fix"
+	]
+	zhlt_customshadow(string) : "Custom shadow"
+	light_origin(string) : "Light Origin (Zhlt 2.2+)"
+]
+
+@BaseClass base(RenderFields, Effects, TexLightType, ZHLT, Minlight) = SolidVisible
+[
+]
+
+@BaseClass = SolidInvisible
+[
+	zhlt_invisible(choices) : "Invisible" : 1 =
+	[
+		1: "yes"
+	]
+	zhlt_noclip(choices) : "Noclip" : "" =
+	[
+		"": "no"
+		1: "yes"
+	]
+]
+
+//* Don't create a light whose name begins with "light" - a bug/feature in RAD means
+//* that such a light won't be able to switch on and off.
+@BaseClass = Light 
+[
+	_light(color255) : "Brightness" : "255 255 255 200"
+	//* This field will have no effect on a dynamic (i.e. named) light.
+	style(Choices) : "Appearance (no name allowed)" : "" =
+	[
+		"" : "Normal"
+		10: "Fluorescent flicker"
+		2 : "Slow, strong pulse"
+		11: "Slow pulse, noblack"
+		5 : "Gentle pulse"
+		1 : "Flicker A"
+		6 : "Flicker B"
+		3 : "Candle A"
+		7 : "Candle B"
+		8 : "Candle C"
+		4 : "Fast strobe"
+		9 : "Slow strobe"
+		12 : "Underwater light"
+	]
+	//* This field will have no effect on a static (i.e. nameless) light.
+	//*   'a' is dark, 'm' is normal brightness, 'z' is full brightness.
+	//* There's no support for a light to have a custom appearances when it's in a
+	//* state other than 'on'. See trigger_lightstyle if you need this effect.
+	pattern(string) : "Custom Appearance"
+	_fade(string) : "Fade (ZHLT Only)" : "1.0"
+	_falloff(Choices) : "Falloff (ZHLT Only)" : "" =
+	[
+		"" : "Default"
+		1 : "Inverse Linear"
+		2 : "Inverse Square"
+	]
+	spawnflags(Flags) =
+	[
+		1 : "Initially dark" : 0
+	]
+]
+
+//
+// CKF3
+//
 
 @SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_resupplyroom : "Resupply room" 
 [

@@ -1,35 +1,37 @@
 // ------------------------------------------------------------------------------
-// CKF 3 æ¸¸æˆå®šä¹‰æ–‡ä»¶ (.fgd)
-// ç‰ˆæœ¬å·: 0.0.0.3
-// æœ€åæ›´æ–°æ ‡è¯†ï¼š2015å¹´5æœˆ24æ—¥ ç”± stay
-// æ”¯æŒ:
-//   åœ°å›¾ç¼–è¾‘å™¨ Worldcraft 3.3, Hammer 3.4 - 3.5beta4 (éƒ¨åˆ†æ•ˆæœåœ¨ Hammer 3.5 ä¸­æ‰èƒ½æ˜¾ç¤º)
-//   ç¼–è¯‘ç¨‹åº ZHLT å„ç‰ˆæœ¬ (éƒ¨åˆ†é”®å€¼åªåœ¨ç‰¹å®šç‰ˆæœ¬ ZHLT æœ‰æ•ˆ)
-//   æ¸¸æˆ Chicken Fortress 3
+// CKF 3 ÓÎÏ·¶¨ÒåÎÄ¼ş (.fgd)
+// °æ±¾ºÅ: 0.0.0.4
+// ×îºó¸üĞÂ±êÊ¶£º2016Äê5ÔÂ28ÈÕ ÓÉ yuxuanchiadm
+// Ö§³Ö:
+//   µØÍ¼±à¼­Æ÷ Worldcraft 3.3, Hammer 3.4 - 3.5beta4 (²¿·ÖĞ§¹ûÔÚ Hammer 3.5 ÖĞ²ÅÄÜÏÔÊ¾)
+//   ±àÒë³ÌĞò ZHLT ¸÷°æ±¾ (²¿·Ö¼üÖµÖ»ÔÚÌØ¶¨°æ±¾ ZHLT ÓĞĞ§)
+//   ÓÎÏ· Chicken Fortress 3
 // -------------------------------------------------------------------------------
 //
-// å£°æ˜:
-//   å¯ä»¥ä»»æ„å‘å¸ƒä¿®æ”¹ç‰ˆ,å¦‚å‘å¸ƒä¿®æ”¹ç‰ˆè¯·åŠ¡å¿…åœ¨å‘å¸ƒè¯´æ˜ä¸­åŒ…å«å®Œæ•´ä½œè€…ä¿¡æ¯åŠæœ¬å£°æ˜.
+// ÉùÃ÷:
+//   ¿ÉÒÔÈÎÒâ·¢²¼ĞŞ¸Ä°æ,Èç·¢²¼ĞŞ¸Ä°æÇëÎñ±ØÔÚ·¢²¼ËµÃ÷ÖĞ°üº¬ÍêÕû×÷ÕßĞÅÏ¢¼°±¾ÉùÃ÷.
 //
-// ä½œè€…ä¿¡æ¯:
-// ç‰ˆæœ¬ 0.0.0.1 ä¿®æ”¹è€… hzqst (113660872@qq.com)
-// ç‰ˆæœ¬ 0.0.0.2 ä¿®æ”¹è€… stay (344233108@qq.com)
-// ç‰ˆæœ¬ 0.0.0.3 ä¿®æ”¹è€… hzqst (113660872@qq.com)
+// ×÷ÕßĞÅÏ¢:
+// °æ±¾ 0.0.0.1 ĞŞ¸ÄÕß hzqst (113660872@qq.com)
+// °æ±¾ 0.0.0.2 ĞŞ¸ÄÕß stay (344233108@qq.com)
+// °æ±¾ 0.0.0.3 ĞŞ¸ÄÕß hzqst (113660872@qq.com)
+// °æ±¾ 0.0.0.4 ĞŞ¸ÄÕß yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
-//   ä¸ºä¿æŒfgdå…¼å®¹æ€§,ä¸è¦åšä¸å¿…è¦çš„ç»†å¾®ä¿®æ”¹.
-//   fgdæ–‡ä»¶å‘½å: "ckf3_<è¯­è¨€>.fgd".
+//   Îª±£³Öfgd¼æÈİĞÔ,²»Òª×ö²»±ØÒªµÄÏ¸Î¢ĞŞ¸Ä.
+//   fgdÎÄ¼şÃüÃû: "ckf3_<ÓïÑÔ>.fgd".
 //
 // -----------------------------------------------------------------------
-// æ›´æ–°å†å²(è¯¦è§æ–‡æœ¬æœ€å)
-// 2015å¹´6æœˆ3æ—¥ - hzqst (0.0.0.3)
-// 2015å¹´5æœˆ24æ—¥ - stay (0.0.0.2)
-// 2010å¹´12æœˆ25æ—¥ - hzqst (0.0.0.1)
+// ¸üĞÂÀúÊ·(Ïê¼ûÎÄ±¾×îºó
+// 2016Äê5ÔÂ28ÈÕ - yuxuanchiadm (0.0.0.4)
+// 2015Äê6ÔÂ3ÈÕ - hzqst (0.0.0.3)
+// 2015Äê5ÔÂ24ÈÕ - stay (0.0.0.2)
+// 2010Äê12ÔÂ25ÈÕ - hzqst (0.0.0.1)
 //
 // --------------------------------------------------------------------------------
 
 //
-// åœ¨æ­¤è®¾ç½®å„ç±»å®ä½“çš„é¢œè‰²
+// ÔÚ´ËÉèÖÃ¸÷ÀàÊµÌåµÄÑÕÉ«
 //
 
 @BaseClass color(0 255 0) = color_player []
@@ -45,119 +47,366 @@
 @BaseClass color(255 0 128) = color_trigger []
 @BaseClass color(255 64 128) = color_game []
 
-//CKF 3 ADDED
+//
+// BaseClasses
+//
+
+@BaseClass = Targetname 
+[
+	targetname(target_source) : "Ãû³Æ"
+]
+
+@BaseClass = Global 
+[
+//-	globalname(string) : "È«¾ÖÊµÌåÃû³Æ" 
+]
+
+@BaseClass = Target 
+[
+	target(target_destination) : "Ä¿±ê" 
+]
+
+@BaseClass = Angles
+[
+	angles(choices) : "ÊµÌå½Ç¶È (ÇãĞ± Ğı×ª ¹ö¶¯)" : "0 0 0" =
+	[
+		"-90 0 0" : "-90 0 0 (ÏòÉÏ)"
+		"90 0 0" : "90 0 0 (ÏòÏÂ)"
+	]
+]
+
+@BaseClass = Appearflags
+[
+	spawnflags(Flags) =
+	[
+		2048 : "ËÀÍöÄ£Ê½ÖĞ½ûÓÃ" : 0
+	]
+]
+
+@BaseClass = Effects
+[
+	effects(choices) : "ÊµÌåĞ§¹û (Êı×Ö¿ÉÏà¼Ó)": "" =
+	[
+		"" : "ÎŞ"
+		1 : "1 (Á£×ÓäöÎĞ)"
+		2 : "2 (Ç¹¿Ú»ğÑæ)"
+		4 : "4 (Ç¿¹â)"
+		8 : "8 (Èõ¹â)"
+		16 : "16 (¼Ù¶¨»·¾³¹âÏßÏòÉÏ)"
+		32 : "32 (²»²åÈëÏÂÒ»Ö¡)"
+		64 : "64 (·¢¹âÍ¼±ê)"
+		128 : "128 (²»¿É¼û/ÎŞÍøÂç´«Êä)"
+	]
+]
+
+@BaseClass = RenderFields 
+[
+	rendermode(choices) : "äÖÈ¾Ä£Ê½" : "" =
+	[
+		"": "ÆÕÍ¨0 - ÎŞ¹â"
+		//*   For BSP objects, the object will be rendered as a pure area of whatever
+		//* color is specified in FX Color.
+		//*   For models and sprites, this is the same as Normal mode.
+		//* º¬ÓĞÍ¸Ã÷²¿·ÖµÄmdl²»ÒªÊ¹ÓÃÕâ¸öäÖÈ¾Ä£Ê½,·ñÔòÓĞÊ±»áµ¼ÖÂºóÃæÎïÌåÏûÊ§.
+
+		1: "´¿ÑÕÉ«1 (½ö¹ÌÌåÊµÌå)"
+		//*   For BSP objects, the object will be rendered without shadows.
+		//*   For models and sprites, this is the same as Normal mode, except that the Pulse
+		//* renderfx settings work.
+
+		2: "ÎÆÀí2 - Î¢¹â(È«ÁÁ)"
+		//*   Like additive, but as the player gets further from the sprite, it gets
+		//* progressively larger and more transparent. The sprite is also not obscured by
+		//* intervening models, which can sometimes look bad.
+		//*   Alphatest sprites won't use their masks in this mode.
+
+		3: "·¢¹â3 (½öÍ¼±ê¶¯»­)"
+		//*   For BSP objects, this only affects textures beginning with {. Blue pixels
+		//*   will be transparent; non-blue pixels will be solid.
+		//*   For models, this mode is the same as Normal mode.
+		//*   For sprites, this mode is for displaying sprites in Indexalpha mode - i.e.
+		//* the palette positions are used as opacity settings; 0 for fully transparent,
+		//* and 255 for fully opaque, regardless of what the palette colors actually are.
+		//* The only palette colour that will be used is the last one, which sets the
+		//* colour for the whole sprite. (Needless to say, this will look odd unless the
+		//* sprite is designed to be displayed this way!)
+		//*   Oddly, Alphatest sprites won't use their masks in this mode.
+
+		4: "¹ÌÌå4 - ÎŞ¹â"
+		//*   Only bright parts of the object are visible; darker parts are just more
+		//* transparent, and black is not drawn. Useful for making lighting or hologram
+		//* effects.
+
+		5: "¸½¼Ó5"
+	]
+
+	renderfx(choices) : "äÖÈ¾Ğ§¹û" : "" =
+	[
+		"": "ÆÕÍ¨ (0)"
+		//* Additive or Texture mode only.
+		1: "Âö³å »ºÂı (1)"
+		//* Additive or Texture mode only.
+		2: "Âö³å ¿ìËÙ (2)"
+		//* Additive or Texture mode only.
+		3: "Âö³å »ºÂı´ó·¶Î§ (3)"
+		//* Additive or Texture mode only.
+		4: "Âö³å ¿ìËÙ´ó·¶Î§ (4)"
+		9: "ÂË²¨ »ºÂı (9)"
+		10: "ÂË²¨ ¿ìËÙ (10)"
+		11: "ÂË²¨ ¼«¿ì (11)"
+		12: "ÉÁË¸ »ºÂı (12)"
+		13: "ÉÁË¸ ¿ìËÙ (13)"
+//*These don't seem to do anything. Correct me if I'm wrong... 
+//*		5: "Slow Fade Away"
+//*		6: "Fast Fade Away"
+//*		7: "Slow Become Solid"
+//*		8: "Fast Become Solid"
+//* Constant Glow only affects the Glow rendermode. With this setting, Glow mode behaves
+//* exactly like Additive mode - except that (as is usual for Glow mode) the sprite isn't
+//* obscured by intervening sprites or models. (Hmm. Call me slow, but..... how is this
+//* useful?)
+		14: "ºã¶¨µÄ·¢¹âÄ£Ê½ (14)"
+		15: "Å¤Çú (½öÄ£ĞÍ) (15)"
+		16: "Å¤Çú+½¥Òş (16)"
+//* Strange effect. As seen, briefly, when a Gargantua dies.
+		19: "·¢¹âÍâ¿Ç(½öÄ£ĞÍ)(19)"
+	]
+
+	renderamt(integer) : "Í¸Ã÷¶È (0-255 0=ÍêÈ«Í¸Ã÷)" : 255
+	//* µ±äÖÈ¾Ğ§¹ûÎª19Ê±,Í¸Ã÷¶È¾ö¶¨·¢¹âÍâ¿ÇµÄºñ¶È.
+
+	rendercolor(color255) : "äÖÈ¾É« (R G B)" : ""
+	//* µ±Ê¹ÓÃ¹ö¶¯ÎÆÀí(ÎÆÀíÃû³Æscroll¿ªÍ·)Ê±,äÖÈ¾É«¾ö¶¨¹ö¶¯ËÙ¶È:
+	//* RÊÇËÙ¶ÈÖµµÄ·ûºÅ,R=0ÎªÕı,R=1Îª¸º,
+	//* GÊÇËÙ¶ÈÖµµÄ¸ßÎ»,GÃ¿Ôö¼Ó1,ËÙ¶ÈÔö¼Ó16µ¥Î»,
+	//* BÊÇËÙ¶ÈÖµµÄµÍÎ»,BÃ¿Ôö¼Ó1,ËÙ¶ÈÔö¼Ó1/16µ¥Î».
+]
+
+// LRCHLT Texture light additions
+// these will only work with advanced compiling tools that allow 
+// switchable texture lighting.  note that lighting used by
+// moveable entitys may be left behind!
+//
+@BaseClass = TexLightType
+[
+	style(choices) : "ÎÆÀí·¢¹âÑùÊ½" : "" =
+	[
+		"" : "ÆÕÍ¨"
+		-3: "À¦°óµ½Í¬Ãû¹âÔ´"
+		10: "ÉÁË¸µÄÓ«¹â"
+		2 : "Âö³å »ºÂı Ç¿´ó"
+		11: "Âö³å »ºÂı"
+		5 : "Âö³å ÎÂºÍ"
+		1 : "ÉÁË¸ A"
+		6 : "ÉÁË¸ B"
+		3 : "Öò¹â A"
+		7 : "Öò¹â B"
+		8 : "Öò¹â C"
+		4 : "ÂË²¨ ¿ìËÙ"
+		9 : "ÂË²¨ »ºÂı"
+		12: "Ë®ÏÂ¹âÏß"
+	]
+]
+
+@BaseClass = Minlight
+[
+	_minlight(string) : "×îĞ¡µÆ¹âµÈ¼¶ (0.0-2.0)"
+]
+
+@BaseClass = ZHLT
+[
+	zhlt_invisible(choices) : "(ZHLT)²»¿É¼û" : "" =
+	[
+		"": "·ñ"
+		1: "ÊÇ"
+	]
+	zhlt_noclip(choices) : "(ZHLT)²»ÓëÍæ¼Ò½Ó´¥(¿É´©¹ı)" : "" =
+	[
+		"": "·ñ"
+		1: "ÊÇ"
+	]
+	zhlt_lightflags(choices) : "(ZHLT)¹âÓ°Ñ¡Ïî" : "" =
+	[
+		"": "ÆÕÍ¨"
+		2: "²»Í¸Ã÷ (²úÉúÒõÓ°)"
+		10: "²»Í¸Ã÷ + Í¸Ã÷ÎÆÀíĞŞÕı"
+	]
+	zhlt_customshadow(color1) : "(ZHLT)×Ô¶¨ÒåÒõÓ°"
+	light_origin(string) : "(ZHLT)¹âÓ°±àÒëÒÆ¶¯ÖáĞÄÄ¿±ê"
+]
+
+@BaseClass base(RenderFields, Effects, TexLightType, ZHLT, Minlight) = SolidVisible
+[
+]
+
+@BaseClass = SolidInvisible
+[
+	zhlt_invisible(choices) : "(ZHLT)²»¿É¼ûµÄ¹ÌÌåÊµÌå" : 1 =
+	[
+		1: "ÊÇ"
+	]
+	zhlt_noclip(choices) : "(ZHLT)²»ÓëÍæ¼Ò½Ó´¥" : "" =
+	[
+		"": "·ñ"
+		1: "ÊÇ"
+	]
+]
+
+//* Don't create a light whose name begins with "light" - a bug/feature in RAD means
+//* that such a light won't be able to switch on and off.
+@BaseClass = Light 
+[
+	_light(color255) : "¹âÏß (ÑÕÉ«ºÍÁÁ¶È)" : "255 255 255 100"
+	//* This field will have no effect on a dynamic (i.e. named) light.
+	style(Choices) : "¹âÏßÑùÊ½ (ÊµÌåÎŞÃû³ÆÊ±)" : "" =
+	[
+		"" : "ÆÕÍ¨"
+		10: "ÉÁË¸µÄÓ«¹â"
+		2 : "Âö³å »ºÂıÇ¿´ó"
+		11: "Âö³å »ºÂı"
+		5 : "Âö³å ÎÂºÍ"
+		1 : "ÉÁË¸ A"
+		6 : "ÉÁË¸ B"
+		3 : "Öò¹â A"
+		7 : "Öò¹â B"
+		8 : "Öò¹â C"
+		4 : "ÂË²¨ ¿ìËÙ"
+		9 : "ÂË²¨ »ºÂı"
+		12 : "Ë®ÏÂ¹âÏß"
+	]
+	//* This field will have no effect on a static (i.e. nameless) light.
+	//*   'a' is dark, 'm' is normal brightness, 'z' is full brightness.
+	//* There's no support for a light to have a custom appearances when it's in a
+	//* state other than 'on'. See trigger_lightstyle if you need this effect.
+	pattern(string) : "×Ô¶¨ÒåÑùÊ½(a-z) (ÊµÌåÓĞÃû³ÆÊ±)"
+	_fade(string) : "¹âÏßË¥¼õËÙ¶È (½öZHLT)" : ""
+	_falloff(Choices) : "¹âÏßË¥¼õÄ£Ê½ (½öZHLT)" : "" =
+	[
+		"" : "Ä¬ÈÏ"
+		1 : "ÏßĞÔ"
+		2 : "Æ½·½"
+	]
+	spawnflags(Flags) =
+	[
+		1 : "¿ªÊ¼Ê±¹Ø±Õ" : 0
+	]
+]
+
+//
+// CKF3
+//
 
 @SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_resupplyroom : "Resupply room" 
 [
-	team(choices) : "é˜Ÿä¼" : 0 =
+	team(choices) : "¶ÓÎé" : 0 =
 	[
-		0: "åŒæ–¹"
-		1: "çº¢é˜Ÿ"
-		2: "è“é˜Ÿ"
+		0: "Ë«·½"
+		1: "ºì¶Ó"
+		2: "À¶¶Ó"
 	]
 ]
 
 @SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_resupplycase : "Resupply case" 
 [
-	team(choices) : "é˜Ÿä¼" : 0 =
+	team(choices) : "¶ÓÎé" : 0 =
 	[
-		0: "åŒæ–¹"
-		1: "çº¢é˜Ÿ"
-		2: "è“é˜Ÿ"
+		0: "Ë«·½"
+		1: "ºì¶Ó"
+		2: "À¶¶Ó"
 	]
-	subentity(string) : "ç»‘å®šå¤–è§‚å®ä½“" : ""
+	subentity(string) : "°ó¶¨Íâ¹ÛÊµÌå" : ""
 ]
 
 @SolidClass base(color_cs) base(Targetname, SolidInvisible, Appearflags) = func_controlpoint : "Control Point" 
 [
-	team(choices) : "é˜Ÿä¼" : 0 =
+	team(choices) : "¶ÓÎé" : 0 =
 	[
-		0: "åŒæ–¹"
-		1: "çº¢é˜Ÿ"
-		2: "è“é˜Ÿ"
+		0: "Ë«·½"
+		1: "ºì¶Ó"
+		2: "À¶¶Ó"
 	]
-	capname(string) : "æ§åˆ¶ç‚¹å" : ""
-	caprate(string) : "å é¢†é€Ÿåº¦(/s)" : "0"
-	trigonredcap(string) : "çº¢é˜Ÿå é¢†åå¼•å‘" : ""
-	trigonblucap(string) : "è“é˜Ÿå é¢†åå¼•å‘" : ""
-	trigoncap(string) : "å é¢†åå¼•å‘" : ""
-	subentity(string) : "ç»‘å®šå¤–è§‚å®ä½“" : ""
-	hudpos(integer) : "HUDå›¾æ ‡ä½ç½®(0~5)" : 2
-	timeadded(string) : "å¢åŠ å›åˆæ—¶é—´" : ""
-	startlock(choices) : "åˆå§‹é”å®š" : 0 =
+	capname(string) : "¿ØÖÆµãÃû" : ""
+	caprate(string) : "Õ¼ÁìËÙ¶È(/s)" : "0"
+	trigonredcap(string) : "ºì¶ÓÕ¼ÁìºóÒı·¢" : ""
+	trigonblucap(string) : "À¶¶ÓÕ¼ÁìºóÒı·¢" : ""
+	trigoncap(string) : "Õ¼ÁìºóÒı·¢" : ""
+	subentity(string) : "°ó¶¨Íâ¹ÛÊµÌå" : ""
+	hudpos(integer) : "HUDÍ¼±êÎ»ÖÃ(0~5)" : 2
+	timeadded(string) : "Ôö¼Ó»ØºÏÊ±¼ä" : ""
+	startlock(choices) : "³õÊ¼Ëø¶¨" : 0 =
 	[
-		0: "å¦"
-		1: "æ˜¯"
+		0: "·ñ"
+		1: "ÊÇ"
 	]
 ]
 
 @SolidClass base(color_wall) base(Targetname, Global, SolidVisible) = func_nobuildzone : "No Buildable Zone" 
 [
-	team(choices) : "é˜Ÿä¼" : 0 =
+	team(choices) : "¶ÓÎé" : 0 =
 	[
-		0: "æ‰€æœ‰äºº"
-		1: "çº¢é˜Ÿ"
-		2: "è“é˜Ÿ"
+		0: "ËùÓĞÈË"
+		1: "ºì¶Ó"
+		2: "À¶¶Ó"
 	]
 	spawnflags(flags) =
 	[
-		1 : "å¼€å§‹æ—¶å…³é—­" : 0
+		1 : "¿ªÊ¼Ê±¹Ø±Õ" : 0
 	]
 ]
 
 @PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cplocker : "Control Point Locker"
 [
-	lockstate(choices) : "è®¾å®šæ–¹å¼" : 0 = 
+	lockstate(choices) : "Éè¶¨·½Ê½" : 0 = 
 	[
-		0 : "åˆ‡æ¢"
-		1 : "é”å®š"
-		2 : "è§£é”"
+		0 : "ÇĞ»»"
+		1 : "Ëø¶¨"
+		2 : "½âËø"
 	]
 ]
 
 @PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundterminator : "Round Terminator"
 [
-	winstatus(choices) : "èƒœåˆ©æ–¹" : 0 = 
+	winstatus(choices) : "Ê¤Àû·½" : 0 = 
 	[
-		0 : "å¹³å±€"
-		1 : "çº¢é˜Ÿ"
-		2 : "è“é˜Ÿ"
+		0 : "Æ½¾Ö"
+		1 : "ºì¶Ó"
+		2 : "À¶¶Ó"
 	]
-	endtime(integer) : "è‡ªå®šä¹‰å›åˆç»“æŸæ—¶é—´" : 0
+	endtime(integer) : "×Ô¶¨Òå»ØºÏ½áÊøÊ±¼ä" : 0
 ]
 
 // all items will respawn after a short period in a multiplayer game.
-//* ç‰©å“é‡ç”Ÿæ—¶é—´ä¸º30ç§’
+//* ÎïÆ·ÖØÉúÊ±¼äÎª30Ãë
 
 @PointClass base(color_func) size(-16 -16 0, 16 16 16) base(Targetname, Angles, RenderFields, Effects, Appearflags) Studio("models/CKF_III/w_health.mdl")= item_healthbox : "Health Box" 
 [
-	givehealth(string) : "*ç»™äºˆç”Ÿå‘½(%)" : "0"
-	type(Choices) : "ç±»å‹" : "" = 
+	givehealth(string) : "*¸øÓèÉúÃü(%)" : "0"
+	type(Choices) : "ÀàĞÍ" : "" = 
 	[
-		"0" : "å°"
-		"1" : "ä¸­"
-		"2" : "å¤§"
+		"0" : "Ğ¡"
+		"1" : "ÖĞ"
+		"2" : "´ó"
 	]
 ]
 
 @PointClass base(color_func) size(-16 -16 0, 16 16 16) base(Targetname, Angles, RenderFields, Effects, Appearflags) Studio("models/CKF_III/w_ammo.mdl") = item_ammobox : "Ammo Box" 
 [
- 	giveammo(string) : "*ç»™äºˆå¼¹è¯(%)" : "0"
-	type(Choices) : "ç±»å‹" : "" = 
+ 	giveammo(string) : "*¸øÓèµ¯Ò©(%)" : "0"
+	type(Choices) : "ÀàĞÍ" : "" = 
 	[
-		"0" : "å°"
-		"1" : "ä¸­"
-		"2" : "å¤§"
+		"0" : "Ğ¡"
+		"1" : "ÖĞ"
+		"2" : "´ó"
 	]
 ]
 
 @PointClass base(color_light) iconsprite("sprites/CS/lightbulb.spr") base(Targetname, Target, Angles, Light, Appearflags) = shadow_manager : "Shadow Manager" [
-	pitch(integer) : "å€¾æ–œ (-90=å‘ä¸‹ 90=å‘ä¸Š)" : "-90"
-	radius(integer) : "è·ç¦»" : "100"
-	fardist(integer) : "æ·¡å‡ºè·ç¦»" : "50"
-	scale(integer) : "è´´å›¾ç¼©æ”¾" : "16"
-	texsize(integer) : "è´´å›¾å°ºå¯¸" : "512"
-	affectmodel(string) : "å½±å“æ¨¡å‹" : ""
+	pitch(integer) : "ÇãĞ± (-90=ÏòÏÂ 90=ÏòÉÏ)" : "-90"
+	radius(integer) : "¾àÀë" : "100"
+	fardist(integer) : "µ­³ö¾àÀë" : "50"
+	scale(integer) : "ÌùÍ¼Ëõ·Å" : "16"
+	texsize(integer) : "ÌùÍ¼³ß´ç" : "512"
+	affectmodel(string) : "Ó°ÏìÄ£ĞÍ" : ""
 ]
 
 @SolidClass base(color_func) base(Appearflags) = sky_box : "3D SkyBox Zone" [
@@ -171,25 +420,25 @@
 
 @PointClass base(color_game) base(Targetname, Appearflags) iconsprite("sprites/CS/MapParams.spr") = info_map_settings : "CKF3 GameRules Settings"
 [
-	setupcondition(choices)  : "å¼€å±€çŠ¶æ€" : 0 =
+	setupcondition(choices)  : "¿ª¾Ö×´Ì¬" : 0 =
 	[
-		0: "æ­£å¸¸(é»˜è®¤)"
-		1: "å‡†å¤‡é˜¶æ®µ(æ¨è)"
-		2: "ç»“æŸé˜¶æ®µ(ä¸æ¨è)"
-		3: "è¶…æ—¶é˜¶æ®µ(ä¸æ¨è)"
-		4: "ç­‰å¾…ç©å®¶(ä¸æ¨è)"
+		0: "Õı³£(Ä¬ÈÏ)"
+		1: "×¼±¸½×¶Î(ÍÆ¼ö)"
+		2: "½áÊø½×¶Î(²»ÍÆ¼ö)"
+		3: "³¬Ê±½×¶Î(²»ÍÆ¼ö)"
+		4: "µÈ´ıÍæ¼Ò(²»ÍÆ¼ö)"
 	]
-	endaction(choices)  : "å›åˆæ—¶é—´è€—å°½æ—¶åŠ¨ä½œ" : 0 =
+	endaction(choices)  : "»ØºÏÊ±¼äºÄ¾¡Ê±¶¯×÷" : 0 =
 	[
-		0: "æ— åŠ¨ä½œ(é»˜è®¤)"
-		1: "å¹³å±€"
-		2: "çº¢é˜Ÿèƒœåˆ©"
-		3: "è“é˜Ÿèƒœåˆ©"
-		4: "è¿›å…¥åŠ æ—¶èµ›(æš‚ä¸å¯ç”¨)"
+		0: "ÎŞ¶¯×÷(Ä¬ÈÏ)"
+		1: "Æ½¾Ö"
+		2: "ºì¶ÓÊ¤Àû"
+		3: "À¶¶ÓÊ¤Àû"
+		4: "½øÈë¼ÓÊ±Èü(Ôİ²»¿ÉÓÃ)"
 	]
-	waittime(integer) : "ç­‰å¾…ç©å®¶æ—¶é—´(ç§’)" : 30
-	freezetime(integer) : "å¼€å±€å†»ç»“æ—¶é—´(ç§’)" : 3
-	setuptime(integer) : "å‡†å¤‡é˜¶æ®µæ—¶é—´(ç§’)" : 60
-	roundtime(integer) : "å›åˆæ—¶é—´(ç§’)" : 300
-	endtime(integer) : "ç»“æŸç­‰å¾…æ—¶é—´(ç§’)" : 15
+	waittime(integer) : "µÈ´ıÍæ¼ÒÊ±¼ä(Ãë)" : 30
+	freezetime(integer) : "¿ª¾Ö¶³½áÊ±¼ä(Ãë)" : 3
+	setuptime(integer) : "×¼±¸½×¶ÎÊ±¼ä(Ãë)" : 60
+	roundtime(integer) : "»ØºÏÊ±¼ä(Ãë)" : 300
+	endtime(integer) : "½áÊøµÈ´ıÊ±¼ä(Ãë)" : 15
 ]

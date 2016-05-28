@@ -518,7 +518,8 @@ void CHudSayText::SayTextPrint(const char *pszBuf, int iBufSize, int clientIndex
 	wchar_t temp[MAX_CHARS_PER_LINE];
 	wchar_t out[MAX_CHARS_PER_LINE];
 
-	GetPlayerInfo(clientIndex, &g_PlayerInfoList[clientIndex]);
+	if (clientIndex >= 0 && clientIndex <= MAX_PLAYERS)
+		GetPlayerInfo(clientIndex, &g_PlayerInfoList[clientIndex]);
 
 	for (lineNum = 0; lineNum < MAX_LINES; lineNum++)
 	{
