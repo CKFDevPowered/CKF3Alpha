@@ -2792,28 +2792,22 @@ void CBasePlayer::Jump(void)
 	if (pev->waterlevel >= 2)
 		return;
 
-	if (!(pev->button & IN_JUMP))//if (!(m_afButtonPressed & IN_JUMP))
+	if (!(pev->button & IN_JUMP) || (pev->oldbuttons & IN_JUMP))//if (!(m_afButtonPressed & IN_JUMP))
+		return;
+
+	if ((!m_iMultiJumpMax || !(m_iMultiJumpCurrent < m_iMultiJumpMax)) && (!(pev->flags & FL_ONGROUND) || !pev->groundentity))
+		return;
+
+	if ((pev->flags & FL_ONGROUND) && pev->groundentity)
+		SetAnimation(PLAYER_JUMP);
+	else if (m_iMultiJumpCurrent < m_iMultiJumpMax)
 	{
-		if(m_bMultiJump == 1)
+		if (!m_bMultiJump)
 		{
-			m_bMultiJump = 2;
+			m_bMultiJump = true;
 			pev->flags |= FL_MULTIJUMP;
 		}
-		return;
-	}
-
-	if(m_bMultiJump != 2)
-	{
-		if (!(pev->flags & FL_ONGROUND) || !pev->groundentity)
-			return;
-	}
-
-	SetAnimation(PLAYER_JUMP);
-
-	if(m_bMultiJump == 2)
-	{
-		m_bMultiJump = 3;
-		m_iMultiJump --;
+		m_iMultiJumpCurrent++;
 		SetAnimation(PLAYER_SUPERJUMP);
 		EMIT_SOUND(ENT(pev), CHAN_STATIC, "CKF_III/multijump.wav", VOL_NORM, ATTN_NORM);
 
@@ -2822,11 +2816,8 @@ void CBasePlayer::Jump(void)
 		WRITE_SHORT(entindex());
 		MESSAGE_END();
 	}
-	else if(!m_bMultiJump)
-	{
-		if(m_iMultiJump)
-			m_bMultiJump = 1;
-	}
+	else
+		return;
 
 	entvars_t *pevGround = VARS(pev->groundentity);
 
@@ -3312,18 +3303,15 @@ void CBasePlayer::PreThink(void)
 
 	Jump();//multi jump predict
 
-	if(m_bMultiJump >= 2 && (pev->flags & FL_ONGROUND))
+	if (m_bMultiJump && (pev->flags & FL_ONGROUND))
 	{
-		if(m_bMultiJump == 3)
-		{
-			MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
-			WRITE_BYTE(FX_KILLTRAIL);
-			WRITE_SHORT(entindex());
-			MESSAGE_END();
-		}
-		m_bMultiJump = 0;
+		MESSAGE_BEGIN(MSG_BROADCAST, gmsgDrawFX);
+		WRITE_BYTE(FX_KILLTRAIL);
+		WRITE_SHORT(entindex());
+		MESSAGE_END();
+		m_iMultiJumpCurrent = 0;
+		m_bMultiJump = false;
 		pev->flags &= ~FL_MULTIJUMP;
-		if(m_iClass == CLASS_SCOUT) m_iMultiJump = 1;
 	}
 
 	if ((pev->button & IN_DUCK) || FBitSet(pev->flags, FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING))
@@ -3896,7 +3884,8 @@ void CBasePlayer::Spawn(void)
 
 	//become my desired class!
 	m_iClass = m_iNewClass;
-	m_iMultiJump = 0;
+	m_iMultiJumpCurrent = 0;
+	m_iMultiJumpMax = 0;
 	m_bMultiJump = 0;
 
 	m_pHealer = NULL;
@@ -3918,7 +3907,7 @@ void CBasePlayer::Spawn(void)
 	default:
 	case CLASS_SCOUT:
 		pev->view_ofs = VEC_VIEW_SCOUT;
-		m_iMultiJump=1;
+		m_iMultiJumpMax=1;
 		break;
 	case CLASS_HEAVY:
 		pev->view_ofs = VEC_VIEW_HEAVY;

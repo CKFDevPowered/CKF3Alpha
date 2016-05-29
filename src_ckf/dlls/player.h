@@ -698,8 +698,9 @@ public:
 	float m_fRespawnTimer;
 	float m_fRespawnCounter;
 	int m_iRocketJump;
-	int m_iMultiJump;
-	int m_bMultiJump;
+	int m_iMultiJumpCurrent;
+	int m_iMultiJumpMax;
+	bool m_bMultiJump;
 	//Cloak Field
 	int m_iCloak;
 	float m_fCloakTimer;
