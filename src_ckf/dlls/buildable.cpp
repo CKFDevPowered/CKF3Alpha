@@ -503,6 +503,7 @@ void CBuildSentry::Upgraded(void)
 		else
 		{
 			m_iUpgrade = m_iDesiredUpgrade;
+			m_bIsRebuilt = false;
 			UpdateHUD();
 		}
 	}
@@ -1173,6 +1174,7 @@ void CBuildDispenser::Upgraded(void)
 		else
 		{
 			m_iUpgrade = m_iDesiredUpgrade;
+			m_bIsRebuilt = false;
 			UpdateHUD();
 		}
 	}
@@ -1747,6 +1749,7 @@ void CBuildTeleporter::BuildFinish(void)
 		else
 		{
 			m_iUpgrade = m_iDesiredUpgrade;
+			m_bIsRebuilt = false;
 			UpdateHUD();
 		}
 	}
