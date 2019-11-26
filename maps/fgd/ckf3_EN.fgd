@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------------
 // CKF 3 Game Definition (.fgd)
-// Version: 0.0.0.4
-// Last Update at£ºMay. 28th 2016 by stay
+// Version: 0.0.0.5
+// Last Update at: May. 26th 2018 by yuxuanchiadm
 //   this is for mod Chicken Fortress 3
 // -------------------------------------------------------------------------------
 //
@@ -13,6 +13,7 @@
 // ver 0.0.0.2 by stay (344233108@qq.com)
 // ver 0.0.0.3 by hzqst (113660872@qq.com)
 // ver 0.0.0.4 by yuxuanchiadm (yuxuanchiadm@126.com)
+// ver 0.0.0.5 by yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
 //   Don't edit edit file unless you know what you are doing.
@@ -20,6 +21,7 @@
 //
 // -----------------------------------------------------------------------
 // History
+// May. 26th 2018 - yuxuanchiadm (0.0.0.5)
 // May. 28th 2016 - yuxuanchiadm (0.0.0.4)
 // Jun. 3rd 2015 - hzqst (0.0.0.3)
 // May. 24th 2015 - stay (0.0.0.2)
@@ -398,10 +400,10 @@
 
 @PointClass base(color_light) iconsprite("sprites/CS/lightbulb.spr") base(Targetname, Target, Angles, Light, Appearflags) = shadow_manager : "Shadow Manager" [
 	pitch(integer) : "pitch (-90=down 90=up)" : -90
-	radius(integer) : "distance" : "100"
-	fardist(integer) : "fade distance" : "50"
-	scale(integer) : "depth texture scale" : "16"
-	texsize(integer) : "depth texture size" : "512"
+	radius(integer) : "distance" : 100
+	fardist(integer) : "fade distance" : 50
+	scale(integer) : "depth texture scale" : 16
+	texsize(integer) : "depth texture size" : 512
 	affectmodel(string) : "which model to apply to" : ""
 ]
 

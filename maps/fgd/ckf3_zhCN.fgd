@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------------
 // CKF 3 游戏定义文件 (.fgd)
-// 版本号: 0.0.0.4
-// 最后更新标识：2016年5月28日 由 yuxuanchiadm
+// 版本号: 0.0.0.5
+// 最后更新标识: 2018年5月26日 由 yuxuanchiadm
 // 支持:
 //   地图编辑器 Worldcraft 3.3, Hammer 3.4 - 3.5beta4 (部分效果在 Hammer 3.5 中才能显示)
 //   编译程序 ZHLT 各版本 (部分键值只在特定版本 ZHLT 有效)
@@ -16,6 +16,7 @@
 // 版本 0.0.0.2 修改者 stay (344233108@qq.com)
 // 版本 0.0.0.3 修改者 hzqst (113660872@qq.com)
 // 版本 0.0.0.4 修改者 yuxuanchiadm (yuxuanchiadm@126.com)
+// 版本 0.0.0.5 修改者 yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
 //   为保持fgd兼容性,不要做不必要的细微修改.
@@ -23,6 +24,7 @@
 //
 // -----------------------------------------------------------------------
 // 更新历史(详见文本最后
+// 2018年5月26日 - yuxuanchiadm (0.0.0.5)
 // 2016年5月28日 - yuxuanchiadm (0.0.0.4)
 // 2015年6月3日 - hzqst (0.0.0.3)
 // 2015年5月24日 - stay (0.0.0.2)
@@ -401,11 +403,11 @@
 ]
 
 @PointClass base(color_light) iconsprite("sprites/CS/lightbulb.spr") base(Targetname, Target, Angles, Light, Appearflags) = shadow_manager : "Shadow Manager" [
-	pitch(integer) : "倾斜 (-90=向下 90=向上)" : "-90"
-	radius(integer) : "距离" : "100"
-	fardist(integer) : "淡出距离" : "50"
-	scale(integer) : "贴图缩放" : "16"
-	texsize(integer) : "贴图尺寸" : "512"
+	pitch(integer) : "倾斜 (-90=向下 90=向上)" : -90
+	radius(integer) : "距离" : 100
+	fardist(integer) : "淡出距离" : 50
+	scale(integer) : "贴图缩放" : 16
+	texsize(integer) : "贴图尺寸" : 512
 	affectmodel(string) : "影响模型" : ""
 ]
 
