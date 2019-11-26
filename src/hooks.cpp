@@ -168,7 +168,10 @@ void InstallHook(void)
 		gHookFuncs.cls_demofile = *(FileHandle_t **)(addr + 3);
 
 		#define CL_DEMOPLAYSOUND_SIG "\x52\x50\x56\xE8\x2A\x2A\x2A\x2A\x83\xC4\x18"
+        #define CL_DEMOPLAYSOUND_8308_SIG "\x52\x50\x57\xE8\x2A\x2A\x2A\x2A\x83\xC4\x30"
 		addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.CL_DemoParseSound, 0x200, CL_DEMOPLAYSOUND_SIG, sizeof(CL_DEMOPLAYSOUND_SIG)-1);
+        if (!addr)
+            addr = (DWORD)g_pMetaHookAPI->SearchPattern((void *)gHookFuncs.CL_DemoParseSound, 0x200, CL_DEMOPLAYSOUND_8308_SIG, sizeof(CL_DEMOPLAYSOUND_8308_SIG) - 1);
 		gHookFuncs.CL_DemoPlaySound = (void (*)( int, char *, float, float, int, int ))GetCallAddress(addr + 3);
 
 		g_pMetaHookAPI->InlineHook(gHookFuncs.CL_ReadClientDLLData, CL_ReadClientDLLData, (void *&)gHookFuncs.CL_ReadClientDLLData);

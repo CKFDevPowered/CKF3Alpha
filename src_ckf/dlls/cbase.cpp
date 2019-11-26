@@ -20,7 +20,7 @@ DWORD g_dwEngineBuildnum = 0;
 
 int ShouldCollide(edict_t *pentTouched, edict_t *pentOther);
 
-#define SIG_NOT_FOUND(name) Sys_ErrorEx("无法定位: %s\n引擎版本：%d", name, g_dwEngineBuildnum);
+#define SIG_NOT_FOUND(name) Sys_ErrorEx("Could not found: %s\nEngine buildnum: %d", name, g_dwEngineBuildnum);
 
 void InitExceptionFilter(void);
 void InitCrashHandler(void);
