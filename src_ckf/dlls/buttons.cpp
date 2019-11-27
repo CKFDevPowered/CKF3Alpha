@@ -454,9 +454,6 @@ CBaseButton::BUTTON_CODE CBaseButton::ButtonResponseToTouch(void)
 	if (m_toggle_state == TS_GOING_UP || m_toggle_state == TS_GOING_DOWN || ((m_toggle_state == TS_AT_TOP) && !m_fStayPushed && !FBitSet(pev->spawnflags, SF_BUTTON_TOGGLE)))
 		return BUTTON_NOTHING;
 
-	if (m_toggle_state == TS_AT_BOTTOM && !m_fStayPushed)
-		return BUTTON_NOTHING;
-
 	if (m_toggle_state == TS_AT_TOP)
 	{
 		if (FBitSet(pev->spawnflags, SF_BUTTON_TOGGLE) && !m_fStayPushed)
