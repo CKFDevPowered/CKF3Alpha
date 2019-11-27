@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------------
 // CKF 3 Game Definition (.fgd)
-// Version: 0.0.0.5
-// Last Update at: May. 26th 2018 by yuxuanchiadm
+// Version: 0.0.0.6
+// Last Update at: Nov. 27th 2019 by yuxuanchiadm
 //   this is for mod Chicken Fortress 3
 // -------------------------------------------------------------------------------
 //
@@ -14,6 +14,7 @@
 // ver 0.0.0.3 by hzqst (113660872@qq.com)
 // ver 0.0.0.4 by yuxuanchiadm (yuxuanchiadm@126.com)
 // ver 0.0.0.5 by yuxuanchiadm (yuxuanchiadm@126.com)
+// ver 0.0.0.6 by yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
 //   Don't edit edit file unless you know what you are doing.
@@ -21,6 +22,7 @@
 //
 // -----------------------------------------------------------------------
 // History
+// Nov. 27th 2019 - yuxuanchiadm (0.0.0.6)
 // May. 26th 2018 - yuxuanchiadm (0.0.0.5)
 // May. 28th 2016 - yuxuanchiadm (0.0.0.4)
 // Jun. 3rd 2015 - hzqst (0.0.0.3)
@@ -439,4 +441,14 @@
 	setuptime(integer) : "Setup time(sec.)" : 60
 	roundtime(integer) : "Round time(sec.)" : 300
 	endtime(integer) : "Humiliation time(sec.)" : 15
+]
+
+@SolidClass base(color_wall) base(Targetname, Global, SolidVisible, Appearflags) = func_wall : "Wall" 
+[
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
 ]
