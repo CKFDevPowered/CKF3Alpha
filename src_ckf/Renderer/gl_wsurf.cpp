@@ -737,10 +737,16 @@ void R_DrawSequentialPoly(msurface_t *s, int face)
 		p = s->polys;
 		bface = &r_wsurf.pFaceBuffer[p->flags];
 
+		GLfloat r = (*currententity)->curstate.rendercolor.r / 255.0f;
+		GLfloat g = (*currententity)->curstate.rendercolor.g / 255.0f;
+		GLfloat b = (*currententity)->curstate.rendercolor.b / 255.0f;
+		GLfloat a = (*currententity)->curstate.renderamt / 255.0f;
+
 		GL_DisableMultitexture();
 		qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		qglEnable(GL_BLEND);
 		qglDisable(GL_TEXTURE_2D);
+		qglColor4f(r, g, b, a);
 
 		qglEnableClientState(GL_VERTEX_ARRAY);
 		qglBindBufferARB( GL_ARRAY_BUFFER_ARB, r_wsurf.hVBO );
