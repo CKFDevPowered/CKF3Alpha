@@ -62,7 +62,7 @@ aud_engine_t gAudEngine;
 #define S_STOPSOUND_8308_SIG S_STOPSOUND_6153_SIG
 #define S_STOPALLSOUNDS_8308_SIG S_STOPALLSOUNDS_6153_SIG
 #define S_UPDATE_8308_SIG S_UPDATE_6153_SIG
-#define S_LOADSOUND_8308_SIG "\x55\x8B\xEC\x83\xEC\x48"
+#define S_LOADSOUND_8308_SIG "\x55\x8B\xEC\x81\xEC\x28\x05\x00\x00\x53\x8B\x5D\x08"
 #define SEQUENCE_GETSENTENCEBYINDEX_8308_SIG SEQUENCE_GETSENTENCEBYINDEX_6153_SIG
 #define VOICESE_IDLE_8308_SIG VOICESE_IDLE_6153_SIG
 #ifdef _DEBUG
@@ -197,7 +197,7 @@ void S_FillAddress(void)
         gAudEngine.S_Update = (void(*)(float *, float *, float *, float *))Search_Pattern_From(S_StopAllSounds, S_UPDATE_8308_SIG);
         Sig_FuncNotFound(S_Update);
 
-        gAudEngine.S_LoadSound = (aud_sfxcache_t *(*)(sfx_t *, aud_channel_t *))Search_Pattern_From(S_StartDynamicSound, S_LOADSOUND_8308_SIG);
+        gAudEngine.S_LoadSound = (aud_sfxcache_t *(*)(sfx_t *, aud_channel_t *))Search_Pattern_From(S_Update, S_LOADSOUND_8308_SIG);
         Sig_FuncNotFound(S_LoadSound);
 
         gAudEngine.SequenceGetSentenceByIndex = (sentenceEntry_s*(*)(unsigned int))Search_Pattern(SEQUENCE_GETSENTENCEBYINDEX_8308_SIG);
