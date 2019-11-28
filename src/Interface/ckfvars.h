@@ -234,6 +234,8 @@ typedef struct
 {
 	int iHudPosition;
 	char szName[32];
+	BOOL bLocked;
+	BOOL bDisabled;
 	int iState;
 	int iCapTeam;
 	int iTeam;

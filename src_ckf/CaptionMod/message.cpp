@@ -1241,6 +1241,8 @@ int MsgFunc_CPState(const char *pszName, int iSize, void *pbuf)
 
 	if(iIndex >= 0 && iIndex <= g_ControlPoints.Count())
 	{
+		g_ControlPoints[iIndex].bLocked = READ_BYTE();
+		g_ControlPoints[iIndex].bDisabled = READ_BYTE();
 		g_ControlPoints[iIndex].iState = READ_BYTE();
 		int iTeam = READ_BYTE();
 		g_ControlPoints[iIndex].iCapTeam = (iTeam & 3);

@@ -595,8 +595,13 @@ void DrawControlPoints(void)
 	for(int i = 0; i < g_ControlPoints.Count(); ++i)
 	{
 		controlpoint_t *cp = &g_ControlPoints[i];
+
+		if (cp->bDisabled)
+			continue;
+
 		g_pSurface->DrawSetColor(255,255,255,255);
-		if(cp->iState == CP_LOCKED)
+
+		if (cp->bLocked)
 			g_pSurface->DrawSetTexture(g_texControlPointLock[cp->iTeam]);
 		else
 			g_pSurface->DrawSetTexture(g_texControlPoint[cp->iTeam]);

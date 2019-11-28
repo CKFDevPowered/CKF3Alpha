@@ -3435,6 +3435,8 @@ void CHalfLifeMultiplay::CPSendState(entvars_t *pevPoint)
 
 	MESSAGE_BEGIN(MSG_ALL, gmsgCPState);
 	WRITE_BYTE(i);
+	WRITE_BYTE(pPoint->m_bLocked);
+	WRITE_BYTE(pPoint->m_bDisabled);
 	WRITE_BYTE(pPoint->m_iState);
 	WRITE_BYTE(pPoint->m_iCapTeam | (pPoint->pev->team << 2));
 	WRITE_BYTE(pPoint->m_iCapPlayers);
@@ -3450,6 +3452,8 @@ void CHalfLifeMultiplay::CPSendState(void)
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		MESSAGE_BEGIN(MSG_ALL, gmsgCPState);		
 		WRITE_BYTE(i);
+		WRITE_BYTE(pPoint->m_bLocked);
+		WRITE_BYTE(pPoint->m_bDisabled);
 		WRITE_BYTE(pPoint->m_iState);
 		WRITE_BYTE(pPoint->m_iCapTeam | (pPoint->pev->team << 2));
 		WRITE_BYTE(pPoint->m_iCapPlayers);
@@ -3466,6 +3470,8 @@ void CHalfLifeMultiplay::CPSendState(CBasePlayer *pPlayer)
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
 		MESSAGE_BEGIN(MSG_ONE, gmsgCPState, NULL, pPlayer->pev);
 		WRITE_BYTE(i);
+		WRITE_BYTE(pPoint->m_bLocked);
+		WRITE_BYTE(pPoint->m_bDisabled);
 		WRITE_BYTE(pPoint->m_iState);
 		WRITE_BYTE(pPoint->m_iCapTeam | (pPoint->pev->team << 2));
 		WRITE_BYTE(pPoint->m_iCapPlayers);

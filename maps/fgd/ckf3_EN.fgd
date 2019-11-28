@@ -336,7 +336,12 @@
 	subentity(string) : "Model entity to link to" : ""
 	hudpos(integer) : "HUD icon position(0~5)" : 2
 	timeadded(string) : "RoundTime added when captured" : ""
-	startlock(choices) : "Locked when round start" : 0 =
+	locked(choices) : "Locked when round start" : 0 =
+	[
+		0: "no"
+		1: "yes"
+	]
+	disabled(choices) : "Disabled when round start" : 0 =
 	[
 		0: "no"
 		1: "yes"

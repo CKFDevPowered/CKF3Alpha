@@ -238,7 +238,7 @@ void LinkUserMessages(void)
 	gmsgWeaponAnimEx = REG_USER_MSG("WpnAnimEx", 3);
 	gmsgFlameIgnite = REG_USER_MSG("FlameIgnite", -1);
 	gmsgObjectMsg = REG_USER_MSG("ObjectMsg", -1);
-	gmsgCPState = REG_USER_MSG("CPState", 8);
+	gmsgCPState = REG_USER_MSG("CPState", 10);
 	gmsgCPInit = REG_USER_MSG("CPInit", -1);
 	gmsgBuildDeath = REG_USER_MSG("BuildDeath", -1);
 	gmsgDisguise = REG_USER_MSG("Disguise", -1);

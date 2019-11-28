@@ -1833,9 +1833,14 @@ void CControlPoint::KeyValue(KeyValueData *pkvd)
 		m_iTimeAdded = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else if (FStrEq(pkvd->szKeyName, "startlock"))
+	else if (FStrEq(pkvd->szKeyName, "locked"))
 	{
-		m_bStartLock = atoi(pkvd->szValue);
+		m_bOriginLocked = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabled"))
+	{
+		m_bOriginDisabled = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
 	else
@@ -1868,13 +1873,10 @@ void CControlPoint::Restart(void)
 		m_pSubEntity->pev->skin = pev->team;
 	}
 	m_iState = 0;
+	m_bLocked = m_bOriginLocked;
+	m_bDisabled = m_bOriginDisabled;
 	m_flProgress = 0;
 	m_iCapTeam = 0;
-
-	if(m_bStartLock)
-	{
-		m_iState = CP_LOCKED;
-	}
 }
 
 void CControlPoint::Spawn(void)
@@ -2049,7 +2051,7 @@ void CControlPoint::ControlPointTouch(CBaseEntity *pOther)
 
 	CBasePlayer *pPlayer = (CBasePlayer *)pOther;
 
-	if(m_iState == CP_LOCKED)
+	if(m_bLocked || m_bDisabled)
 		return;
 
 	if(g_pGameRules->m_iRoundStatus == ROUND_END)
@@ -2087,10 +2089,8 @@ void CControlPoint::ControlPointThink(void)
 {
 	pev->nextthink = gpGlobals->time + 0.1;
 
-	if(m_iState == CP_LOCKED)
-	{
+	if(m_bLocked || m_bDisabled)
 		return;
-	}
 
 	float flCapRate = m_flCaptureRate * 0.1;
 	int iRedCaps = 0;

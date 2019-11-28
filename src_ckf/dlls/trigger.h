@@ -32,7 +32,8 @@ public:
 		m_iTimeAdded = 0;
 		m_iHUDPosition = 0;
 		m_flCaptureRate = 0;
-		m_bStartLock = FALSE;
+		m_bLocked = FALSE;
+		m_bDisabled = FALSE;
 		m_iIndex = 0;
 		m_iState = 0;
 		m_iCapTeam = 0;
@@ -70,11 +71,14 @@ public:
 	int m_iOriginTeam;
 	int m_iHUDPosition;
 	int m_iTimeAdded;
-	BOOL m_bStartLock;
+	BOOL m_bOriginLocked;
+	BOOL m_bOriginDisabled;
 	int m_iIndex;
 public:
 	//Dynamic
 	int m_iState;
+	BOOL m_bLocked;
+	BOOL m_bDisabled;
 	int m_iCapTeam;
 	int m_iCapPlayers;
 	float m_flProgress;
@@ -91,8 +95,7 @@ enum
 	CP_IDLE = 0,
 	CP_CAPTURING,
 	CP_BLOCKED,
-	CP_BACK,
-	CP_LOCKED
+	CP_BACK
 };
 
 #define MAP_NOBUILDABLE 1

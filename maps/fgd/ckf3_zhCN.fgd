@@ -339,7 +339,12 @@
 	subentity(string) : "绑定外观实体" : ""
 	hudpos(integer) : "HUD图标位置(0~5)" : 2
 	timeadded(string) : "增加回合时间" : ""
-	startlock(choices) : "初始锁定" : 0 =
+	locked(choices) : "回合开始时锁定" : 0 =
+	[
+		0: "否"
+		1: "是"
+	]
+	disabled(choices) : "回合开始时禁用" : 0 =
 	[
 		0: "否"
 		1: "是"

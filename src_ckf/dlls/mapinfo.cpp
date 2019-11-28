@@ -119,19 +119,16 @@ void CCPLocker::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 		if(pEntity->Classify() != CLASS_CONTROLPOINT) continue;
 		pPoint = (CControlPoint *)pEntity;
 
-		if(m_iLockState == 1)
-			pPoint->m_iState = CP_LOCKED;
-		else if(m_iLockState >= 2)
-		{
-			if(pPoint->m_iState == CP_LOCKED)
-				pPoint->m_iState = 0;
-		}
-		else
-		{
-			if(pPoint->m_iState == CP_LOCKED)
-				pPoint->m_iState = 0;
-			else
-				pPoint->m_iState = CP_LOCKED;
+		switch (m_iLockState) {
+		case 0:
+			pPoint->m_bLocked = !pPoint->m_bLocked;
+			break;
+		case 1:
+			pPoint->m_bLocked = TRUE;
+			break;
+		case 2:
+			pPoint->m_bLocked = FALSE;
+			break;
 		}
 		g_pGameRules->CPSendState(pPoint->pev);
 	}

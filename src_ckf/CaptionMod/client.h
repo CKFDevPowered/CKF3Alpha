@@ -378,8 +378,7 @@ enum
 	CP_IDLE = 0,
 	CP_CAPTURING,
 	CP_BLOCKED,
-	CP_BACK,
-	CP_LOCKED
+	CP_BACK
 };
 
 extern hud_player_info_t g_HudPlayerInfo[33];
