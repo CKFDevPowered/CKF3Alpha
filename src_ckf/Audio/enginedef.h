@@ -83,19 +83,31 @@ typedef struct sx_preset_s
 #define MAX_SOUNDS		512	
 
 // a sound with no channel is a local only sound
-#define SND_VOLUME		(1<<0)		// a byte
-#define SND_ATTENUATION	(1<<1)		// a byte
-#define SND_LARGE_INDEX	(1<<2)		// a long
-#define SND_PITCH		(1<<3)
-#define SND_SENTENCE	(1<<4)
-#define SND_STOP		(1<<5)
-#define SND_CHANGE_VOL	(1<<6)
+#define SND_VOLUME			(1<<0)		// a byte
+#define SND_ATTENUATION		(1<<1)		// a byte
+#define SND_LARGE_INDEX		(1<<2)		// a long
+#define SND_PITCH			(1<<3)
+#define SND_SENTENCE		(1<<4)
+#define SND_STOP			(1<<5)
+#define SND_CHANGE_VOL		(1<<6)
 #define SND_CHANGE_PITCH	(1<<7)
-#define SND_SPAWNING	(1<<8)
+#define SND_SPAWNING		(1<<8)
 
-#define	NUM_AMBIENTS			4		// automatic ambient sounds
-#define	MAX_DYNAMIC_CHANNELS	8
-#define MAX_CHANNELS			128
+#define MAX_CHANNELS		128
+#define CHANNELS_BEGIN		0
+#define CHANNELS_END		(CHANNELS_BEGIN + MAX_CHANNELS)
+
+#define	NUM_AMBIENTS		4
+#define AMBIENTS_BEGIN		CHANNELS_BEGIN
+#define AMBIENTS_END		(AMBIENTS_BEGIN + NUM_AMBIENTS)
+
+#define	NUM_DYNAMIC			8
+#define DYNAMIC_BEGIN		AMBIENTS_END
+#define DYNAMIC_END			(DYNAMIC_BEGIN + NUM_DYNAMIC)
+
+#define NUM_STATIC			(MAX_CHANNELS - NUM_AMBIENTS - NUM_DYNAMIC)
+#define STATIC_BEGIN		DYNAMIC_END
+#define STATIC_END			(STATIC_BEGIN + NUM_STATIC)
 
 #define MAX_WAVSTREAM_SIZE	(32*1024)
 

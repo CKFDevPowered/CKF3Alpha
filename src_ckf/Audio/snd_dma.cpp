@@ -7,11 +7,11 @@
 
 //sfx struct
 sfx_t known_sfx[MAX_SFX];
-int num_sfx;
+int num_sfx = 0;
 
 //channels
 aud_channel_t channels[MAX_CHANNELS];
-int total_channels;
+int total_channels = STATIC_BEGIN;
 
 //engine cvars
 cvar_t *nosound = NULL;
@@ -260,9 +260,9 @@ void S_CheckWavEnd(aud_channel_t *ch, aud_sfxcache_t *sc)
 				return;
 			}
 		}
-
-		S_FreeChannel(ch);
 	}
+
+	S_FreeChannel(ch);
 }
 
 void SND_Spatialize(aud_channel_t *ch, qboolean init)
@@ -388,25 +388,25 @@ void S_Update(float *origin, float *forward, float *right, float *up)
 	qalListener3f(AL_POSITION, AL_UnpackVector(origin) );
 	qalListenerfv(AL_ORIENTATION, orientation);
 
-	for (i = NUM_AMBIENTS, ch = channels+NUM_AMBIENTS; i < total_channels; i++, ch++)
+	for (i = DYNAMIC_BEGIN; i < total_channels; i++)
 	{
-		SND_Spatialize(ch, false);
+		SND_Spatialize(&channels[i], false);
 	}
 
 	if (snd_show && snd_show->value)
 	{
 		total = 0;
-		ch = channels;
-		for (i = 0; i < total_channels; i++, ch++)
+		for (i = CHANNELS_BEGIN; i < total_channels; i++)
 		{
-			if (ch->sfx && ch->volume > 0)
+			ch = &channels[i];
+			if (ch->sfx)
 			{
-				gEngfuncs.Con_Printf("%3i %s\n", (int)(ch->volume * 255.0f), ch->sfx->name);
+				gEngfuncs.Con_Printf("[%3i] (%3f) %s \n", i, ch->volume, ch->sfx->name);
 				total++;
 			}
 		}
 		
-		gEngfuncs.Con_Printf("----(%i)----\n", total);
+		gEngfuncs.Con_Printf("----(%i/%i)----\n", total, total_channels);
 	}
 }
 
@@ -510,7 +510,7 @@ qboolean SND_IsPlaying(sfx_t *sfx)
 {
 	int ch_idx;
 
-	for (ch_idx = 0; ch_idx < MAX_CHANNELS; ch_idx++)
+	for (ch_idx = CHANNELS_BEGIN; ch_idx < total_channels; ch_idx++)
 	{
 		if (channels[ch_idx].sfx == sfx)
 			return true;
@@ -536,7 +536,7 @@ aud_channel_t *SND_PickDynamicChannel(int entnum, int entchannel, sfx_t *sfx)
 	aud_channel_t *ch;
 	aud_sfxcache_t *sc;
 
-	for (ch_idx = NUM_AMBIENTS; ch_idx < NUM_AMBIENTS + MAX_DYNAMIC_CHANNELS; ch_idx++)
+	for (ch_idx = DYNAMIC_BEGIN; ch_idx < DYNAMIC_END; ch_idx++)
 	{
 		ch = &channels[ch_idx];
 		if (ch->entchannel == CHAN_STREAM && ch->alstreambuffers[0])
@@ -547,7 +547,6 @@ aud_channel_t *SND_PickDynamicChannel(int entnum, int entchannel, sfx_t *sfx)
 			continue;
 		}
 
-		//ÇÕµãchannel
 		if (entchannel != 0 && ch->entnum == entnum && (ch->entchannel == entchannel || entchannel == -1))
 		{
 			first_to_die = ch_idx;
@@ -731,7 +730,7 @@ aud_channel_t *SND_PickStaticChannel(int entnum, int entchannel, sfx_t *sfx)
 	int i;
 	aud_channel_t *ch = NULL;
 
- 	for (i = MAX_DYNAMIC_CHANNELS; i < total_channels; i++)
+ 	for (i = STATIC_BEGIN; i < total_channels; i++)
 	{
 		if (channels[i].sfx == NULL)
 			break;
@@ -744,9 +743,9 @@ aud_channel_t *SND_PickStaticChannel(int entnum, int entchannel, sfx_t *sfx)
 	else
 	{
 		// no empty slots, alloc a new static sound channel
-		if (total_channels == MAX_CHANNELS)
+		if (total_channels >= STATIC_END)
 		{
-			gEngfuncs.Con_DPrintf("total_channels == MAX_CHANNELS\n");
+			gEngfuncs.Con_DPrintf("total_channels >= STATIC_END\n");
 			return NULL;
 		}
 
@@ -885,7 +884,7 @@ void S_StopSound(int entnum, int entchannel)
 		return gAudEngine.S_StopSound(entnum, entchannel);
 	}
 
-	for (int i = NUM_AMBIENTS ; i < total_channels; i++)
+	for (int i = DYNAMIC_BEGIN; i < total_channels; i++)
 	{
 		if (channels[i].entnum == entnum && channels[i].entchannel == entchannel)
 		{
@@ -901,14 +900,14 @@ void S_StopAllSounds(qboolean clear)
 		return gAudEngine.S_StopAllSounds(clear);
 	}
 
-	for (int i = 0; i < MAX_CHANNELS; i++)
+	for (int i = CHANNELS_BEGIN; i < CHANNELS_END; i++)
 	{
 		if (channels[i].sfx)
 			S_FreeChannel(&channels[i]);
 	}
 
-	memset(channels, 0, MAX_CHANNELS * sizeof(aud_channel_t));
-	total_channels = MAX_DYNAMIC_CHANNELS + NUM_AMBIENTS;
+	memset(channels, 0, sizeof(aud_channel_t) * MAX_CHANNELS);
+	total_channels = STATIC_BEGIN;
 }
 
 qboolean OpenAL_Init(void)
@@ -980,6 +979,9 @@ void S_Init(void)
 
 	memset(known_sfx, 0, sizeof(sfx_t) * MAX_SFX);
 	num_sfx = 0;
+
+	memset(channels, 0, sizeof(aud_channel_t) * MAX_CHANNELS);
+	total_channels = STATIC_BEGIN;
 
 	VOX_Init();
 
