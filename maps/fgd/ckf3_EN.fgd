@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------------------
 // CKF 3 Game Definition (.fgd)
-// Version: 0.0.0.6
-// Last Update at: Nov. 27th 2019 by yuxuanchiadm
+// Version: 0.0.0.7
+// Last Update at: Nov. 29th 2019 by yuxuanchiadm
 //   this is for mod Chicken Fortress 3
 // -------------------------------------------------------------------------------
 //
@@ -15,6 +15,7 @@
 // ver 0.0.0.4 by yuxuanchiadm (yuxuanchiadm@126.com)
 // ver 0.0.0.5 by yuxuanchiadm (yuxuanchiadm@126.com)
 // ver 0.0.0.6 by yuxuanchiadm (yuxuanchiadm@126.com)
+// ver 0.0.0.7 by yuxuanchiadm (yuxuanchiadm@126.com)
 // -----------------------------------------------------------------------
 //
 //   Don't edit edit file unless you know what you are doing.
@@ -22,6 +23,7 @@
 //
 // -----------------------------------------------------------------------
 // History
+// Nov. 29th 2019 - yuxuanchiadm (0.0.0.7)
 // Nov. 27th 2019 - yuxuanchiadm (0.0.0.6)
 // May. 26th 2018 - yuxuanchiadm (0.0.0.5)
 // May. 28th 2016 - yuxuanchiadm (0.0.0.4)
@@ -428,7 +430,23 @@
 		3: "Overtime Stage"
 		4: "Wait for Players"
 	]
-	endaction(choices)  : "Action when time is out" : 0 =
+	endaction(choices)  : "Action when time is out" : 1 =
+	[
+		0: "No Action(Default)"
+		1: "Stalemate"
+		2: "Red Win"
+		3: "Blue Win"
+		4: "Sudden Death(Not done yet)"
+	]
+	reddominatedaction(choices)  : "Action when red is dominated" : 2 =
+	[
+		0: "No Action(Default)"
+		1: "Stalemate"
+		2: "Red Win"
+		3: "Blue Win"
+		4: "Sudden Death(Not done yet)"
+	]
+	bludominatedaction(choices)  : "Action when blue is dominated" : 3 =
 	[
 		0: "No Action(Default)"
 		1: "Stalemate"

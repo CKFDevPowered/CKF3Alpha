@@ -376,6 +376,8 @@ public:
 	int m_iEndTime;
 	int m_iRespawnDisabled;
 	int m_iEndAction;
+	int m_iRedDominatedAction;
+	int m_iBluDominatedAction;
 	//bool m_bTimerExpired;
 	bool m_bFreezePeriod;
 	float m_flFreezeTimer;

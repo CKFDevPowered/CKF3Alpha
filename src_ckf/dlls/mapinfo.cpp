@@ -31,6 +31,28 @@ void CMapInfo::KeyValue(KeyValueData *pkvd)
 
 		pkvd->fHandled = TRUE;
 	}
+	else if (FStrEq(pkvd->szKeyName, "reddominatedaction"))
+	{
+		m_iRedDominatedAction = atoi(pkvd->szValue);
+
+		if (m_iRedDominatedAction > END_SUDDEN_DEATH)
+			m_iRedDominatedAction = END_SUDDEN_DEATH;
+		else if (m_iRedDominatedAction < END_NOTHING)
+			m_iRedDominatedAction = END_NOTHING;
+
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "bludominatedaction"))
+	{
+		m_iBluDominatedAction = atoi(pkvd->szValue);
+
+		if (m_iBluDominatedAction > END_SUDDEN_DEATH)
+			m_iBluDominatedAction = END_SUDDEN_DEATH;
+		else if (m_iBluDominatedAction < END_NOTHING)
+			m_iBluDominatedAction = END_NOTHING;
+
+		pkvd->fHandled = TRUE;
+	}
 	else if (FStrEq(pkvd->szKeyName, "waittime"))
 	{
 		m_iWaitTime = max(atoi(pkvd->szValue), 0);

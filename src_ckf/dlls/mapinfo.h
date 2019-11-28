@@ -17,6 +17,8 @@ public:
 	int m_iRoundTime;
 	int m_iEndTime;
 	int m_iEndAction;
+	int m_iRedDominatedAction;
+	int m_iBluDominatedAction;
 };
 
 class CCPLocker : public CPointEntity
