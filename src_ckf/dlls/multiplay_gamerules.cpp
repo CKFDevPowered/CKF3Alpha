@@ -172,6 +172,8 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_iNumConsecutiveTerroristLoses = 0;
 	m_bLevelInitialized = FALSE;
 	m_tmNextPeriodicThink = 0;
+	m_flRoundTimer = gpGlobals->time;
+	m_iRoundTimeMax = 0;
 	m_flAnnounceRoundTime = 0;
 	m_bFirstConnected = FALSE;
 	m_bCompleteReset = FALSE;
@@ -187,10 +189,12 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_NoBuildZone.RemoveAll();
 	m_ShadowManager.RemoveAll();
 	m_iSetupCondition = ROUND_NORMAL;
-	m_iEndAction = END_NOTHING;
+	m_iEndAction = END_DRAW;
+	m_iRedDominatedAction = END_RED_WIN;
+	m_iBluDominatedAction = END_BLU_WIN;
 	m_iWaitTime = 30;
-	m_iFreezeTime = 0;
-	m_iSetupTime = 0;
+	m_iFreezeTime = 3;
+	m_iSetupTime = 60;
 	m_iRoundTime = 300;
 	m_iEndTime = 15;	
 	m_bFreezePeriod = false;
@@ -755,7 +759,7 @@ BOOL CHalfLifeMultiplay::TeamExterminationCheck(int NumAliveTerrorist, int NumAl
 				}
 
 				EndRoundMessage("#CTs_Win", CTs_Win);
-				TerminateRound(5, WINSTATUS_CT);
+				TerminateRound(m_iEndTime, WINSTATUS_CT);
 				return TRUE;
 			}
 		}
@@ -770,7 +774,7 @@ BOOL CHalfLifeMultiplay::TeamExterminationCheck(int NumAliveTerrorist, int NumAl
 			}
 
 			EndRoundMessage("#Terrorists_Win", Terrorists_Win);
-			TerminateRound(5, WINSTATUS_TERRORIST);
+			TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
 			return TRUE;
 		}
 	}
@@ -778,7 +782,7 @@ BOOL CHalfLifeMultiplay::TeamExterminationCheck(int NumAliveTerrorist, int NumAl
 	{
 		EndRoundMessage("#Round_Draw", Round_Draw);
 		Broadcast("rounddraw");
-		TerminateRound(5, WINSTATUS_DRAW);
+		TerminateRound(m_iEndTime, WINSTATUS_DRAW);
 		return TRUE;
 	}
 
@@ -1001,6 +1005,10 @@ void CHalfLifeMultiplay::RestartRound(void)
 			m_iSetupCondition = params->m_iSetupCondition;
 		if(params->m_iEndAction >= 0)
 			m_iEndAction = params->m_iEndAction;
+		if (params->m_iRedDominatedAction >= 0)
+			m_iRedDominatedAction = params->m_iRedDominatedAction;
+		if (params->m_iBluDominatedAction >= 0)
+			m_iBluDominatedAction = params->m_iBluDominatedAction;
 		if(params->m_iFreezeTime >= 0)
 			m_iFreezeTime = params->m_iFreezeTime;
 		if(params->m_iWaitTime >= 0)
@@ -1071,23 +1079,19 @@ void CHalfLifeMultiplay::RestartRound(void)
 
 void CHalfLifeMultiplay::SetRoundStatus(int iStatus)
 {
-	m_iRoundStatus = iStatus;
-
-	m_flRoundTimer = gpGlobals->time;
-
-	switch(m_iRoundStatus)
+	switch(iStatus)
 	{
 	case ROUND_SETUP:
-		m_iRoundTimeMax = m_iSetupTime;
+		SetRoundStatus(iStatus, m_iSetupTime);
 		break;
 	case ROUND_END:
-		m_iRoundTimeMax = m_iEndTime;
+		SetRoundStatus(iStatus, m_iEndTime);
 		break;
 	case ROUND_WAIT:
-		m_iRoundTimeMax = m_iWaitTime;
+		SetRoundStatus(iStatus, m_iWaitTime);
 		break;
 	default:
-		m_iRoundTimeMax = m_iRoundTime;
+		SetRoundStatus(iStatus, m_iRoundTime);
 		break;
 	}
 }
@@ -1196,8 +1200,6 @@ void CHalfLifeMultiplay::Think(void)
 	if ((int)CVAR_GET_FLOAT("sv_clienttrace") != 1)
 		CVAR_SET_FLOAT("sv_clienttrace", 1);
 
-	if (!m_flRoundTimer)
-		m_flRoundTimer = gpGlobals->time;
 
 	if (CheckGameOver())
 		return;
@@ -3357,42 +3359,44 @@ void CHalfLifeMultiplay::ClientUserInfoChanged(CBasePlayer *pPlayer, char *infob
 
 BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 {
+	int action = END_NOTHING;
+
 	if (m_bMapHasControlPoint)
 	{
-		if(CPCountPoints(TEAM_RED) == m_ControlPoints.Count())
-		{
-			if (!bNeededPlayers)
-			{
-				m_iNumTerroristWins++;
-				UpdateTeamScores();
-			}			
-			//EndRoundMessage("#Target_Bombed", Target_Bombed);
-			TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
-			return TRUE;
-		}
-		if(CPCountPoints(TEAM_BLU) == m_ControlPoints.Count())
-		{
-			if (!bNeededPlayers)
-			{
-				m_iNumCTWins++;
-				UpdateTeamScores();
-			}
-			//EndRoundMessage("#Target_Saved", Target_Saved);
-			TerminateRound(m_iEndTime, WINSTATUS_CT);
-			return TRUE;
-		}
-		if(TimeRemaining() <= 0 && m_iRoundStatus == ROUND_NORMAL)
-		{
-			if (!bNeededPlayers)
-			{
-				m_iNumCTWins++;
-				UpdateTeamScores();
-			}
-			//EndRoundMessage("#Target_Bombed", Target_Bombed);
-			TerminateRound(m_iEndTime, WINSTATUS_CT);
-			return TRUE;
-		}
+		if(CPCountPoints(TEAM_RED) >= m_ControlPoints.Count())
+			action = m_iRedDominatedAction;
+		if(CPCountPoints(TEAM_BLU) >= m_ControlPoints.Count())
+			action = m_iBluDominatedAction;
 	}
+
+	switch (action)
+	{
+	case END_NOTHING:
+		break;
+	case END_DRAW:
+		TerminateRound(m_iEndTime, WINSTATUS_DRAW);
+		return TRUE;
+	case END_RED_WIN:
+		if (!bNeededPlayers)
+		{
+			m_iNumTerroristWins++;
+			UpdateTeamScores();
+		}
+		TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
+		return TRUE;
+	case END_BLU_WIN:
+		if (!bNeededPlayers)
+		{
+			m_iNumCTWins++;
+			UpdateTeamScores();
+		}
+		TerminateRound(m_iEndTime, WINSTATUS_CT);
+		return TRUE;
+	case END_SUDDEN_DEATH:
+		// TODO NYI
+		break;
+	}
+
 	return FALSE;
 }
 

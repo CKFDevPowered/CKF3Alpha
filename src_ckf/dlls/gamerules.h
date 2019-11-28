@@ -289,7 +289,7 @@ public:
 	void UpdateTeamScores(void);
 	void SwapAllPlayers(void);
 	void TerminateRound(float tmDelay, int iWinStatus);
-	float TimeRemaining(void){ return m_iRoundTimeMax - gpGlobals->time + m_flRoundTimer; }
+	float TimeRemaining(void){ return m_iRoundTimeMax - TimeElapsed(); }
 	float TimeElapsed(void) { return gpGlobals->time - m_flRoundTimer; }
 	float TimeTotal(void) { return m_iRoundTimeMax; }
 
