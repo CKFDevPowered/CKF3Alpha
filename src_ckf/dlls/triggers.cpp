@@ -1977,7 +1977,7 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 
 	if(iTimeAdded && g_pGameRules->m_iRoundStatus == ROUND_NORMAL)
 	{
-		g_pGameRules->m_flRoundTimer += iTimeAdded;
+		g_pGameRules->SetRoundStatus(ROUND_NORMAL, g_pGameRules->TimeRemaining() + iTimeAdded);
 		g_pGameRules->SyncRoundTimer();
 	}
 }
