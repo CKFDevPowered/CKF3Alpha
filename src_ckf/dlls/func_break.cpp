@@ -448,7 +448,7 @@ void CBreakable::BreakTouch(CBaseEntity *pOther)
 
 void CBreakable::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
-	if(pev->deadflag = DEAD_DEAD && useType != USE_OFF)
+	if(pev->deadflag == DEAD_DEAD && useType != USE_OFF)
 	{
 		Restart();
 	}
