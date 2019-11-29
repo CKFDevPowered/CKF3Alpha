@@ -1362,16 +1362,16 @@ void CHalfLifeMultiplay::CheckSetupPeriodExpired(void)
 
 void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 {
-	if (TimeRemaining() > 0)
+	if (m_iRoundStatus != ROUND_NORMAL && m_iRoundStatus != ROUND_OVERTIME)
 		return;
 
-	//if(m_bTimerExpired)
-	//	return;
+	if (TimeRemaining() > 0)
+		return;
 
 	if(m_bMapHasControlPoint)
 	{
 		BOOL bOverTime = CPCheckOvertime();
-		if(m_iRoundStatus != ROUND_OVERTIME && bOverTime)
+		if(bOverTime && m_iRoundStatus == ROUND_NORMAL)
 		{
 			switch(RANDOM_LONG(0, 3))
 			{
@@ -1384,12 +1384,13 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 			SyncRoundTimer();
 			return;
 		}
-		else if(m_iRoundStatus == ROUND_OVERTIME)
+		else if(bOverTime && m_iRoundStatus == ROUND_OVERTIME)
 		{
-			if(!bOverTime)
-				m_iRoundStatus = ROUND_NORMAL;
-			else
-				return;
+			return;
+		}
+		else
+		{
+			m_iRoundStatus = ROUND_NORMAL;
 		}
 	}
 
@@ -3512,7 +3513,7 @@ BOOL CHalfLifeMultiplay::CPCheckOvertime(void)
 	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
-		if(pPoint->m_flProgress > 0)
+		if(pPoint->m_flProgress > 0 && pPoint->m_iTimeAdded > 0)
 			return TRUE;
 	}
 	return FALSE;
