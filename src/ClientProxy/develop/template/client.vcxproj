@@ -12,8 +12,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\cdll_export.h" />
+    <ClInclude Include="..\..\metahook.h" />
     <ClInclude Include="..\LoadBlob.h" />
-    <ClInclude Include="..\metahook.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Launcher\commandline.cpp">
