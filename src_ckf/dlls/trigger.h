@@ -24,18 +24,27 @@ class CControlPoint : public CBaseTrigger
 public:
 	CControlPoint::CControlPoint(void)
 	{
+		m_pSubEntity = NULL;
 		m_iSubEntity = 0;
-		m_szName[0] = 0;
 		m_iTrigOnRedCap = 0;
 		m_iTrigOnBluCap = 0;
 		m_iTrigOnCap = 0;
-		m_iTimeAdded = 0;
-		m_iHUDPosition = 0;
+		m_szName[0] = 0;
 		m_flCaptureRate = 0;
+		m_iOriginTeam = 0;
+		m_iHUDPosition = 0;
+		m_iTimeAdded = 0;
+		m_bOriginLocked = FALSE;
+		m_bOriginDisabled = FALSE;
+		m_bOriginCanRedCap = FALSE;
+		m_bOriginCanBluCap = FALSE;
+		m_iIndex = 0;
+
+		m_iState = 0;
 		m_bLocked = FALSE;
 		m_bDisabled = FALSE;
-		m_iIndex = 0;
-		m_iState = 0;
+		m_bCanRedCap = FALSE;
+		m_bCanBluCap = FALSE;
 		m_iCapTeam = 0;
 		m_iCapPlayers = 0;		
 		m_flProgress = 0;
@@ -74,12 +83,16 @@ public:
 	int m_iTimeAdded;
 	BOOL m_bOriginLocked;
 	BOOL m_bOriginDisabled;
+	BOOL m_bOriginCanRedCap;
+	BOOL m_bOriginCanBluCap;
 	int m_iIndex;
 public:
 	//Dynamic
 	int m_iState;
 	BOOL m_bLocked;
 	BOOL m_bDisabled;
+	BOOL m_bCanRedCap;
+	BOOL m_bCanBluCap;
 	int m_iCapTeam;
 	int m_iCapPlayers;
 	float m_flProgress;

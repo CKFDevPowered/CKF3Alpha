@@ -370,9 +370,9 @@ void DrawControlPoint_Bar(controlpoint_t *cp, int x, int y, int w, int h, float 
 	qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	gRefExports.RefAPI.GL_DisableMultitexture();
-	gRefExports.RefAPI.GL_Bind(g_texControlPointProgressBar[iCapTeam]);
+	g_pSurface->DrawSetTexture(g_texControlPointProgressBar[iCapTeam]);
 	gRefExports.RefAPI.GL_EnableMultitexture();
-	gRefExports.RefAPI.GL_Bind(g_texControlPoint[0]);
+	g_pSurface->DrawSetTexture(g_texControlPoint[0]);
 
 	float s = (progress * 105 + (1 - progress) * 280) / 512.0f;
 
@@ -396,7 +396,7 @@ void DrawControlPoint_Bar(controlpoint_t *cp, int x, int y, int w, int h, float 
 
 	qglEnd();
 
-	gRefExports.RefAPI.GL_Bind(0);
+	g_pSurface->DrawSetTexture(0);
 	gRefExports.RefAPI.GL_DisableMultitexture();
 	gRefExports.ShaderAPI.GL_EndProgram();
 }

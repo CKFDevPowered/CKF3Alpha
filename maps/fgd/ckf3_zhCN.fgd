@@ -332,19 +332,29 @@
 		2: "蓝队"
 	]
 	capname(string) : "控制点名" : ""
-	caprate(string) : "占领速度(/s)" : "0"
+	caprate(string) : "占领速度" : "0"
 	trigonredcap(string) : "红队占领后引发" : ""
 	trigonblucap(string) : "蓝队占领后引发" : ""
 	trigoncap(string) : "占领后引发" : ""
 	subentity(string) : "绑定外观实体" : ""
-	hudpos(integer) : "HUD图标位置(0~5)" : 2
+	hudpos(integer) : "HUD图标位置" : 0
 	timeadded(string) : "增加回合时间" : ""
-	locked(choices) : "回合开始时锁定" : 0 =
+	locked(choices) : "锁定" : 0 =
 	[
 		0: "否"
 		1: "是"
 	]
-	disabled(choices) : "回合开始时禁用" : 0 =
+	disabled(choices) : "禁用" : 0 =
+	[
+		0: "否"
+		1: "是"
+	]
+	canredcap(choices) : "红队可占领" : 1 =
+	[
+		0: "否"
+		1: "是"
+	]
+	canblucap(choices) : "蓝队可占领" : 1 =
 	[
 		0: "否"
 		1: "是"
@@ -387,6 +397,30 @@
 		3 : "重置"
 	]
 	disabledarg(choices) : "禁用参数" : 0 = 
+	[
+		0: "否"
+		1: "是"
+	]
+	canredcapop(choices) : "红队可占领操作" : 0 = 
+	[
+		0 : "忽略"
+		1 : "更新"
+		2 : "切换"
+		3 : "重置"
+	]
+	canredcaparg(choices) : "红队可占领参数" : 0 = 
+	[
+		0: "否"
+		1: "是"
+	]
+	canblucapop(choices) : "蓝队可占领操作" : 0 = 
+	[
+		0 : "忽略"
+		1 : "更新"
+		2 : "切换"
+		3 : "重置"
+	]
+	canblucaparg(choices) : "蓝队可占领参数" : 0 = 
 	[
 		0: "否"
 		1: "是"

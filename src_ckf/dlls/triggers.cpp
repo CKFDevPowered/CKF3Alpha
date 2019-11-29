@@ -1843,6 +1843,16 @@ void CControlPoint::KeyValue(KeyValueData *pkvd)
 		m_bOriginDisabled = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
+	else if (FStrEq(pkvd->szKeyName, "canredcap"))
+	{
+		m_bOriginCanRedCap = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "canblucap"))
+	{
+		m_bOriginCanBluCap = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
 	else
 		CBaseEntity::KeyValue(pkvd);
 }
@@ -1875,6 +1885,8 @@ void CControlPoint::Restart(void)
 	m_iState = 0;
 	m_bLocked = m_bOriginLocked;
 	m_bDisabled = m_bOriginDisabled;
+	m_bCanRedCap = m_bOriginCanRedCap;
+	m_bCanBluCap = m_bOriginCanBluCap;
 	m_flProgress = 0;
 	m_iCapTeam = 0;
 }
@@ -2134,8 +2146,9 @@ void CControlPoint::ControlPointThink(void)
 	{
 		bBlocked = TRUE;
 	}
+	//Is there any player defending this point?
 	if(iBluCaps && m_iCapTeam == TEAM_RED)
-	{//Is there any player defending this point?
+	{
 		bIsDefending = TRUE;
 		iDefTeam = TEAM_BLU;
 	}
@@ -2144,12 +2157,13 @@ void CControlPoint::ControlPointThink(void)
 		bIsDefending = TRUE;
 		iDefTeam = TEAM_RED;
 	}
-	if(iRedCaps && pev->team != TEAM_RED)
-	{//Is there any player capturing this point?
+	//Is there any player capturing this point?
+	if(iRedCaps && m_bCanRedCap && pev->team != TEAM_RED)
+	{
 		bIsCapuring = TRUE;
 		iCapTeam = TEAM_RED;
 	}
-	else if(iBluCaps && pev->team != TEAM_BLU)
+	else if(iBluCaps && m_bCanBluCap && pev->team != TEAM_BLU)
 	{
 		bIsCapuring = TRUE;
 		iCapTeam = TEAM_BLU;

@@ -329,19 +329,29 @@
 		2: "Blue"
 	]
 	capname(string) : "Control point name" : ""
-	caprate(string) : "capture rate(/s)" : "0"
+	caprate(string) : "capture rate" : "0"
 	trigonredcap(string) : "Triggered when red captured" : ""
 	trigonblucap(string) : "Triggered when blue captured" : ""
 	trigoncap(string) : "Triggered when captured" : ""
 	subentity(string) : "Model entity to link to" : ""
-	hudpos(integer) : "HUD icon position(0~5)" : 2
+	hudpos(integer) : "HUD icon position" : 0
 	timeadded(string) : "RoundTime added when captured" : ""
-	locked(choices) : "Locked when round start" : 0 =
+	locked(choices) : "Locked" : 0 =
 	[
 		0: "no"
 		1: "yes"
 	]
-	disabled(choices) : "Disabled when round start" : 0 =
+	disabled(choices) : "Disabled" : 0 =
+	[
+		0: "no"
+		1: "yes"
+	]
+	canredcap(choices) : "Red capturable" : 1 =
+	[
+		0: "no"
+		1: "yes"
+	]
+	canblucap(choices) : "Blue capturable" : 1 =
 	[
 		0: "no"
 		1: "yes"
@@ -384,6 +394,30 @@
 		3 : "Reset"
 	]
 	disabledarg(choices) : "Disabled argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	canredcapop(choices) : "Red capturable operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+	]
+	canredcaparg(choices) : "Red capturable argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	canblucapop(choices) : "Blue capturable operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+	]
+	canblucaparg(choices) : "Blue capturable argument" : 0 = 
 	[
 		0 : "no"
 		1 : "yes"

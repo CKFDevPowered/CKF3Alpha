@@ -37,6 +37,10 @@ public:
 		m_bLockedArg = FALSE;
 		m_opDisabledOp = SKIP;
 		m_bDisabledArg = FALSE;
+		m_opCanRedCapOp = SKIP;
+		m_bCanRedCapArg = FALSE;
+		m_opCanBluCapOp = SKIP;
+		m_bCanBluCapArg = FALSE;
 		m_opTeamOp = SKIP;
 		m_iTeamArg = 0;
 	}
@@ -50,6 +54,10 @@ public:
 	BOOL		m_bLockedArg;
 	CONTROL_OP	m_opDisabledOp;
 	BOOL		m_bDisabledArg;
+	CONTROL_OP	m_opCanRedCapOp;
+	BOOL		m_bCanRedCapArg;
+	CONTROL_OP	m_opCanBluCapOp;
+	BOOL		m_bCanBluCapArg;
 	CONTROL_OP	m_opTeamOp;
 	int			m_iTeamArg;
 };

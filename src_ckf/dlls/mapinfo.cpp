@@ -117,6 +117,28 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 		m_bDisabledArg = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
+	else if (FStrEq(pkvd->szKeyName, "canredcapop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opCanRedCapOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "canredcaparg"))
+	{
+		m_bCanRedCapArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "canblucapop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opCanBluCapOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "canblucaparg"))
+	{
+		m_bCanBluCapArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
 	else if (FStrEq(pkvd->szKeyName, "teamop"))
 	{
 		op = atoi(pkvd->szValue);
@@ -183,6 +205,36 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 			break;
 		}
 
+		switch (m_opCanRedCapOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pPoint->m_bCanRedCap = m_bCanRedCapArg;
+			break;
+		case TOGGLE:
+			pPoint->m_bCanRedCap = !pPoint->m_bCanRedCap;
+			break;
+		case RESET:
+			pPoint->m_bCanRedCap = pPoint->m_bOriginCanRedCap;
+			break;
+		}
+
+		switch (m_opCanBluCapOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pPoint->m_bCanBluCap = m_bCanBluCapArg;
+			break;
+		case TOGGLE:
+			pPoint->m_bCanBluCap = !pPoint->m_bCanBluCap;
+			break;
+		case RESET:
+			pPoint->m_bCanBluCap = pPoint->m_bOriginCanBluCap;
+			break;
+		}
+
 		switch (m_opTeamOp)
 		{
 		case SKIP:
@@ -201,7 +253,7 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 			break;
 		}
 
-		if (m_opLockedOp || m_opDisabledOp || m_opTeamOp)
+		if (m_opLockedOp || m_opDisabledOp || m_opCanRedCapOp || m_bCanBluCapArg || m_opTeamOp)
 			g_pGameRules->CPSendState(pPoint->pev);
 	}
 }
