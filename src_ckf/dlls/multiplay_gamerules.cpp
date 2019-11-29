@@ -1264,6 +1264,9 @@ void CHalfLifeMultiplay::Think(void)
 
 void CHalfLifeMultiplay::CheckWaitPeriodExpired(void)
 {
+	if (m_iRoundStatus != ROUND_WAIT)
+		return;
+
 	if (TimeRemaining() > 0)
 		return;
 
@@ -1351,6 +1354,9 @@ void CHalfLifeMultiplay::CheckFreezePeriodExpired(void)
 
 void CHalfLifeMultiplay::CheckSetupPeriodExpired(void)
 {
+	if (m_iRoundStatus != ROUND_SETUP)
+		return;
+
 	if (TimeRemaining() > 0)
 		return;
 
@@ -1398,25 +1404,30 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 
 	//m_bTimerExpired = true;
 
-	if(m_iEndAction == END_NOTHING)
-		return;
-
-	if(m_iEndAction == END_RED_WIN)
+	switch (m_iEndAction)
 	{
-		TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
-	}
-	else if(m_iEndAction == END_BLU_WIN)
-	{
-		TerminateRound(m_iEndTime, WINSTATUS_CT);
-	}
-	else if(m_iEndAction == END_DRAW)
-	{
+	case END_NOTHING:
+		break;
+	case END_DRAW:
 		TerminateRound(m_iEndTime, WINSTATUS_DRAW);
+		break;
+	case END_RED_WIN:
+		TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
+		break;
+	case END_BLU_WIN:
+		TerminateRound(m_iEndTime, WINSTATUS_CT);
+		break;
+	case END_SUDDEN_DEATH:
+		// TODO NYI
+		break;
 	}
 }
 
 void CHalfLifeMultiplay::CheckEndPeriodExpired(void)
 {
+	if (m_iRoundStatus != ROUND_END)
+		return;
+
 	if (TimeRemaining() > 0)
 		return;
 
