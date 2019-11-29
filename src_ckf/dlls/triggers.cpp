@@ -2226,6 +2226,17 @@ void CControlPoint::ControlPointThink(void)
 	UpdateHUD();
 }
 
+void CControlPoint::UpdateTeam(int iNewTeam)
+{
+	pev->team = iNewTeam;
+	m_flProgress = 0;
+	m_iState = CP_IDLE;
+	m_iCapTeam = 0;
+
+	if (m_pSubEntity)
+		m_pSubEntity->pev->skin = pev->team;
+}
+
 void CControlPoint::UpdateHUD(void)
 {
 	if(m_iState == CP_CAPTURING && m_iClientState != m_iState)//Cap MP3 Announcer

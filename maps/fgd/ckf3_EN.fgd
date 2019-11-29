@@ -362,13 +362,44 @@
 	]
 ]
 
-@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cplocker : "Control Point Locker"
+@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cpcontrols : "Control Point Controls"
 [
-	lockstate(choices) : "Action" : 0 = 
+	lockedop(choices) : "Locked operation" : 0 = 
 	[
-		0 : "Switch"
-		1 : "Lock"
-		2 : "Unlock"
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+	]
+	lockedarg(choices) : "Locked argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	disabledop(choices) : "Disabled operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+	]
+	disabledarg(choices) : "Disabled argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	teamop(choices) : "Team operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+	]
+    teamarg(choices) : "Team argument" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
 	]
 ]
 

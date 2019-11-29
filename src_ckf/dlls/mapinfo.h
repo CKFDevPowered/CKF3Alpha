@@ -21,12 +21,24 @@ public:
 	int m_iBluDominatedAction;
 };
 
-class CCPLocker : public CPointEntity
+typedef enum {
+	SKIP = 0,
+	UPDATE,
+	TOGGLE,
+	RESET
+} CONTROL_OP;
+
+class CCPControls : public CPointEntity
 {
 public:
-	CCPLocker(void)
+	CCPControls(void)
 	{
-		m_iLockState = 0;
+		m_opLockedOp = SKIP;
+		m_bLockedArg = FALSE;
+		m_opDisabledOp = SKIP;
+		m_bDisabledArg = FALSE;
+		m_opTeamOp = SKIP;
+		m_iTeamArg = 0;
 	}
 public:
 	void Spawn(void);
@@ -34,7 +46,12 @@ public:
 	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
 
 public:
-	int m_iLockState;
+	CONTROL_OP	m_opLockedOp;
+	BOOL		m_bLockedArg;
+	CONTROL_OP	m_opDisabledOp;
+	BOOL		m_bDisabledArg;
+	CONTROL_OP	m_opTeamOp;
+	int			m_iTeamArg;
 };
 
 class CRoundTerminator : public CPointEntity

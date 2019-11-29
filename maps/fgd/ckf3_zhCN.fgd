@@ -365,13 +365,44 @@
 	]
 ]
 
-@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cplocker : "Control Point Locker"
+@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_cpcontrols : "Control Point Controls"
 [
-	lockstate(choices) : "设定方式" : 0 = 
+	lockedop(choices) : "锁定操作" : 0 = 
 	[
-		0 : "切换"
-		1 : "锁定"
-		2 : "解锁"
+		0 : "忽略"
+		1 : "更新"
+		2 : "切换"
+		3 : "重置"
+	]
+	lockedarg(choices) : "锁定参数" : 0 = 
+	[
+		0: "否"
+		1: "是"
+	]
+	disabledop(choices) : "禁用操作" : 0 = 
+	[
+		0 : "忽略"
+		1 : "更新"
+		2 : "切换"
+		3 : "重置"
+	]
+	disabledarg(choices) : "禁用参数" : 0 = 
+	[
+		0: "否"
+		1: "是"
+	]
+	teamop(choices) : "队伍操作" : 0 = 
+	[
+		0 : "忽略"
+		1 : "更新"
+		2 : "切换"
+		3 : "重置"
+	]
+    teamarg(choices) : "队伍参数" : 0 =
+	[
+		0: "双方"
+		1: "红队"
+		2: "蓝队"
 	]
 ]
 

@@ -58,6 +58,7 @@ public:
 	void ControlPointCapturing(int iCapTeam);
 	void ControlPointCaptured(int iNewTeam);
 	void ControlPointDefend(int iCapTeam);
+	void UpdateTeam(int iNewTeam);
 	void UpdateHUD(void);
 public:
 	//Map Static

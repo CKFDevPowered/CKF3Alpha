@@ -78,6 +78,8 @@ void CMapInfo::KeyValue(KeyValueData *pkvd)
 		m_iEndTime = max(atoi(pkvd->szValue), 0);
 		pkvd->fHandled = TRUE;
 	}
+	else
+		CPointEntity::KeyValue(pkvd);
 }
 
 void CMapInfo::Spawn(void)
@@ -87,26 +89,57 @@ void CMapInfo::Spawn(void)
 	pev->effects |= EF_NODRAW;
 }
 
-LINK_ENTITY_TO_CLASS(trigger_cplocker, CCPLocker);
+LINK_ENTITY_TO_CLASS(trigger_cpcontrols, CCPControls);
 
-void CCPLocker::KeyValue(KeyValueData *pkvd)
+void CCPControls::KeyValue(KeyValueData *pkvd)
 {
-	if (FStrEq(pkvd->szKeyName, "lockstate"))
+	int op;
+
+	if (FStrEq(pkvd->szKeyName, "lockedop"))
 	{
-		m_iLockState = atoi(pkvd->szValue);
-		m_iLockState = max(min(m_iLockState, 2), 0);
+		op = atoi(pkvd->szValue);
+		m_opLockedOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
+	else if (FStrEq(pkvd->szKeyName, "lockedarg"))
+	{
+		m_bLockedArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabledop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opDisabledOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabledarg"))
+	{
+		m_bDisabledArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "teamop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opTeamOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "teamarg"))
+	{
+		m_iTeamArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CPointEntity::KeyValue(pkvd);
 }
 
-void CCPLocker::Spawn(void)
+void CCPControls::Spawn(void)
 {
 	pev->movetype = MOVETYPE_NONE;
 	pev->solid = SOLID_NOT;
 	pev->effects |= EF_NODRAW;
 }
 
-void CCPLocker::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	CBaseEntity *pEntity = NULL;
 	CControlPoint *pPoint = NULL;
@@ -117,20 +150,59 @@ void CCPLocker::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useT
 	{
 		if(!pEntity) continue;
 		if(pEntity->Classify() != CLASS_CONTROLPOINT) continue;
-		pPoint = (CControlPoint *)pEntity;
+		pPoint = dynamic_cast<CControlPoint *>(pEntity);
+		if (!pPoint) continue;
 
-		switch (m_iLockState) {
-		case 0:
+		switch (m_opLockedOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pPoint->m_bLocked = m_bLockedArg;
+			break;
+		case TOGGLE:
 			pPoint->m_bLocked = !pPoint->m_bLocked;
 			break;
-		case 1:
-			pPoint->m_bLocked = TRUE;
-			break;
-		case 2:
-			pPoint->m_bLocked = FALSE;
+		case RESET:
+			pPoint->m_bLocked = pPoint->m_bOriginLocked;
 			break;
 		}
-		g_pGameRules->CPSendState(pPoint->pev);
+
+		switch (m_opDisabledOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pPoint->m_bDisabled = m_bDisabledArg;
+			break;
+		case TOGGLE:
+			pPoint->m_bDisabled = !pPoint->m_bDisabled;
+			break;
+		case RESET:
+			pPoint->m_bDisabled = pPoint->m_bOriginDisabled;
+			break;
+		}
+
+		switch (m_opTeamOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pPoint->UpdateTeam(m_iTeamArg);
+			break;
+		case TOGGLE:
+			if (pPoint->pev->team == TEAM_RED)
+				pPoint->UpdateTeam(TEAM_BLU);
+			if (pPoint->pev->team == TEAM_BLU)
+				pPoint->UpdateTeam(TEAM_RED);
+			break;
+		case RESET:
+			pPoint->UpdateTeam(pPoint->m_iOriginTeam);
+			break;
+		}
+
+		if (m_opLockedOp || m_opDisabledOp || m_opTeamOp)
+			g_pGameRules->CPSendState(pPoint->pev);
 	}
 }
 
@@ -149,6 +221,8 @@ void CRoundTerminator::KeyValue(KeyValueData *pkvd)
 		m_iEndTime = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
+	else
+		CPointEntity::KeyValue(pkvd);
 }
 
 void CRoundTerminator::Spawn(void)
