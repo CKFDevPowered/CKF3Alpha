@@ -575,7 +575,7 @@ aud_channel_t *SND_PickDynamicChannel(int entnum, int entchannel, sfx_t *sfx)
 			break;
 		}
 
-		sc = (aud_sfxcache_t *)Cache_Check(&sfx->cache);
+		sc = (aud_sfxcache_t *)Cache_Check(&ch->sfx->cache);
 		if(!sc)
 		{
 			first_to_die = ch_idx;
