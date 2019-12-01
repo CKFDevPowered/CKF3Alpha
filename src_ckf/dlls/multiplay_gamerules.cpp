@@ -1255,11 +1255,7 @@ void CHalfLifeMultiplay::Think(void)
 			m_fBluWaveThink = gpGlobals->time + 10;
 	}
 
-	if (gpGlobals->time > m_flAnnounceRoundTime)
-	{
-		m_flAnnounceRoundTime = gpGlobals->time + 1;
-		AnnounceRoundTime();
-	}
+	AnnounceRoundTime();
 }
 
 void CHalfLifeMultiplay::CheckWaitPeriodExpired(void)
@@ -3583,12 +3579,15 @@ void CHalfLifeMultiplay::SyncRoundTimer(void)
 	WRITE_SHORT(time);
 	WRITE_SHORT(maxtime);
 	MESSAGE_END();
-
-	m_flAnnounceRoundTime = gpGlobals->time;
 }
 
 void CHalfLifeMultiplay::AnnounceRoundTime(void)
 {
+	if (gpGlobals->time <= m_flAnnounceRoundTime)
+		return;
+
+	m_flAnnounceRoundTime = gpGlobals->time;
+
 	int iRemaining = TimeRemaining();
 	if(m_iRoundStatus == ROUND_SETUP)
 	{

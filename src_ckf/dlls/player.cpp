@@ -2360,30 +2360,7 @@ void CBasePlayer::AddAccount(int iAmount, BOOL flash)
 
 void CBasePlayer::SyncRoundTimer(void)
 {
-	float time;
-	float maxtime;
-
-	if (g_pGameRules->IsMultiplayer())
-		time = g_pGameRules->TimeRemaining();
-	else
-		time = 0;
-
-	if (time < 0)
-		time = 0;
-
-	if (g_pGameRules->IsMultiplayer())
-		maxtime = g_pGameRules->TimeTotal();
-	else
-		maxtime = 0;
-
-	if (maxtime < 0)
-		maxtime = 0;
-
-	MESSAGE_BEGIN(MSG_ONE, gmsgRoundTime, NULL, pev);
-	WRITE_BYTE(g_pGameRules->m_iRoundStatus);
-	WRITE_SHORT(time);
-	WRITE_SHORT(maxtime);
-	MESSAGE_END();
+	g_pGameRules->SyncRoundTimer();
 }
 
 void CBasePlayer::ResetMenu(void)
