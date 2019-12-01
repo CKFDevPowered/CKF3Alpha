@@ -1034,8 +1034,6 @@ void CHalfLifeMultiplay::RestartRound(void)
 	m_bCompleteReset = false;
 	m_iRoundWinStatus = 0;
 
-	//m_bTimerExpired = false;
-
 	m_fMaxIdlePeriod = 120;//Idle Kick
 
 	if(!m_bFirstConnected && m_iWaitTime > 0)
@@ -1081,17 +1079,20 @@ void CHalfLifeMultiplay::SetRoundStatus(int iStatus)
 {
 	switch(iStatus)
 	{
+	case ROUND_NORMAL:
+		SetRoundStatus(iStatus, m_iRoundTime);
+		break;
 	case ROUND_SETUP:
 		SetRoundStatus(iStatus, m_iSetupTime);
 		break;
 	case ROUND_END:
 		SetRoundStatus(iStatus, m_iEndTime);
 		break;
+	case ROUND_OVERTIME:
+		SetRoundStatus(iStatus, 0);
+		break;
 	case ROUND_WAIT:
 		SetRoundStatus(iStatus, m_iWaitTime);
-		break;
-	default:
-		SetRoundStatus(iStatus, m_iRoundTime);
 		break;
 	}
 }
@@ -1370,35 +1371,26 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 	if (TimeRemaining() > 0)
 		return;
 
-	if(m_bMapHasControlPoint)
+	BOOL bOverTime = CPCheckOvertime();
+
+	if (bOverTime)
 	{
-		BOOL bOverTime = CPCheckOvertime();
-		if(bOverTime && m_iRoundStatus == ROUND_NORMAL)
+		if (m_iRoundStatus == ROUND_NORMAL)
 		{
-			switch(RANDOM_LONG(0, 3))
+			switch (RANDOM_LONG(0, 3))
 			{
-			case 0:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime.mp3");break;
-			case 1:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime2.mp3");break;
-			case 2:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime3.mp3");break;
-			case 3:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime4.mp3");break;
+			case 0:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime.mp3"); break;
+			case 1:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime2.mp3"); break;
+			case 2:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime3.mp3"); break;
+			case 3:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime4.mp3"); break;
 			}
-			m_iRoundStatus = ROUND_OVERTIME;
+			SetRoundStatus(ROUND_OVERTIME);
 			SyncRoundTimer();
-			return;
 		}
-		else if(bOverTime && m_iRoundStatus == ROUND_OVERTIME)
-		{
-			return;
-		}
-		else
-		{
-			m_iRoundStatus = ROUND_NORMAL;
-		}
+		return;
 	}
 
 	FireTargets("game_round_expired", g_pWorld, g_pWorld, USE_TOGGLE, 0);
-
-	//m_bTimerExpired = true;
 
 	switch (m_iEndAction)
 	{
