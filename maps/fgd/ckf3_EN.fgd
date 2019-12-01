@@ -429,7 +429,7 @@
 		2 : "Toggle"
 		3 : "Reset"
 	]
-    teamarg(choices) : "Team argument" : 0 =
+	teamarg(choices) : "Team argument" : 0 =
 	[
 		0: "Both"
 		1: "Red"
@@ -439,13 +439,14 @@
 
 @PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundterminator : "Round Terminator"
 [
-	winstatus(choices) : "Winner" : 0 = 
+	winstatus(choices) : "Win status" : 0 = 
 	[
-		0 : "Stalemate"
-		1 : "Red"
-		2 : "Blue"
+		0 : "No Action(Default)"
+		1 : "Red Win"
+		2 : "Blue Win"
+		3 : "Stalemate"
 	]
-	endtime(integer) : "Custom humiliation time(sec.)" : 0
+	endtime(integer) : "Custom humiliation time(sec.)" : -1
 ]
 
 // all items will respawn after 30s in a multiplayer game.

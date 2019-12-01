@@ -432,7 +432,7 @@
 		2 : "切换"
 		3 : "重置"
 	]
-    teamarg(choices) : "队伍参数" : 0 =
+	teamarg(choices) : "队伍参数" : 0 =
 	[
 		0: "双方"
 		1: "红队"
@@ -442,13 +442,14 @@
 
 @PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundterminator : "Round Terminator"
 [
-	winstatus(choices) : "胜利方" : 0 = 
+	winstatus(choices) : "胜利状态" : 0 = 
 	[
-		0 : "平局"
-		1 : "红队"
-		2 : "蓝队"
+		0 : "无动作(默认)"
+		1 : "红队胜利"
+		2 : "蓝队胜利"
+		3 : "平局"
 	]
-	endtime(integer) : "自定义回合结束时间" : 0
+	endtime(integer) : "自定义结束等待时间(秒)" : -1
 ]
 
 // all items will respawn after a short period in a multiplayer game.

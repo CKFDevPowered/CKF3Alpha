@@ -584,23 +584,33 @@ void CHalfLifeMultiplay::CheckWinConditions(void)
 
 void CHalfLifeMultiplay::TerminateRound(float tmDelay, int iWinStatus)
 {
+	if (iWinStatus == WINSTATUS_NONE)
+		return;
+
 	g_pGameRules->m_iRoundWinStatus = iWinStatus;
 	g_pGameRules->m_bRoundTerminating = TRUE;
 	g_pGameRules->SetRoundStatus(ROUND_END, tmDelay);
 	g_pGameRules->SyncRoundTimer();
 
-	if(iWinStatus == WINSTATUS_TERRORIST)
+	int winTeam = 0;
+
+	switch (iWinStatus)
 	{
+	case WINSTATUS_TERRORIST:
 		FireTargets("game_round_redwin", g_pWorld, g_pWorld, USE_TOGGLE, 0);
-	}
-	else if(iWinStatus == WINSTATUS_CT)
-	{
+		winTeam = TEAM_RED;
+		break;
+	case WINSTATUS_CT:
 		FireTargets("game_round_bluwin", g_pWorld, g_pWorld, USE_TOGGLE, 0);
-	}
-	else
-	{
+		winTeam = TEAM_BLU;
+		break;
+	case WINSTATUS_DRAW:
 		FireTargets("game_round_draw", g_pWorld, g_pWorld, USE_TOGGLE, 0);
+		winTeam = TEAM_UNASSIGNED;
+		break;
 	}
+
+	FireTargets("game_round_end", g_pWorld, g_pWorld, USE_TOGGLE, 0);
 
 	char szVictoryMP3[128];
 	char szFailureMP3[128];
@@ -624,26 +634,16 @@ void CHalfLifeMultiplay::TerminateRound(float tmDelay, int iWinStatus)
 		if (pEntity->pev->flags == FL_DORMANT)
 			continue;
 
-		bStripWeapon = false;
-
-		if(iWinStatus == WINSTATUS_DRAW)
+		if (pPlayer->m_iTeam == winTeam)
 		{
-			CLIENT_COMMAND(pPlayer->edict(), szStalemateMP3);
-			bStripWeapon = true;
+			CLIENT_COMMAND(pPlayer->edict(), szVictoryMP3);
+			pPlayer->CritBoost_Add(tmDelay + 1.0f);
+			bStripWeapon = false;
 		}
 		else
 		{
-			if(iWinStatus == pPlayer->m_iTeam)
-			{
-				CLIENT_COMMAND(pPlayer->edict(), szVictoryMP3);
-				//add critboost here
-				pPlayer->CritBoost_Add(tmDelay + 1.0f);
-			}
-			else
-			{
-				CLIENT_COMMAND(pPlayer->edict(), szFailureMP3);
-				bStripWeapon = true;
-			}
+			CLIENT_COMMAND(pPlayer->edict(), iWinStatus == WINSTATUS_DRAW ? szStalemateMP3 : szFailureMP3);
+			bStripWeapon = true;
 		}
 		if(bStripWeapon)
 		{
@@ -1267,6 +1267,8 @@ void CHalfLifeMultiplay::CheckWaitPeriodExpired(void)
 	if (TimeRemaining() > 0)
 		return;
 
+	FireTargets("game_wait_expired", g_pWorld, g_pWorld, USE_TOGGLE, 0);
+
 	m_bCompleteReset = TRUE;
 	m_bFirstConnected = TRUE;
 	RestartRound();
@@ -1389,8 +1391,6 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 		}
 		return;
 	}
-
-	FireTargets("game_round_expired", g_pWorld, g_pWorld, USE_TOGGLE, 0);
 
 	switch (m_iEndAction)
 	{

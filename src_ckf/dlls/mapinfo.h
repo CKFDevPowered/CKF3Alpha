@@ -68,7 +68,7 @@ public:
 	CRoundTerminator(void)
 	{
 		m_iWinStatus = 0;
-		m_iEndTime = -1;
+		m_iEndTime = 0;
 	}
 public:
 	void Spawn(void);

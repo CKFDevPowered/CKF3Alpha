@@ -265,7 +265,7 @@ void CRoundTerminator::KeyValue(KeyValueData *pkvd)
 	if (FStrEq(pkvd->szKeyName, "winstatus"))
 	{
 		m_iWinStatus = atoi(pkvd->szValue);
-		m_iWinStatus = max(min(m_iWinStatus, 2), 0);
+		m_iWinStatus = max(min(m_iWinStatus, WINSTATUS_DRAW), WINSTATUS_NONE);
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "endtime"))
