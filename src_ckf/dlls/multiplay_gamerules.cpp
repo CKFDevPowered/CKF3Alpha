@@ -172,9 +172,9 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_iNumConsecutiveTerroristLoses = 0;
 	m_bLevelInitialized = FALSE;
 	m_tmNextPeriodicThink = 0;
-	m_flRoundTimer = gpGlobals->time;
-	m_iRoundTimeMax = 0;
-	m_flAnnounceRoundTime = 0;
+	m_flRoundBeginTime = gpGlobals->time;
+	m_iRoundTotalTime = 0;
+	m_flRoundLastAnnounceTime = 0;
 	m_bFirstConnected = FALSE;
 	m_bCompleteReset = FALSE;
 	m_iUnBalancedRounds = 0;
@@ -183,7 +183,6 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	//Round init
 	m_iMaxRounds = (int)CVAR_GET_FLOAT("mp_maxrounds");
 	//CP init
-	m_iRedLocal = m_iBluLocal = 0;
 	m_ControlPoints.RemoveAll();
 	//NoBuildZone init
 	m_NoBuildZone.RemoveAll();
@@ -200,7 +199,6 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_bFreezePeriod = false;
 	m_flFreezeTimer = 0;
 	m_iRespawnDisabled = 0;
-	m_bMapHasControlPoint = false;
 	g_SkyCamera.enable = false;
 
 	if (m_iMaxRounds < 0)
@@ -844,12 +842,6 @@ void CHalfLifeMultiplay::BalanceTeams(void)
 
 void CHalfLifeMultiplay::CheckMapConditions(void)
 {
-	if ((UTIL_FindEntityByClassname(NULL, "func_controlpoint")) != NULL)//ckf
-	{
-		m_bMapHasControlPoint = true;
-		m_iRedLocal = m_iBluLocal = 0;
-	}
-
 	if ((UTIL_FindEntityByClassname(NULL, "trigger_resupplyroom")) != NULL)
 		m_bMapHasResupplyRoom = true;
 	else
@@ -987,7 +979,7 @@ void CHalfLifeMultiplay::RestartRound(void)
 
 	CleanUpMap();
 
-	if(m_bMapHasControlPoint)
+	if(CPHasControlPoint())
 	{
 		CPResetAll();
 	}
@@ -1023,7 +1015,7 @@ void CHalfLifeMultiplay::RestartRound(void)
 
 
 	//Objective Reset
-	if(m_bMapHasControlPoint)
+	if(CPHasControlPoint())
 	{
 		CPSendState();
 	}
@@ -1101,9 +1093,9 @@ void CHalfLifeMultiplay::SetRoundStatus(int iStatus, float flMaxTime)
 {
 	m_iRoundStatus = iStatus;
 
-	m_flRoundTimer = gpGlobals->time;
+	m_flRoundBeginTime = gpGlobals->time;
 
-	m_iRoundTimeMax = flMaxTime;
+	m_iRoundTotalTime = flMaxTime;
 }
 
 BOOL CHalfLifeMultiplay::IsThereABomber(void)
@@ -1465,8 +1457,7 @@ void CHalfLifeMultiplay::CheckRestartRound(void)
 		UTIL_ClientPrintAll(HUD_PRINTCONSOLE, "#Game_will_restart_in", UTIL_dtos1(iRestartDelay), iRestartDelay == 1 ? "SECOND" : "SECONDS");
 
 		m_bCompleteReset = TRUE;
-		SetRoundStatus(ROUND_END);
-		m_iRoundTimeMax = iRestartDelay;
+		SetRoundStatus(ROUND_END, iRestartDelay);
 
 		CVAR_SET_FLOAT("sv_restartround", 0);
 		CVAR_SET_FLOAT("sv_restart", 0);
@@ -3361,7 +3352,7 @@ BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 {
 	int action = END_NOTHING;
 
-	if (m_bMapHasControlPoint)
+	if (CPHasControlPoint())
 	{
 		if(CPCountPoints(TEAM_RED) >= m_ControlPoints.Count())
 			action = m_iRedDominatedAction;
@@ -3483,7 +3474,8 @@ void CHalfLifeMultiplay::CPSendState(CBasePlayer *pPlayer)
 
 void CHalfLifeMultiplay::CPSendInit(CBasePlayer *pPlayer)
 {
-	if(!m_ControlPoints.Count()) return;
+	if(!CPHasControlPoint())
+		return;
 
 	int count = m_ControlPoints.Count();
 	MESSAGE_BEGIN(MSG_ONE, gmsgCPInit, NULL, pPlayer->pev);
@@ -3575,10 +3567,10 @@ void CHalfLifeMultiplay::SyncRoundTimer(void)
 
 void CHalfLifeMultiplay::AnnounceRoundTime(void)
 {
-	if (gpGlobals->time <= m_flAnnounceRoundTime)
+	if (gpGlobals->time <= m_flRoundLastAnnounceTime)
 		return;
 
-	m_flAnnounceRoundTime = gpGlobals->time;
+	m_flRoundLastAnnounceTime = gpGlobals->time;
 
 	int iRemaining = TimeRemaining();
 	if(m_iRoundStatus == ROUND_SETUP)
@@ -3642,4 +3634,9 @@ void CHalfLifeMultiplay::UpdateTimeLimit(void)
 BOOL CHalfLifeMultiplay::IsRoundSetup(void)
 {
 	return (m_iRoundStatus >= ROUND_WAIT && m_iRoundStatus <= ROUND_SETUP);
+}
+
+BOOL CHalfLifeMultiplay::CPHasControlPoint(void)
+{
+	return m_ControlPoints.Count() > 0;
 }

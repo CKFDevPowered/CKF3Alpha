@@ -289,9 +289,9 @@ public:
 	void UpdateTeamScores(void);
 	void SwapAllPlayers(void);
 	void TerminateRound(float tmDelay, int iWinStatus);
-	float TimeRemaining(void){ return m_iRoundTimeMax - TimeElapsed(); }
-	float TimeElapsed(void) { return gpGlobals->time - m_flRoundTimer; }
-	float TimeTotal(void) { return m_iRoundTimeMax; }
+	float TimeRemaining(void){ return m_iRoundTotalTime - TimeElapsed(); }
+	float TimeElapsed(void) { return gpGlobals->time - m_flRoundBeginTime; }
+	float TimeTotal(void) { return m_iRoundTotalTime; }
 
 public:
 	BOOL CPRoundEndCheck(BOOL bNeededPlayers);
@@ -301,7 +301,6 @@ public:
 	void CPSendState(CBasePlayer *pPlayer);
 	void CPSendInit(CBasePlayer *pPlayer);
 	void CPResetAll(void);
-	void ObjectNotice(int iObjectIndex, int iObjectAction, int iKillerTeam, int iVictimTeam, CBasePlayer *plKiller);
 	void ObjectNotice(int iObjectIndex, int iObjectAction, int iKillerTeam, int iVictimTeam, CBasePlayer *pevAssister[], int iAssister);//Multiple assister
 	void SyncRoundTimer(void);
 	void SetRoundStatus(int iStatus);
@@ -317,7 +316,7 @@ public:
 	CBasePlayer *GetAssister(CBasePlayer *pKiller, CBasePlayer *pVictim);
 	void Cmd_AddCondition(CBasePlayer *pPlayer);
 	BOOL IsRoundSetup(void);
-	BOOL SendWinStatus(void);
+	BOOL CPHasControlPoint(void);
 
 public:
 	CVoiceGameMgr m_VoiceGameMgr;
@@ -364,9 +363,9 @@ public:
 	float m_fRespawnPlayerFactor;
 	int m_iRespawnPlayerNum;
 
-	float m_flRoundTimer;//the round time which is displayed
-	int m_iRoundTimeMax;//the max round time which is displayed
-	float m_flAnnounceRoundTime;
+	float m_flRoundBeginTime;
+	int m_iRoundTotalTime;
+	float m_flRoundLastAnnounceTime;
 
 	int m_iFreezeTime;
 	int m_iSetupCondition;
@@ -380,10 +379,6 @@ public:
 	int m_iBluDominatedAction;
 	bool m_bFreezePeriod;
 	float m_flFreezeTimer;
-	//For CP
-	bool m_bMapHasControlPoint;
-	int m_iRedLocal;
-	int m_iBluLocal;
 	//for control points
 	CUtlVector<edict_t *> m_ControlPoints;
 	//For nobuild zone
