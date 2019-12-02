@@ -174,7 +174,7 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_tmNextPeriodicThink = 0;
 	m_flRoundBeginTime = gpGlobals->time;
 	m_iRoundTotalTime = 0;
-	m_flRoundLastAnnounceTime = 0;
+	m_iRoundLastAnnounceTime = -1;
 	m_bFirstConnected = FALSE;
 	m_bCompleteReset = FALSE;
 	m_iUnBalancedRounds = 0;
@@ -1092,10 +1092,9 @@ void CHalfLifeMultiplay::SetRoundStatus(int iStatus)
 void CHalfLifeMultiplay::SetRoundStatus(int iStatus, float flMaxTime)
 {
 	m_iRoundStatus = iStatus;
-
 	m_flRoundBeginTime = gpGlobals->time;
-
 	m_iRoundTotalTime = flMaxTime;
+	m_iRoundLastAnnounceTime = -1;
 }
 
 BOOL CHalfLifeMultiplay::IsThereABomber(void)
@@ -3567,12 +3566,11 @@ void CHalfLifeMultiplay::SyncRoundTimer(void)
 
 void CHalfLifeMultiplay::AnnounceRoundTime(void)
 {
-	if (gpGlobals->time <= m_flRoundLastAnnounceTime)
+	int iRemaining = max(TimeRemaining(), 0);
+	if (iRemaining == m_iRoundLastAnnounceTime)
 		return;
+	m_iRoundLastAnnounceTime = iRemaining;
 
-	m_flRoundLastAnnounceTime = gpGlobals->time;
-
-	int iRemaining = TimeRemaining();
 	if(m_iRoundStatus == ROUND_SETUP)
 	{
 		if(iRemaining == 60)
@@ -3597,9 +3595,9 @@ void CHalfLifeMultiplay::AnnounceRoundTime(void)
 	else if(m_iRoundStatus == ROUND_NORMAL)
 	{
 		if(iRemaining == 300)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5mins.mp3");
+			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5min.mp3");
 		else if(iRemaining == 120)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2mins.mp3");
+			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2min.mp3");
 		else if(iRemaining == 60)
 			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_60sec.mp3");
 		else if(iRemaining == 30)

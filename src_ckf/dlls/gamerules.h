@@ -365,7 +365,7 @@ public:
 
 	float m_flRoundBeginTime;
 	int m_iRoundTotalTime;
-	float m_flRoundLastAnnounceTime;
+	int m_iRoundLastAnnounceTime;
 
 	int m_iFreezeTime;
 	int m_iSetupCondition;
