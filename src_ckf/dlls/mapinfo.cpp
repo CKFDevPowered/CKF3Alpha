@@ -13,43 +13,7 @@ void CMapInfo::KeyValue(KeyValueData *pkvd)
 	{
 		m_iSetupCondition = atoi(pkvd->szValue);
 
-		if(m_iSetupCondition > ROUND_WAIT)
-			m_iSetupCondition = ROUND_WAIT;
-		else if(m_iSetupCondition < ROUND_NORMAL)
-			m_iSetupCondition = ROUND_NORMAL;
-
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "endaction"))
-	{
-		m_iEndAction = atoi(pkvd->szValue);
-
-		if(m_iEndAction > END_SUDDEN_DEATH)
-			m_iEndAction = END_SUDDEN_DEATH;
-		else if(m_iEndAction < END_NOTHING)
-			m_iEndAction = END_NOTHING;
-
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "reddominatedaction"))
-	{
-		m_iRedDominatedAction = atoi(pkvd->szValue);
-
-		if (m_iRedDominatedAction > END_SUDDEN_DEATH)
-			m_iRedDominatedAction = END_SUDDEN_DEATH;
-		else if (m_iRedDominatedAction < END_NOTHING)
-			m_iRedDominatedAction = END_NOTHING;
-
-		pkvd->fHandled = TRUE;
-	}
-	else if (FStrEq(pkvd->szKeyName, "bludominatedaction"))
-	{
-		m_iBluDominatedAction = atoi(pkvd->szValue);
-
-		if (m_iBluDominatedAction > END_SUDDEN_DEATH)
-			m_iBluDominatedAction = END_SUDDEN_DEATH;
-		else if (m_iBluDominatedAction < END_NOTHING)
-			m_iBluDominatedAction = END_NOTHING;
+		m_iSetupCondition = min(max(m_iSetupCondition, ROUND_NORMAL), ROUND_WAIT);
 
 		pkvd->fHandled = TRUE;
 	}
@@ -68,14 +32,25 @@ void CMapInfo::KeyValue(KeyValueData *pkvd)
 		m_iSetupTime = max(atoi(pkvd->szValue), 0);
 		pkvd->fHandled = TRUE;
 	}
-	else if (FStrEq(pkvd->szKeyName, "roundtime"))
-	{
-		m_iRoundTime = max(atoi(pkvd->szValue), 0);
-		pkvd->fHandled = TRUE;
-	}
 	else if (FStrEq(pkvd->szKeyName, "endtime"))
 	{
 		m_iEndTime = max(atoi(pkvd->szValue), 0);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "reddominatedaction"))
+	{
+		m_iRedDominatedAction = atoi(pkvd->szValue);
+
+		m_iRedDominatedAction = min(max(m_iRedDominatedAction, WINSTATUS_NONE), WINSTATUS_DRAW);
+
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "bludominatedaction"))
+	{
+		m_iBluDominatedAction = atoi(pkvd->szValue);
+
+		m_iBluDominatedAction = min(max(m_iBluDominatedAction, WINSTATUS_NONE), WINSTATUS_DRAW);
+
 		pkvd->fHandled = TRUE;
 	}
 	else

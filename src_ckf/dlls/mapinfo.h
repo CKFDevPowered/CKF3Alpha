@@ -6,6 +6,17 @@
 class CMapInfo : public CPointEntity
 {
 public:
+	CMapInfo(void)
+	{
+		m_iSetupCondition = 0;
+		m_iWaitTime = 0;
+		m_iFreezeTime = 0;
+		m_iSetupTime = 0;
+		m_iEndTime = 0;
+		m_iRedDominatedAction = 0;
+		m_iBluDominatedAction = 0;
+	}
+public:
 	void Spawn(void);
 	void KeyValue(KeyValueData *pkvd);
 
@@ -14,9 +25,7 @@ public:
 	int m_iWaitTime;
 	int m_iFreezeTime;
 	int m_iSetupTime;
-	int m_iRoundTime;
 	int m_iEndTime;
-	int m_iEndAction;
 	int m_iRedDominatedAction;
 	int m_iBluDominatedAction;
 };

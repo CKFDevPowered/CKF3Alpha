@@ -313,7 +313,6 @@ enum
 	ROUND_NORMAL = 0,
 	ROUND_SETUP,
 	ROUND_END,
-	ROUND_OVERTIME,
 	ROUND_WAIT
 };
 
@@ -388,6 +387,7 @@ extern BuildInfo g_Build;
 extern PlayerStats g_PlayerStats;
 extern CUtlVector<physent_t> g_NoBuildZones;
 extern CUtlVector<controlpoint_t> g_ControlPoints;
+extern CUtlVector<roundtimer_t> g_RoundTimers;
 
 extern CClientSentry g_Sentry;
 extern CClientDispenser g_Dispenser;

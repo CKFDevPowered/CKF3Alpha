@@ -498,38 +498,26 @@
 		0: "Normal(Default)"
 		1: "Setup Stage"
 		2: "End Stage"
-		3: "Overtime Stage"
-		4: "Wait for Players"
-	]
-	endaction(choices)  : "Action when time is out" : 1 =
-	[
-		0: "No Action(Default)"
-		1: "Stalemate"
-		2: "Red Win"
-		3: "Blue Win"
-		4: "Sudden Death(Not done yet)"
-	]
-	reddominatedaction(choices)  : "Action when red is dominated" : 2 =
-	[
-		0: "No Action(Default)"
-		1: "Stalemate"
-		2: "Red Win"
-		3: "Blue Win"
-		4: "Sudden Death(Not done yet)"
-	]
-	bludominatedaction(choices)  : "Action when blue is dominated" : 3 =
-	[
-		0: "No Action(Default)"
-		1: "Stalemate"
-		2: "Red Win"
-		3: "Blue Win"
-		4: "Sudden Death(Not done yet)"
+		3: "Wait for Players"
 	]
 	waittime(integer) : "Wait for players time(sec.)" : 30
 	freezetime(integer) : "Freeze time(sec.)" : 3
 	setuptime(integer) : "Setup time(sec.)" : 60
-	roundtime(integer) : "Round time(sec.)" : 300
 	endtime(integer) : "Humiliation time(sec.)" : 15
+	reddominatedaction(choices)  : "Action when red is dominated" : 1 =
+	[
+		0: "No Action(Default)"
+		1: "Red Win"
+		2: "Blue Win"
+		3: "Stalemate"
+	]
+	bludominatedaction(choices)  : "Action when blue is dominated" : 2 =
+	[
+		0: "No Action(Default)"
+		1: "Red Win"
+		2: "Blue Win"
+		3: "Stalemate"
+	]
 ]
 
 @SolidClass base(color_wall) base(Targetname, Global, SolidVisible, Appearflags) = func_wall : "Wall" 
@@ -539,5 +527,40 @@
 		0: "Both"
 		1: "Red"
 		2: "Blue"
+	]
+]
+
+@PointClass base(color_trigger) base(Targetname, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundtimer : "Round Timer"
+[
+	timeoutaction(choices)  : "Action when timeout" : 3 =
+	[
+		0: "No Action(Default)"
+		1: "Red Win"
+		2: "Blue Win"
+		3: "Stalemate"
+	]
+	trigontimeout(string) : "Triggered when timeout" : ""
+	hudpos(integer) : "HUD icon position" : 0
+	hudteam(choices) : "HUD team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
+    totaltime(string) : "Total time(sec.)" : 300
+	announcetime(choices) : "Announce time" : 1 =
+	[
+		0: "no"
+		1: "yes"
+	]
+	locked(choices) : "Locked" : 0 =
+	[
+		0: "no"
+		1: "yes"
+	]
+	disabled(choices) : "Disabled" : 0 =
+	[
+		0: "no"
+		1: "yes"
 	]
 ]

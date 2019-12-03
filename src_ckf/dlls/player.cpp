@@ -146,6 +146,8 @@ int gmsgCPState = 0;
 int gmsgCPInit = 0;
 int gmsgBuildDeath = 0;//build deathmsg
 int gmsgDisguise = 0;
+int gmsgRTInit = 0;
+int gmsgRTState = 0;
 int gmsgHUDStatus = 0;
 int gmsgHUDBuild = 0;
 int gmsgStatsInfo = 0;
@@ -242,6 +244,8 @@ void LinkUserMessages(void)
 	gmsgCPInit = REG_USER_MSG("CPInit", -1);
 	gmsgBuildDeath = REG_USER_MSG("BuildDeath", -1);
 	gmsgDisguise = REG_USER_MSG("Disguise", -1);
+	gmsgRTInit = REG_USER_MSG("RTInit", -1);
+	gmsgRTState = REG_USER_MSG("RTState", 8);
 	//We have client-side hudstatus now
 	//gmsgHUDStatus = REG_USER_MSG("HUDStatus", -1);
 	gmsgHUDBuild = REG_USER_MSG("HUDBuild", -1);
@@ -5038,6 +5042,8 @@ void CBasePlayer::UpdateClientData(void)
 		SyncRoundTimer();
 		g_pGameRules->CPSendInit(this);
 		g_pGameRules->CPSendState(this);
+		g_pGameRules->RTSendInit(this);
+		g_pGameRules->RTSendState(this);
 
 		if (g_pGameRules->IsMultiplayer())
 		{

@@ -1302,6 +1302,49 @@ int MsgFunc_CPZone(const char *pszName, int iSize, void *pbuf)
 	return 1;
 }
 
+int MsgFunc_RTInit(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int iNumTimers = READ_BYTE();
+
+	g_RoundTimers.RemoveAll();
+	g_RoundTimers.AddMultipleToTail(iNumTimers);
+
+	for (int i = 0; i < iNumTimers; ++i)
+	{
+		g_RoundTimers[i].iHudPosition = READ_CHAR();
+		g_RoundTimers[i].iHudTeam = READ_CHAR();
+	}
+
+	return 1;
+}
+
+int MsgFunc_RTState(const char *pszName, int iSize, void *pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int iIndex = READ_BYTE();
+
+	if (iIndex >= 0 && iIndex <= g_RoundTimers.Count())
+	{
+		BOOL bLocked = READ_BYTE();
+		BOOL bDisabled = READ_BYTE();
+		BOOL bOvertime = READ_BYTE();
+		float flTime = READ_SHORT();
+		float flTotalTime = READ_SHORT();
+
+		g_RoundTimers[iIndex].bLocked = bLocked;
+		g_RoundTimers[iIndex].bDisabled = bDisabled;
+		g_RoundTimers[iIndex].bOvertime = bOvertime;
+		g_RoundTimers[iIndex].flTime = flTime;
+		g_RoundTimers[iIndex].flEndTime = bLocked || bDisabled ? 0.0f : g_flClientTime + flTime;
+		g_RoundTimers[iIndex].flTotalTime = flTotalTime;
+	}
+
+	return 1;
+}
+
 int MsgFunc_PlayerVars(const char *pszName, int iSize, void *pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
@@ -1371,6 +1414,8 @@ void UserMsg_InstallHook(void)
 	HOOK_USERMSG(StatsInfo);
 	HOOK_USERMSG(CPState);
 	HOOK_USERMSG(CPInit);
+	HOOK_USERMSG(RTInit);
+	HOOK_USERMSG(RTState);
 	//HOOK_USERMSG(CPZone);
 	HOOK_USERMSG(SpawnInit);
 	HOOK_USERMSG(PlayerVars);

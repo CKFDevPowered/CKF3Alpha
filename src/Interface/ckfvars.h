@@ -246,6 +246,18 @@ typedef struct
 	physent_t physent;
 }controlpoint_t;
 
+typedef struct
+{
+	int iHudPosition;
+	int iHudTeam;
+	BOOL bLocked;
+	BOOL bDisabled;
+	BOOL bOvertime;
+	float flTime;
+	float flEndTime;
+	float flTotalTime;
+} roundtimer_t;
+
 extern ckf_vars_t gCKFVars;
 
 #endif

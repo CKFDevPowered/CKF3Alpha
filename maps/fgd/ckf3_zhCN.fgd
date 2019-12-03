@@ -502,38 +502,26 @@
 		0: "正常(默认)"
 		1: "准备阶段"
 		2: "结束阶段"
-		3: "超时阶段"
-		4: "等待玩家"
-	]
-	endaction(choices)  : "回合时间耗尽时动作" : 1 =
-	[
-		0: "无动作(默认)"
-		1: "平局"
-		2: "红队胜利"
-		3: "蓝队胜利"
-		4: "进入加时赛(暂不可用)"
-	]
-	reddominatedaction(choices)  : "红队主宰时的动作" : 2 =
-	[
-		0: "无动作(默认)"
-		1: "平局"
-		2: "红队胜利"
-		3: "蓝队胜利"
-		4: "进入加时赛(暂不可用)"
-	]
-	bludominatedaction(choices)  : "蓝队主宰时的动作" : 3 =
-	[
-		0: "无动作(默认)"
-		1: "平局"
-		2: "红队胜利"
-		3: "蓝队胜利"
-		4: "进入加时赛(暂不可用)"
+		3: "等待玩家"
 	]
 	waittime(integer) : "等待玩家时间(秒)" : 30
 	freezetime(integer) : "开局冻结时间(秒)" : 3
 	setuptime(integer) : "准备阶段时间(秒)" : 60
-	roundtime(integer) : "回合时间(秒)" : 300
 	endtime(integer) : "结束等待时间(秒)" : 15
+	reddominatedaction(choices)  : "红队主宰时的动作" : 2 =
+	[
+		0: "无动作(默认)"
+		1: "红队胜利"
+		2: "蓝队胜利"
+		3: "平局"
+	]
+	bludominatedaction(choices)  : "蓝队主宰时的动作" : 3 =
+	[
+		0: "无动作(默认)"
+		1: "红队胜利"
+		2: "蓝队胜利"
+		3: "平局"
+	]
 ]
 
 @SolidClass base(color_wall) base(Targetname, Global, SolidVisible, Appearflags) = func_wall : "Wall" 
@@ -543,5 +531,40 @@
 		0: "双方"
 		1: "红队"
 		2: "蓝队"
+	]
+]
+
+@PointClass base(color_trigger) base(Targetname, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundtimer : "Round Timer"
+[
+	timeoutaction(choices)  : "超时后的动作" : 3 =
+	[
+		0: "无动作(默认)"
+		1: "红队胜利"
+		2: "蓝队胜利"
+		3: "平局"
+	]
+	trigontimeout(string) : "超时后引发" : ""
+	hudpos(integer) : "HUD图标位置" : 0
+	hudteam(choices) : "HUD队伍" : 0 =
+	[
+		0: "双方"
+		1: "红队"
+		2: "蓝队"
+	]
+    totaltime(string) : "总时间(秒)" : 300
+	announcetime(choices) : "播报时间" : 1 =
+	[
+		0: "否"
+		1: "是"
+	]
+	locked(choices) : "锁定" : 0 =
+	[
+		0: "否"
+		1: "是"
+	]
+	disabled(choices) : "禁用" : 0 =
+	[
+		0: "否"
+		1: "是"
 	]
 ]

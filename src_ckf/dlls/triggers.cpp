@@ -1944,6 +1944,7 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 
 		if(m_iTimeAdded)
 		{
+			// TODO Refactor
 			pPlayer->SendAddTime(iTimeAdded);
 
 			if(!bPlayedSnd && RANDOM_LONG(0, 2) == 0)
@@ -1989,10 +1990,19 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 
 	g_pGameRules->ObjectNotice(m_iIndex, 0, pev->team, iOldTeam, plCapturer, iCapturer);
 
-	if(iTimeAdded && (g_pGameRules->m_iRoundStatus == ROUND_NORMAL || g_pGameRules->m_iRoundStatus == ROUND_OVERTIME))
+	if(iTimeAdded && g_pGameRules->m_iRoundStatus == ROUND_NORMAL)
 	{
-		g_pGameRules->SetRoundStatus(ROUND_NORMAL, fmaxf(g_pGameRules->TimeRemaining(), 0.0f) + iTimeAdded);
-		g_pGameRules->SyncRoundTimer();
+		// TODO Refactor
+		// Add time to all timer for now
+		for (int i = 0; i < g_pGameRules->m_RoundTimers.Count(); i++)
+		{
+			CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(g_pGameRules->m_RoundTimers[i]);
+
+			pTimer->m_bOvertime = FALSE;
+			pTimer->m_flBeginTime = gpGlobals->time;
+			pTimer->m_flTotalTime = fmaxf(pTimer->TimeRemaining(), 0.0f) + iTimeAdded;
+		}
+		g_pGameRules->RTSendState();
 	}
 }
 
@@ -2272,6 +2282,120 @@ void CControlPoint::UpdateHUD(void)
 
 		g_pGameRules->CPSendState(pev);
 	}
+}
+
+LINK_ENTITY_TO_CLASS(trigger_roundtimer, CRoundTimer);
+
+void CRoundTimer::Spawn(void)
+{
+	InitTrigger();
+	pev->nextthink = gpGlobals->time + 1.0;
+}
+
+void CRoundTimer::PostSpawn(void)
+{
+	m_iIndex = g_pGameRules->m_RoundTimers.Count() + 1;
+	g_pGameRules->m_RoundTimers.AddToTail(edict());
+}
+
+void CRoundTimer::KeyValue(KeyValueData *pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "timeoutaction"))
+	{
+		m_iTimeoutAction = atoi(pkvd->szValue);
+
+		m_iTimeoutAction = min(max(m_iTimeoutAction, WINSTATUS_NONE), WINSTATUS_DRAW);
+
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "trigontimeout"))
+	{
+		m_iTrigOnTimeout = ALLOC_STRING(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "hudpos"))
+	{
+		m_iHUDPosition = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "hudteam"))
+	{
+		m_iHUDTeam = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "totaltime"))
+	{
+		m_flOriginTotalTime = atof(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "announcetime"))
+	{
+		m_bAnnounceTime = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "locked"))
+	{
+		m_bOriginLocked = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabled"))
+	{
+		m_bOriginDisabled = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CBaseEntity::KeyValue(pkvd);
+}
+
+void CRoundTimer::Restart(void)
+{
+	m_bTiming = FALSE;
+	m_bOvertime = FALSE;
+	m_flTotalTime = m_flOriginTotalTime;
+	m_flBeginTime = 0.0f;
+	m_bLocked = m_bOriginLocked;
+	m_bDisabled = m_bOriginDisabled;
+	m_iLastAnnounceTime = -1;
+}
+
+void CRoundTimer::RoundTimerUpdate(void)
+{
+	if (m_bLocked || m_bDisabled)
+		RoundTimerPause();
+	else
+		RoundTimerResume();
+}
+
+void CRoundTimer::RoundTimerPause(void)
+{
+	if (!m_bTiming)
+		return;
+	m_bTiming = FALSE;
+	m_flTotalTime = max(TimeRemaining(), 0.0f);
+	m_flBeginTime = 0.0f;
+}
+
+void CRoundTimer::RoundTimerResume(void)
+{
+	if (m_bTiming)
+		return;
+	m_bTiming = TRUE;
+	m_flBeginTime = gpGlobals->time;
+}
+
+float CRoundTimer::TimeRemaining(void)
+{
+	return TimeTotal() - TimeElapsed();
+}
+
+float CRoundTimer::TimeElapsed(void)
+{
+	return m_bTiming ? gpGlobals->time - m_flBeginTime : 0.0f;
+}
+
+float CRoundTimer::TimeTotal(void)
+{
+	return m_flTotalTime;
 }
 
 class CNoBuildZone : public CBaseTrigger

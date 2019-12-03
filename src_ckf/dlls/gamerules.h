@@ -32,17 +32,7 @@ enum
 	ROUND_NORMAL = 0,
 	ROUND_SETUP,
 	ROUND_END,
-	ROUND_OVERTIME,
 	ROUND_WAIT
-};
-
-enum
-{
-	END_NOTHING = 0,
-	END_DRAW,
-	END_RED_WIN,
-	END_BLU_WIN,	
-	END_SUDDEN_DEATH
 };
 
 enum
@@ -316,7 +306,14 @@ public:
 	CBasePlayer *GetAssister(CBasePlayer *pKiller, CBasePlayer *pVictim);
 	void Cmd_AddCondition(CBasePlayer *pPlayer);
 	BOOL IsRoundSetup(void);
-	BOOL CPHasControlPoint(void);
+	BOOL CPExist(void);
+	void RTStartAll(void);
+	void RTResetAll(void);
+	BOOL RTExist(void);
+	void RTSendInit(CBasePlayer *pPlayer);
+	void RTSendState(void);
+	void RTSendState(entvars_t *pevTimer);
+	void RTSendState(CBasePlayer *pPlayer);
 
 public:
 	CVoiceGameMgr m_VoiceGameMgr;
@@ -371,19 +368,15 @@ public:
 	int m_iSetupCondition;
 	int m_iWaitTime;
 	int m_iSetupTime;
-	int m_iRoundTime;
 	int m_iEndTime;
 	int m_iRespawnDisabled;
-	int m_iEndAction;
 	int m_iRedDominatedAction;
 	int m_iBluDominatedAction;
 	bool m_bFreezePeriod;
 	float m_flFreezeTimer;
-	//for control points
 	CUtlVector<edict_t *> m_ControlPoints;
-	//For nobuild zone
+	CUtlVector<edict_t *> m_RoundTimers;
 	CUtlVector<edict_t *> m_NoBuildZone;
-	//For light_shadow
 	CUtlVector<shadow_manager_t> m_ShadowManager;
 };
 

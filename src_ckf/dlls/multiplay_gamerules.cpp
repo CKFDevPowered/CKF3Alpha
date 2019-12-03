@@ -182,19 +182,16 @@ CHalfLifeMultiplay::CHalfLifeMultiplay(void)
 	m_iLimitTeam = 0;
 	//Round init
 	m_iMaxRounds = (int)CVAR_GET_FLOAT("mp_maxrounds");
-	//CP init
 	m_ControlPoints.RemoveAll();
-	//NoBuildZone init
+	m_RoundTimers.RemoveAll();
 	m_NoBuildZone.RemoveAll();
 	m_ShadowManager.RemoveAll();
 	m_iSetupCondition = ROUND_NORMAL;
-	m_iEndAction = END_DRAW;
-	m_iRedDominatedAction = END_RED_WIN;
-	m_iBluDominatedAction = END_BLU_WIN;
+	m_iRedDominatedAction = WINSTATUS_TERRORIST;
+	m_iBluDominatedAction = WINSTATUS_CT;
 	m_iWaitTime = 30;
 	m_iFreezeTime = 3;
 	m_iSetupTime = 60;
-	m_iRoundTime = 300;
 	m_iEndTime = 15;	
 	m_bFreezePeriod = false;
 	m_flFreezeTimer = 0;
@@ -257,7 +254,6 @@ void CHalfLifeMultiplay::ReadMultiplayCvars(void)
 	m_iWaitTime = (int)CVAR_GET_FLOAT("mp_waittime");
 	m_iFreezeTime = (int)CVAR_GET_FLOAT("mp_freezetime");
 	m_iSetupTime = (int)CVAR_GET_FLOAT("mp_setuptime");
-	m_iRoundTime = (int)CVAR_GET_FLOAT("mp_roundtime");
 	m_iEndTime = (int)CVAR_GET_FLOAT("mp_endtime");
 
 	m_iLimitTeam = (int)CVAR_GET_FLOAT("mp_limitteams");
@@ -293,17 +289,6 @@ void CHalfLifeMultiplay::ReadMultiplayCvars(void)
 	{
 		CVAR_SET_FLOAT("mp_setuptime", 0);
 		m_iSetupTime = 0;
-	}
-
-	if (m_iRoundTime > 32767)//540
-	{
-		CVAR_SET_FLOAT("mp_roundtime", 32767);
-		m_iRoundTime = 32767;
-	}
-	else if (m_iRoundTime < 30)
-	{
-		CVAR_SET_FLOAT("mp_roundtime", 30);
-		m_iRoundTime = 30;
 	}
 
 	if (m_iEndTime > 60)
@@ -978,11 +963,8 @@ void CHalfLifeMultiplay::RestartRound(void)
 	}
 
 	CleanUpMap();
-
-	if(CPHasControlPoint())
-	{
-		CPResetAll();
-	}
+	CPResetAll();
+	RTResetAll();
 
 	//Fire
 	FireTargets("game_round_start", g_pWorld, g_pWorld, USE_TOGGLE, 0);
@@ -995,30 +977,24 @@ void CHalfLifeMultiplay::RestartRound(void)
 	{
 		if(params->m_iSetupCondition >= 0)
 			m_iSetupCondition = params->m_iSetupCondition;
-		if(params->m_iEndAction >= 0)
-			m_iEndAction = params->m_iEndAction;
-		if (params->m_iRedDominatedAction >= 0)
-			m_iRedDominatedAction = params->m_iRedDominatedAction;
-		if (params->m_iBluDominatedAction >= 0)
-			m_iBluDominatedAction = params->m_iBluDominatedAction;
 		if(params->m_iFreezeTime >= 0)
 			m_iFreezeTime = params->m_iFreezeTime;
 		if(params->m_iWaitTime >= 0)
 			m_iWaitTime = params->m_iWaitTime;
 		if(params->m_iSetupTime >= 0)
 			m_iSetupTime = params->m_iSetupTime;
-		if(params->m_iRoundTime >= 0)
-			m_iRoundTime = params->m_iRoundTime;
 		if(params->m_iEndTime >= 0)
 			m_iEndTime = params->m_iEndTime;
+		if (params->m_iRedDominatedAction >= 0)
+			m_iRedDominatedAction = params->m_iRedDominatedAction;
+		if (params->m_iBluDominatedAction >= 0)
+			m_iBluDominatedAction = params->m_iBluDominatedAction;
 	}
 
 
 	//Objective Reset
-	if(CPHasControlPoint())
-	{
-		CPSendState();
-	}
+	CPSendState();
+	RTSendState();
 
 	m_flIntermissionEndTime = 0;
 	m_flIntermissionStartTime = 0;
@@ -1072,16 +1048,13 @@ void CHalfLifeMultiplay::SetRoundStatus(int iStatus)
 	switch(iStatus)
 	{
 	case ROUND_NORMAL:
-		SetRoundStatus(iStatus, m_iRoundTime);
+		SetRoundStatus(iStatus, 0);
 		break;
 	case ROUND_SETUP:
 		SetRoundStatus(iStatus, m_iSetupTime);
 		break;
 	case ROUND_END:
 		SetRoundStatus(iStatus, m_iEndTime);
-		break;
-	case ROUND_OVERTIME:
-		SetRoundStatus(iStatus, 0);
 		break;
 	case ROUND_WAIT:
 		SetRoundStatus(iStatus, m_iWaitTime);
@@ -1091,6 +1064,9 @@ void CHalfLifeMultiplay::SetRoundStatus(int iStatus)
 
 void CHalfLifeMultiplay::SetRoundStatus(int iStatus, float flMaxTime)
 {
+	if (iStatus == ROUND_NORMAL)
+		RTStartAll();
+
 	m_iRoundStatus = iStatus;
 	m_flRoundBeginTime = gpGlobals->time;
 	m_iRoundTotalTime = flMaxTime;
@@ -1358,18 +1334,28 @@ void CHalfLifeMultiplay::CheckSetupPeriodExpired(void)
 
 void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 {
-	if (m_iRoundStatus != ROUND_NORMAL && m_iRoundStatus != ROUND_OVERTIME)
-		return;
-
-	if (TimeRemaining() > 0)
+	if (m_iRoundStatus != ROUND_NORMAL)
 		return;
 
 	BOOL bOverTime = CPCheckOvertime();
 
-	if (bOverTime)
+	for (int i = 0; i < m_RoundTimers.Count(); i++)
 	{
-		if (m_iRoundStatus == ROUND_NORMAL)
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+
+		if (pTimer->m_bLocked || pTimer->m_bDisabled)
+			continue;
+
+		if (pTimer->TimeRemaining() > 0)
+			continue;
+
+		if (bOverTime)
 		{
+			if (pTimer->m_bOvertime)
+				continue;
+
+			pTimer->m_bOvertime = TRUE;
+
 			switch (RANDOM_LONG(0, 3))
 			{
 			case 0:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime.mp3"); break;
@@ -1377,28 +1363,26 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 			case 2:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime3.mp3"); break;
 			case 3:UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_overtime4.mp3"); break;
 			}
-			SetRoundStatus(ROUND_OVERTIME);
-			SyncRoundTimer();
+			RTSendState(pTimer->pev);
+			continue;
 		}
-		return;
-	}
+		else if (pTimer->m_bOvertime)
+		{
+			pTimer->m_bOvertime = FALSE;
+		}
 
-	switch (m_iEndAction)
-	{
-	case END_NOTHING:
-		break;
-	case END_DRAW:
-		TerminateRound(m_iEndTime, WINSTATUS_DRAW);
-		break;
-	case END_RED_WIN:
-		TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
-		break;
-	case END_BLU_WIN:
-		TerminateRound(m_iEndTime, WINSTATUS_CT);
-		break;
-	case END_SUDDEN_DEATH:
-		// TODO NYI
-		break;
+		pTimer->m_bLocked = TRUE;
+		pTimer->RoundTimerUpdate();
+		RTSendState(pTimer->pev);
+
+		if (pTimer->m_iTrigOnTimeout)
+			FireTargets(STRING(pTimer->m_iTrigOnTimeout), pTimer, pTimer, USE_TOGGLE, 0);
+
+		if (pTimer->m_iTimeoutAction != WINSTATUS_NONE)
+		{
+			TerminateRound(m_iEndTime, pTimer->m_iTimeoutAction);
+			break;
+		}
 	}
 }
 
@@ -3349,45 +3333,33 @@ void CHalfLifeMultiplay::ClientUserInfoChanged(CBasePlayer *pPlayer, char *infob
 
 BOOL CHalfLifeMultiplay::CPRoundEndCheck(BOOL bNeededPlayers)
 {
-	int action = END_NOTHING;
+	int iWinStatus = WINSTATUS_NONE;
 
-	if (CPHasControlPoint())
+	if (CPExist())
 	{
 		if(CPCountPoints(TEAM_RED) >= m_ControlPoints.Count())
-			action = m_iRedDominatedAction;
+			iWinStatus = m_iRedDominatedAction;
 		if(CPCountPoints(TEAM_BLU) >= m_ControlPoints.Count())
-			action = m_iBluDominatedAction;
+			iWinStatus = m_iBluDominatedAction;
 	}
 
-	switch (action)
+	if (!bNeededPlayers)
 	{
-	case END_NOTHING:
-		break;
-	case END_DRAW:
-		TerminateRound(m_iEndTime, WINSTATUS_DRAW);
-		return TRUE;
-	case END_RED_WIN:
-		if (!bNeededPlayers)
+		switch (iWinStatus)
 		{
+		case WINSTATUS_TERRORIST:
 			m_iNumTerroristWins++;
 			UpdateTeamScores();
-		}
-		TerminateRound(m_iEndTime, WINSTATUS_TERRORIST);
-		return TRUE;
-	case END_BLU_WIN:
-		if (!bNeededPlayers)
-		{
+			break;
+		case WINSTATUS_CT:
 			m_iNumCTWins++;
 			UpdateTeamScores();
+			break;
 		}
-		TerminateRound(m_iEndTime, WINSTATUS_CT);
-		return TRUE;
-	case END_SUDDEN_DEATH:
-		// TODO NYI
-		break;
 	}
+	TerminateRound(m_iEndTime, iWinStatus);
 
-	return FALSE;
+	return iWinStatus != WINSTATUS_DRAW;
 }
 
 int CHalfLifeMultiplay::CPCountPoints(int iTeam)
@@ -3473,7 +3445,7 @@ void CHalfLifeMultiplay::CPSendState(CBasePlayer *pPlayer)
 
 void CHalfLifeMultiplay::CPSendInit(CBasePlayer *pPlayer)
 {
-	if(!CPHasControlPoint())
+	if(!CPExist())
 		return;
 
 	int count = m_ControlPoints.Count();
@@ -3503,7 +3475,7 @@ BOOL CHalfLifeMultiplay::CPCheckOvertime(void)
 	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
-		if(pPoint->m_flProgress > 0 && pPoint->m_iTimeAdded > 0)
+		if(pPoint->m_flProgress > 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -3566,13 +3538,13 @@ void CHalfLifeMultiplay::SyncRoundTimer(void)
 
 void CHalfLifeMultiplay::AnnounceRoundTime(void)
 {
-	int iRemaining = max(TimeRemaining(), 0);
-	if (iRemaining == m_iRoundLastAnnounceTime)
-		return;
-	m_iRoundLastAnnounceTime = iRemaining;
-
 	if(m_iRoundStatus == ROUND_SETUP)
 	{
+		int iRemaining = max(TimeRemaining(), 0);
+		if (iRemaining == m_iRoundLastAnnounceTime)
+			return;
+		m_iRoundLastAnnounceTime = iRemaining;
+
 		if(iRemaining == 60)
 			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_begins_60sec.mp3");
 		else if(iRemaining == 30)
@@ -3594,28 +3566,41 @@ void CHalfLifeMultiplay::AnnounceRoundTime(void)
 	}
 	else if(m_iRoundStatus == ROUND_NORMAL)
 	{
-		if(iRemaining == 300)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5min.mp3");
-		else if(iRemaining == 120)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2min.mp3");
-		else if(iRemaining == 60)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_60sec.mp3");
-		else if(iRemaining == 30)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_30sec.mp3");
-		else if(iRemaining == 20)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_20sec.mp3");
-		else if(iRemaining == 10)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_10sec.mp3");
-		else if(iRemaining == 5)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5sec.mp3");
-		else if(iRemaining == 4)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_4sec.mp3");
-		else if(iRemaining == 3)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_3sec.mp3");
-		else if(iRemaining == 2)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2sec.mp3");
-		else if(iRemaining == 1)
-			UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_1sec.mp3");
+		for (int i = 0; i < m_RoundTimers.Count(); i++)
+		{
+			CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+
+			if (!pTimer->m_bAnnounceTime)
+				continue;
+
+			int iRemaining = max(pTimer->TimeRemaining(), 0);
+			if (iRemaining == pTimer->m_iLastAnnounceTime)
+				continue;
+			pTimer->m_iLastAnnounceTime = iRemaining;
+
+			if (iRemaining == 300)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5min.mp3");
+			else if (iRemaining == 120)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2min.mp3");
+			else if (iRemaining == 60)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_60sec.mp3");
+			else if (iRemaining == 30)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_30sec.mp3");
+			else if (iRemaining == 20)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_20sec.mp3");
+			else if (iRemaining == 10)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_10sec.mp3");
+			else if (iRemaining == 5)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_5sec.mp3");
+			else if (iRemaining == 4)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_4sec.mp3");
+			else if (iRemaining == 3)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_3sec.mp3");
+			else if (iRemaining == 2)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_2sec.mp3");
+			else if (iRemaining == 1)
+				UTIL_PlayMP3(NULL, "sound/CKF_III/ano/announcer_ends_1sec.mp3");
+		}
 	}
 }
 
@@ -3634,7 +3619,122 @@ BOOL CHalfLifeMultiplay::IsRoundSetup(void)
 	return (m_iRoundStatus >= ROUND_WAIT && m_iRoundStatus <= ROUND_SETUP);
 }
 
-BOOL CHalfLifeMultiplay::CPHasControlPoint(void)
+BOOL CHalfLifeMultiplay::CPExist(void)
 {
 	return m_ControlPoints.Count() > 0;
+}
+
+void CHalfLifeMultiplay::RTStartAll(void)
+{
+	for (int i = 0; i < m_RoundTimers.Count(); i++)
+	{
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+		pTimer->RoundTimerResume();
+		RTSendState(pTimer->pev);
+	}
+}
+
+void CHalfLifeMultiplay::RTResetAll(void)
+{
+	for (int i = 0; i < m_RoundTimers.Count(); ++i)
+	{
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+		pTimer->Restart();
+	}
+}
+
+BOOL CHalfLifeMultiplay::RTExist(void)
+{
+	return m_RoundTimers.Count() > 0;
+}
+
+extern int gmsgRTInit;
+extern int gmsgRTState;
+
+void CHalfLifeMultiplay::RTSendInit(CBasePlayer *pPlayer)
+{
+	if (!RTExist())
+		return;
+
+	int count = m_RoundTimers.Count();
+	MESSAGE_BEGIN(MSG_ONE, gmsgRTInit, NULL, pPlayer->pev);
+	WRITE_BYTE(count);
+	for (int i = 0; i < count; ++i)
+	{
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+		WRITE_CHAR(pTimer->m_iHUDPosition);
+		WRITE_CHAR(pTimer->m_iHUDTeam);
+	}
+	MESSAGE_END();
+}
+
+void CHalfLifeMultiplay::RTSendState()
+{
+	for (int i = 0; i < m_RoundTimers.Count(); ++i)
+	{
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+
+		float flTime = max(pTimer->TimeRemaining(), 0.0f);
+		float flTotalTime = max(pTimer->TimeTotal(), 0.0f);
+
+		MESSAGE_BEGIN(MSG_ALL, gmsgRTState);
+		WRITE_BYTE(i);
+		WRITE_BYTE(pTimer->m_bLocked);
+		WRITE_BYTE(pTimer->m_bDisabled);
+		WRITE_BYTE(pTimer->m_bOvertime);
+		WRITE_SHORT(flTime);
+		WRITE_SHORT(flTotalTime);
+		MESSAGE_END();
+	}
+}
+
+void CHalfLifeMultiplay::RTSendState(entvars_t *pevTimer)
+{
+	if (!pevTimer)
+		return;
+
+	CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(pevTimer);
+
+	int i;
+
+	for (i = 0; i < m_RoundTimers.Count(); ++i)
+	{
+		if (m_RoundTimers[i] == pevTimer->pContainingEntity)
+			break;
+	}
+
+	if (i == m_RoundTimers.Count())
+		return;
+
+	float flTime = max(pTimer->TimeRemaining(), 0.0f);
+	float flTotalTime = max(pTimer->TimeTotal(), 0.0f);
+
+	MESSAGE_BEGIN(MSG_ALL, gmsgRTState);
+	WRITE_BYTE(i);
+	WRITE_BYTE(pTimer->m_bLocked);
+	WRITE_BYTE(pTimer->m_bDisabled);
+	WRITE_BYTE(pTimer->m_bOvertime);
+	WRITE_SHORT(flTime);
+	WRITE_SHORT(flTotalTime);
+	MESSAGE_END();
+}
+
+void CHalfLifeMultiplay::RTSendState(CBasePlayer *pPlayer)
+{
+	for (int i = 0; i < m_RoundTimers.Count(); ++i)
+	{
+		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+
+		float flTime = max(pTimer->TimeRemaining(), 0.0f);
+		float flTotalTime = max(pTimer->TimeTotal(), 0.0f);
+
+		MESSAGE_BEGIN(MSG_ONE, gmsgRTState, NULL, pPlayer->pev);
+		WRITE_BYTE(i);
+		WRITE_BYTE(pTimer->m_bLocked);
+		WRITE_BYTE(pTimer->m_bDisabled);
+		WRITE_BYTE(pTimer->m_bOvertime);
+		WRITE_SHORT(flTime);
+		WRITE_SHORT(flTotalTime);
+		MESSAGE_END();
+	}
 }

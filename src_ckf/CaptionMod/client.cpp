@@ -24,6 +24,7 @@ BuildInfo g_Build;
 PlayerStats g_PlayerStats;
 CUtlVector<physent_t> g_NoBuildZones;
 CUtlVector<controlpoint_t> g_ControlPoints;
+CUtlVector<roundtimer_t> g_RoundTimers;
 
 CClientSentry g_Sentry;
 CClientDispenser g_Dispenser;
@@ -122,6 +123,7 @@ void CL_InitVars(void)
 	memset(&g_Build, 0, sizeof(g_Build));
 	g_NoBuildZones.RemoveAll();
 	g_ControlPoints.RemoveAll();
+	g_RoundTimers.RemoveAll();
 
 	HUD_InitWeapons();
 }

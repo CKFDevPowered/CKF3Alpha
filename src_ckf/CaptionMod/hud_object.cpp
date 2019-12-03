@@ -264,77 +264,74 @@ static void ParseRoundTime(int time, int *mins, int *secs)
 	}
 }
 
-void DrawTimer(void)
+enum
 {
-	wchar_t szText[32];
-	int time, mins, secs, w, h;
+	TIMERSTATUS_NORMAL = 0,
+	TIMERSTATUS_SETUP,
+	TIMERSTATUS_END,
+	TIMERSTATUS_OVERTIME,
+	TIMERSTATUS_WAIT
+};
 
-	float frac;
-	
-	if(g_iLastRoundStatus != g_iRoundStatus && 
-		((g_iLastRoundStatus == ROUND_NORMAL && g_iRoundStatus != ROUND_NORMAL) ||
-		(g_iLastRoundStatus != ROUND_NORMAL && g_iRoundStatus == ROUND_NORMAL))
-		)
-		frac = max(min((g_flClientTime - g_flRoundStatusChangeTime) / 0.5f, 1), 0);
-	else
-		frac = 1;
-
-	if(g_iRoundStatus != ROUND_NORMAL)
+void DrawTimer(int offset, int status, int team, int total, int time)
+{
+	if (status != TIMERSTATUS_NORMAL)
 	{
 		g_pSurface->DrawSetColor(50, 50, 50, 100);
-		DrawHudMask(0, g_xywhTimerPanelAdditional.x, g_xywhTimerPanelAdditional.y, g_xywhTimerPanelAdditional.w, g_xywhTimerPanelAdditional.h * frac );
-
-		if(frac == 1)
-		{
-			switch(g_iRoundStatus)
-			{
-			case ROUND_END:
-				wcscpy(szText, g_wszRoundStatus[1]);
-				break;
-			case ROUND_OVERTIME:
-				wcscpy(szText, g_wszRoundStatus[2]);
-				break;
-			case ROUND_WAIT:
-				wcscpy(szText, g_wszRoundStatus[3]);
-				break;
-			default:
-				wcscpy(szText, g_wszRoundStatus[0]);
-				break;
-			}
-			g_pSurface->DrawSetTextFont(g_hFontTimerAdditional);
-			g_pSurface->DrawSetTextColor(g_ubColor[0].r, g_ubColor[0].g, g_ubColor[0].b, 255);
-			g_pSurface->GetTextSize(g_hFontTimerAdditional, szText, w, h);
-			g_pSurface->DrawSetTextPos(g_xyTimerFontAdditional.x - w / 2, g_xyTimerFontAdditional.y - h / 2);
-			g_pSurface->DrawPrintText(szText, wcslen(szText));
-			g_pSurface->DrawFlushText();
-		}
+		DrawHudMask(0, g_xywhTimerPanelAdditional.x + offset, g_xywhTimerPanelAdditional.y, g_xywhTimerPanelAdditional.w, g_xywhTimerPanelAdditional.h);
 	}
-	else
+
+	wchar_t *pInfoText = NULL;
+
+	switch (status)
 	{
-		if(frac != 1)
-		{
-			g_pSurface->DrawSetColor(50, 50, 50, 100);
-			DrawHudMask(0, g_xywhTimerPanelAdditional.x, g_xywhTimerPanelAdditional.y, g_xywhTimerPanelAdditional.w, g_xywhTimerPanelAdditional.h * (1 - frac) );
-		}
+	case TIMERSTATUS_NORMAL:
+		break;
+	case TIMERSTATUS_SETUP:
+		pInfoText = g_wszRoundStatus[0];
+		break;
+	case TIMERSTATUS_END:
+		pInfoText = g_wszRoundStatus[1];
+		break;
+	case TIMERSTATUS_OVERTIME:
+		pInfoText = g_wszRoundStatus[2];
+		break;
+	case TIMERSTATUS_WAIT:
+		pInfoText = g_wszRoundStatus[3];
+		break;
+	}
+
+	if (pInfoText)
+	{
+		int width, height;
+
+		g_pSurface->DrawSetTextFont(g_hFontTimerAdditional);
+		g_pSurface->DrawSetTextColor(g_ubColor[0].r, g_ubColor[0].g, g_ubColor[0].b, 255);
+		g_pSurface->GetTextSize(g_hFontTimerAdditional, pInfoText, width, height);
+		g_pSurface->DrawSetTextPos(g_xyTimerFontAdditional.x - width / 2 + offset, g_xyTimerFontAdditional.y - height / 2);
+		g_pSurface->DrawPrintText(pInfoText, wcslen(pInfoText));
+		g_pSurface->DrawFlushText();
 	}
 
 	g_pSurface->DrawSetColor(255, 255, 255, 245);
-	DrawHudMask(g_iTeam, g_xywhTimerPanel.x, g_xywhTimerPanel.y, g_xywhTimerPanel.w, g_xywhTimerPanel.h);
+	DrawHudMask(team, g_xywhTimerPanel.x + offset, g_xywhTimerPanel.y, g_xywhTimerPanel.w, g_xywhTimerPanel.h);
 
-	time = max(min(g_flRoundEndTime - g_flClientTime, g_iMaxRoundTime), 0);
+	int mins, secs;
 
- 	ParseRoundTime(time, &mins, &secs);
+	ParseRoundTime(time, &mins, &secs);
 
-	wsprintfW(szText, L"%02d:%02d", mins, secs);
+	wchar_t szTimeText[32];
+
+	wsprintfW(szTimeText, L"%02d:%02d", mins, secs);
 	g_pSurface->DrawSetTextFont(g_hFontTimer);
 	g_pSurface->DrawSetTextColor(g_ubColor[0].r, g_ubColor[0].g, g_ubColor[0].b, 255);
-	g_pSurface->DrawSetTextPos(g_xyTimerFont.x, g_xyTimerFont.y);
-	g_pSurface->DrawPrintText(szText, wcslen(szText));
+	g_pSurface->DrawSetTextPos(g_xyTimerFont.x + offset, g_xyTimerFont.y);
+	g_pSurface->DrawPrintText(szTimeText, wcslen(szTimeText));
 	g_pSurface->DrawFlushText();
 
-	if(g_iMaxRoundTime > 0)
+	if (total > 0)
 	{
-		if(g_RefSupportExt & r_ext_shader)
+		if (g_RefSupportExt & r_ext_shader)
 		{
 			gRefExports.ShaderAPI.GL_UseProgram(cp_fans_program.program);
 			gRefExports.ShaderAPI.GL_Uniform2f(cp_fans_program.fade, 0.05, 0.95);
@@ -344,17 +341,52 @@ void DrawTimer(void)
 		qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		qglDisable(GL_TEXTURE_2D);
-		
+
 		qglColor4ub(g_ubColor[3].r, g_ubColor[3].g, g_ubColor[3].b, 255);
-		DrawTriangleFans2(g_xywhTimerClock.x, g_xywhTimerClock.y, g_xywhTimerClock.w, -0.5 * M_PI, 2 * M_PI - 0.5 * M_PI, 60);
+		DrawTriangleFans2(g_xywhTimerClock.x + offset, g_xywhTimerClock.y, g_xywhTimerClock.w, -0.5 * M_PI, 2 * M_PI - 0.5 * M_PI, 60);
 
 		qglColor4ub(g_ubColor[0].r, g_ubColor[0].g, g_ubColor[0].b, 255);
-		DrawTriangleFans2(g_xywhTimerClock.x, g_xywhTimerClock.y, g_xywhTimerClock.w, -0.5 * M_PI, (float)time / g_iMaxRoundTime * 2.0 * M_PI - 0.5 * M_PI, 60);
-		
+		DrawTriangleFans2(g_xywhTimerClock.x + offset, g_xywhTimerClock.y, g_xywhTimerClock.w, -0.5 * M_PI, (float) time / (float) total * 2.0 * M_PI - 0.5 * M_PI, 60);
+
 		qglEnable(GL_TEXTURE_2D);
 
-		if(g_RefSupportExt & r_ext_shader)
+		if (g_RefSupportExt & r_ext_shader)
 			gRefExports.ShaderAPI.GL_EndProgram();
+	}
+}
+
+void DrawTimers(void)
+{
+	if (g_iRoundStatus != ROUND_NORMAL)
+	{
+		int offset = 0;
+		int status =
+			g_iRoundStatus == ROUND_NORMAL ? TIMERSTATUS_NORMAL :
+			g_iRoundStatus == ROUND_SETUP ? TIMERSTATUS_SETUP :
+			g_iRoundStatus == ROUND_END ? TIMERSTATUS_END :
+			g_iRoundStatus == ROUND_WAIT ? TIMERSTATUS_WAIT : 0;
+		int team = g_iTeam;
+		int total = g_iMaxRoundTime;
+		int time = max(min(g_flRoundEndTime - g_flClientTime, total), 0);
+
+		DrawTimer(offset, status, team, total, time);
+	}
+	else
+	{
+		for (int i = 0; i < g_RoundTimers.Count(); ++i)
+		{
+			if (g_RoundTimers[i].bDisabled)
+				continue;
+
+			int spacing = g_xywhTimerPanel.w * 1.25;
+			int offset = (g_RoundTimers.Count() % 2 == 0 ? -spacing / 2 : 0) + g_RoundTimers[i].iHudPosition * spacing;
+			int status = g_RoundTimers[i].bOvertime ? TIMERSTATUS_OVERTIME : TIMERSTATUS_NORMAL;
+			int team = g_RoundTimers[i].iHudTeam == 0 ? g_iTeam : g_RoundTimers[i].iHudTeam;
+			int total = g_RoundTimers[i].flTotalTime;
+			int time = max(min(g_RoundTimers[i].bLocked ? g_RoundTimers[i].flTime : g_RoundTimers[i].flEndTime - g_flClientTime, total), 0);
+
+			DrawTimer(offset, status, team, total, time);
+		}
 	}
 }
 
@@ -684,7 +716,7 @@ int HudObject_Redraw(float flTime, int iIntermission)
 
 	if(g_iTeam == 1 || g_iTeam == 2)
 	{
-		DrawTimer();
+		DrawTimers();
 	}
 
 	DrawControlPoints();
