@@ -81,6 +81,7 @@
 #define CLASS_PROJECTILE 21
 #define CLASS_BUILDABLE 22
 #define CLASS_CONTROLPOINT 23
+#define CLASS_ROUNDTIMER 24
 
 #define MENU_KEY_1 (1<<0)
 #define MENU_KEY_2 (1<<1)

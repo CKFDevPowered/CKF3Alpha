@@ -140,11 +140,14 @@ public:
 	void PostSpawn(void);
 	void KeyValue(KeyValueData *pkvd);
 	void Restart(void);
+	int Classify(void) { return CLASS_ROUNDTIMER; }
 public:
 	void RoundTimerUpdate(void);
 	void RoundTimerPause(void);
 	void RoundTimerResume(void);
 public:
+	void UpdateTime(float time);
+	void AddTime(float time);
 	float TimeRemaining(void);
 	float TimeElapsed(void);
 	float TimeTotal(void);

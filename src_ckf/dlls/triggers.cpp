@@ -1997,10 +1997,7 @@ void CControlPoint::ControlPointCaptured(int iNewTeam)
 		for (int i = 0; i < g_pGameRules->m_RoundTimers.Count(); i++)
 		{
 			CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(g_pGameRules->m_RoundTimers[i]);
-
-			pTimer->m_bOvertime = FALSE;
-			pTimer->m_flBeginTime = gpGlobals->time;
-			pTimer->m_flTotalTime = fmaxf(pTimer->TimeRemaining(), 0.0f) + iTimeAdded;
+			pTimer->AddTime(iTimeAdded);
 		}
 		g_pGameRules->RTSendState();
 	}
@@ -2370,17 +2367,33 @@ void CRoundTimer::RoundTimerPause(void)
 {
 	if (!m_bTiming)
 		return;
-	m_bTiming = FALSE;
 	m_flTotalTime = max(TimeRemaining(), 0.0f);
 	m_flBeginTime = 0.0f;
+	m_bTiming = FALSE;
 }
 
 void CRoundTimer::RoundTimerResume(void)
 {
 	if (m_bTiming)
 		return;
-	m_bTiming = TRUE;
 	m_flBeginTime = gpGlobals->time;
+	m_bTiming = TRUE;
+}
+
+void CRoundTimer::UpdateTime(float time)
+{
+	m_flTotalTime = fmaxf(time, 0.0f);
+	m_flBeginTime = m_bTiming ? gpGlobals->time : 0.0f;
+	if (TimeRemaining() > 0)
+		m_bOvertime = FALSE;
+}
+
+void CRoundTimer::AddTime(float time)
+{
+	m_flTotalTime = fmaxf(fmaxf(TimeRemaining(), 0.0f) + time, 0.0f);
+	m_flBeginTime = m_bTiming ? gpGlobals->time : 0.0f;
+	if (TimeRemaining() > 0)
+		m_bOvertime = FALSE;
 }
 
 float CRoundTimer::TimeRemaining(void)

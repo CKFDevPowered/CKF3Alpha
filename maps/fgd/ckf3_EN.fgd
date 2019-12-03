@@ -380,6 +380,7 @@
 		1 : "Update"
 		2 : "Toggle"
 		3 : "Reset"
+		4 : "Modify"
 	]
 	lockedarg(choices) : "Locked argument" : 0 = 
 	[
@@ -392,6 +393,7 @@
 		1 : "Update"
 		2 : "Toggle"
 		3 : "Reset"
+		4 : "Modify"
 	]
 	disabledarg(choices) : "Disabled argument" : 0 = 
 	[
@@ -404,6 +406,7 @@
 		1 : "Update"
 		2 : "Toggle"
 		3 : "Reset"
+		4 : "Modify"
 	]
 	canredcaparg(choices) : "Red capturable argument" : 0 = 
 	[
@@ -416,6 +419,7 @@
 		1 : "Update"
 		2 : "Toggle"
 		3 : "Reset"
+		4 : "Modify"
 	]
 	canblucaparg(choices) : "Blue capturable argument" : 0 = 
 	[
@@ -428,6 +432,7 @@
 		1 : "Update"
 		2 : "Toggle"
 		3 : "Reset"
+		4 : "Modify"
 	]
 	teamarg(choices) : "Team argument" : 0 =
 	[
@@ -563,4 +568,43 @@
 		0: "no"
 		1: "yes"
 	]
+]
+
+@PointClass base(color_trigger) base(Targetname, Target, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_rtcontrols : "Round Timer Controls"
+[
+	lockedop(choices) : "Locked operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+		4 : "Modify"
+	]
+	lockedarg(choices) : "Locked argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	disabledop(choices) : "Disabled operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+		4 : "Modify"
+	]
+	disabledarg(choices) : "Disabled argument" : 0 = 
+	[
+		0 : "no"
+		1 : "yes"
+	]
+	timeop(choices) : "Time operation" : 0 = 
+	[
+		0 : "Skip"
+		1 : "Update"
+		2 : "Toggle"
+		3 : "Reset"
+		4 : "Modify"
+	]
+	timearg(integer) : "Time argument" : 0
 ]

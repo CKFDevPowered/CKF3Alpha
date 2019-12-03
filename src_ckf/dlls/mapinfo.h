@@ -34,7 +34,8 @@ typedef enum {
 	SKIP = 0,
 	UPDATE,
 	TOGGLE,
-	RESET
+	RESET,
+	MODIFY
 } CONTROL_OP;
 
 class CCPControls : public CPointEntity
@@ -87,4 +88,30 @@ public:
 public:
 	int m_iWinStatus;
 	int m_iEndTime;
+};
+
+class CRTControls : public CPointEntity
+{
+public:
+	CRTControls(void)
+	{
+		m_opLockedOp = SKIP;
+		m_bLockedArg = FALSE;
+		m_opDisabledOp = SKIP;
+		m_bDisabledArg = FALSE;
+		m_opTimeOp = SKIP;
+		m_iTimeArg = 0;
+	}
+public:
+	void Spawn(void);
+	void KeyValue(KeyValueData *pkvd);
+	void Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value);
+
+public:
+	CONTROL_OP	m_opLockedOp;
+	BOOL		m_bLockedArg;
+	CONTROL_OP	m_opDisabledOp;
+	BOOL		m_bDisabledArg;
+	CONTROL_OP	m_opTimeOp;
+	int			m_iTimeArg;
 };

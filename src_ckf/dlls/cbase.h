@@ -126,6 +126,7 @@ typedef void (CBaseEntity::*USEPTR)(CBaseEntity *pActivator, CBaseEntity *pCalle
 #define CLASS_PROJECTILE 21
 #define CLASS_BUILDABLE 22
 #define CLASS_CONTROLPOINT 23
+#define CLASS_ROUNDTIMER 24
 
 #define CLASS_BARNACLE 99
 #define CLASS_CYCLERSPRITE 100

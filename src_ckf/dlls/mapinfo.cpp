@@ -73,7 +73,7 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 	if (FStrEq(pkvd->szKeyName, "lockedop"))
 	{
 		op = atoi(pkvd->szValue);
-		m_opLockedOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		m_opLockedOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "lockedarg"))
@@ -84,7 +84,7 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 	else if (FStrEq(pkvd->szKeyName, "disabledop"))
 	{
 		op = atoi(pkvd->szValue);
-		m_opDisabledOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		m_opDisabledOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "disabledarg"))
@@ -95,7 +95,7 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 	else if (FStrEq(pkvd->szKeyName, "canredcapop"))
 	{
 		op = atoi(pkvd->szValue);
-		m_opCanRedCapOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		m_opCanRedCapOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "canredcaparg"))
@@ -106,7 +106,7 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 	else if (FStrEq(pkvd->szKeyName, "canblucapop"))
 	{
 		op = atoi(pkvd->szValue);
-		m_opCanBluCapOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		m_opCanBluCapOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "canblucaparg"))
@@ -117,7 +117,7 @@ void CCPControls::KeyValue(KeyValueData *pkvd)
 	else if (FStrEq(pkvd->szKeyName, "teamop"))
 	{
 		op = atoi(pkvd->szValue);
-		m_opTeamOp = op >= SKIP && op <= RESET ? CONTROL_OP(op) : SKIP;
+		m_opTeamOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
 		pkvd->fHandled = TRUE;
 	}
 	else if (FStrEq(pkvd->szKeyName, "teamarg"))
@@ -163,6 +163,9 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 		case RESET:
 			pPoint->m_bLocked = pPoint->m_bOriginLocked;
 			break;
+		case MODIFY:
+			pPoint->m_bLocked = m_bLockedArg ? !pPoint->m_bLocked : pPoint->m_bLocked;
+			break;
 		}
 
 		switch (m_opDisabledOp)
@@ -177,6 +180,9 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 			break;
 		case RESET:
 			pPoint->m_bDisabled = pPoint->m_bOriginDisabled;
+			break;
+		case MODIFY:
+			pPoint->m_bDisabled = m_bDisabledArg ? !pPoint->m_bDisabled : pPoint->m_bDisabled;
 			break;
 		}
 
@@ -193,6 +199,9 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 		case RESET:
 			pPoint->m_bCanRedCap = pPoint->m_bOriginCanRedCap;
 			break;
+		case MODIFY:
+			pPoint->m_bCanRedCap = m_bCanRedCapArg ? !pPoint->m_bCanRedCap : pPoint->m_bCanRedCap;
+			break;
 		}
 
 		switch (m_opCanBluCapOp)
@@ -207,6 +216,9 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 			break;
 		case RESET:
 			pPoint->m_bCanBluCap = pPoint->m_bOriginCanBluCap;
+			break;
+		case MODIFY:
+			pPoint->m_bCanBluCap = m_bCanBluCapArg ? !pPoint->m_bCanBluCap : pPoint->m_bCanBluCap;
 			break;
 		}
 
@@ -225,6 +237,9 @@ void CCPControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE us
 			break;
 		case RESET:
 			pPoint->UpdateTeam(pPoint->m_iOriginTeam);
+			break;
+		case MODIFY:
+			pPoint->UpdateTeam((pPoint->pev->team + m_iTeamArg) % 3);
 			break;
 		}
 
@@ -262,4 +277,143 @@ void CRoundTerminator::Spawn(void)
 void CRoundTerminator::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
 {
 	g_pGameRules->TerminateRound((m_iEndTime >= 0) ? m_iEndTime : g_pGameRules->m_iEndTime, m_iWinStatus);
+}
+
+LINK_ENTITY_TO_CLASS(trigger_rtcontrols, CRTControls);
+
+
+void CRTControls::KeyValue(KeyValueData *pkvd)
+{
+	int op;
+
+	if (FStrEq(pkvd->szKeyName, "lockedop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opLockedOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "lockedarg"))
+	{
+		m_bLockedArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabledop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opDisabledOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "disabledarg"))
+	{
+		m_bDisabledArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "timeop"))
+	{
+		op = atoi(pkvd->szValue);
+		m_opTimeOp = op >= SKIP && op <= MODIFY ? CONTROL_OP(op) : SKIP;
+		pkvd->fHandled = TRUE;
+	}
+	else if (FStrEq(pkvd->szKeyName, "timearg"))
+	{
+		m_iTimeArg = atoi(pkvd->szValue);
+		pkvd->fHandled = TRUE;
+	}
+	else
+		CPointEntity::KeyValue(pkvd);
+}
+
+void CRTControls::Spawn(void)
+{
+	pev->movetype = MOVETYPE_NONE;
+	pev->solid = SOLID_NOT;
+	pev->effects |= EF_NODRAW;
+}
+
+void CRTControls::Use(CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value)
+{
+	CBaseEntity *pEntity = NULL;
+	CRoundTimer *pTimer = NULL;
+
+	if (!pev->target) return;
+
+	while ((pEntity = UTIL_FindEntityByTargetname(pEntity, STRING(pev->target))) != NULL)
+	{
+		if (!pEntity) continue;
+		if (pEntity->Classify() != CLASS_ROUNDTIMER) continue;
+		pTimer = dynamic_cast<CRoundTimer *>(pEntity);
+		if (!pTimer) continue;
+
+		switch (m_opLockedOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pTimer->m_bLocked = m_bLockedArg;
+			pTimer->RoundTimerUpdate();
+			break;
+		case TOGGLE:
+			pTimer->m_bLocked = !pTimer->m_bLocked;
+			pTimer->RoundTimerUpdate();
+			break;
+		case RESET:
+			pTimer->m_bLocked = pTimer->m_bOriginLocked;
+			pTimer->RoundTimerUpdate();
+			break;
+		case MODIFY:
+			pTimer->m_bLocked = m_bLockedArg ? !pTimer->m_bLocked : pTimer->m_bLocked;
+			pTimer->RoundTimerUpdate();
+			break;
+		}
+
+		switch (m_opDisabledOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pTimer->m_bDisabled = m_bDisabledArg;
+			pTimer->RoundTimerUpdate();
+			break;
+		case TOGGLE:
+			pTimer->m_bDisabled = !pTimer->m_bDisabled;
+			pTimer->RoundTimerUpdate();
+			break;
+		case RESET:
+			pTimer->m_bDisabled = pTimer->m_bOriginDisabled;
+			pTimer->RoundTimerUpdate();
+			break;
+		case MODIFY:
+			pTimer->m_bDisabled = m_bDisabledArg ? !pTimer->m_bDisabled : pTimer->m_bDisabled;
+			pTimer->RoundTimerUpdate();
+			break;
+		}
+
+		switch (m_opTimeOp)
+		{
+		case SKIP:
+			break;
+		case UPDATE:
+			pTimer->UpdateTime(m_iTimeArg);
+			pTimer->RoundTimerUpdate();
+			break;
+		case TOGGLE:
+			if (pTimer->TimeRemaining() > 0.0f)
+				pTimer->UpdateTime(0.0f);
+			else
+				pTimer->UpdateTime(pTimer->m_flOriginTotalTime);
+			pTimer->RoundTimerUpdate();
+			break;
+		case RESET:
+			pTimer->UpdateTime(pTimer->m_flOriginTotalTime);
+			pTimer->RoundTimerUpdate();
+			break;
+		case MODIFY:
+			pTimer->AddTime(m_iTimeArg);
+			pTimer->RoundTimerUpdate();
+			break;
+		}
+
+		if (m_opLockedOp || m_opDisabledOp || m_opTimeOp)
+			g_pGameRules->RTSendState(pTimer->pev);
+	}
 }

@@ -3629,7 +3629,7 @@ void CHalfLifeMultiplay::RTStartAll(void)
 	for (int i = 0; i < m_RoundTimers.Count(); i++)
 	{
 		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
-		pTimer->RoundTimerResume();
+		pTimer->RoundTimerUpdate();
 		RTSendState(pTimer->pev);
 	}
 }
