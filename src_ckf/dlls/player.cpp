@@ -2781,7 +2781,7 @@ void CBasePlayer::Jump(void)
 
 	if ((pev->flags & FL_ONGROUND) && pev->groundentity)
 		SetAnimation(PLAYER_JUMP);
-	else if (m_iMultiJumpCurrent < m_iMultiJumpMax)
+	else
 	{
 		if (!m_bMultiJump)
 		{
@@ -2797,8 +2797,6 @@ void CBasePlayer::Jump(void)
 		WRITE_SHORT(entindex());
 		MESSAGE_END();
 	}
-	else
-		return;
 
 	entvars_t *pevGround = VARS(pev->groundentity);
 
@@ -3294,6 +3292,9 @@ void CBasePlayer::PreThink(void)
 		m_bMultiJump = false;
 		pev->flags &= ~FL_MULTIJUMP;
 	}
+
+	if (m_iClass == CLASS_SOLDIER)
+		m_iRocketJump = !(pev->flags & FL_ONGROUND);
 
 	if ((pev->button & IN_DUCK) || FBitSet(pev->flags, FL_DUCKING) || (m_afPhysicsFlags & PFLAG_DUCKING))
 		Duck();
@@ -3865,6 +3866,8 @@ void CBasePlayer::Spawn(void)
 
 	//become my desired class!
 	m_iClass = m_iNewClass;
+
+	m_iRocketJump = 0;
 	m_iMultiJumpCurrent = 0;
 	m_iMultiJumpMax = 0;
 	m_bMultiJump = 0;

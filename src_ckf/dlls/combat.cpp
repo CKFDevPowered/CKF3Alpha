@@ -888,8 +888,10 @@ void CKFRadiusDamage(Vector vecSrc, entvars_t *pevDirectHit, entvars_t *pevInfli
 			{
 				flAdjustedDamage = flDamage*0.9 - flDamage * 0.6 * flDistance / flRadius;
 				flDamageModifier = RANDOM_FLOAT(0.85, 1.0);
+				// https://wiki.teamfortress.com/wiki/Jumping#Soldier_jumps
+				// Soldier has a 40% damage resistance against any rocket he fires that hurts him while he is in the air.
 				if(((CBasePlayer *)pEntity)->m_iRocketJump)
-					flDamageModifier *= RANDOM_FLOAT(0.65, 0.75);
+					flDamageModifier *= 1.0 - 0.4;
 			}
 			else
 			{
