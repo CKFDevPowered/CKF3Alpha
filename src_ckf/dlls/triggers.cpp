@@ -2315,11 +2315,6 @@ void CRoundTimer::KeyValue(KeyValueData *pkvd)
 		m_iHUDPosition = atoi(pkvd->szValue);
 		pkvd->fHandled = TRUE;
 	}
-	else if (FStrEq(pkvd->szKeyName, "hudteam"))
-	{
-		m_iHUDTeam = atoi(pkvd->szValue);
-		pkvd->fHandled = TRUE;
-	}
 	else if (FStrEq(pkvd->szKeyName, "totaltime"))
 	{
 		m_flOriginTotalTime = atof(pkvd->szValue);
@@ -2348,8 +2343,9 @@ void CRoundTimer::Restart(void)
 {
 	m_bTiming = FALSE;
 	m_bOvertime = FALSE;
+	m_flTime = m_flOriginTotalTime;
 	m_flTotalTime = m_flOriginTotalTime;
-	m_flBeginTime = 0.0f;
+	m_flEndTime = 0.0f;
 	m_bLocked = m_bOriginLocked;
 	m_bDisabled = m_bOriginDisabled;
 	m_iLastAnnounceTime = -1;
@@ -2367,8 +2363,8 @@ void CRoundTimer::RoundTimerPause(void)
 {
 	if (!m_bTiming)
 		return;
-	m_flTotalTime = max(TimeRemaining(), 0.0f);
-	m_flBeginTime = 0.0f;
+	m_flTime = max(TimeRemaining(), 0.0f);
+	m_flEndTime = 0.0f;
 	m_bTiming = FALSE;
 }
 
@@ -2376,34 +2372,36 @@ void CRoundTimer::RoundTimerResume(void)
 {
 	if (m_bTiming)
 		return;
-	m_flBeginTime = gpGlobals->time;
+	m_flEndTime = gpGlobals->time + m_flTime;
 	m_bTiming = TRUE;
 }
 
 void CRoundTimer::UpdateTime(float time)
 {
-	m_flTotalTime = fmaxf(time, 0.0f);
-	m_flBeginTime = m_bTiming ? gpGlobals->time : 0.0f;
+	m_flTime = fmaxf(time, 0.0f);
+	m_flTotalTime = m_flTime;
+	m_flEndTime = m_bTiming ? gpGlobals->time + m_flTime : 0.0f;
 	if (TimeRemaining() > 0)
 		m_bOvertime = FALSE;
 }
 
 void CRoundTimer::AddTime(float time)
 {
-	m_flTotalTime = fmaxf(fmaxf(TimeRemaining(), 0.0f) + time, 0.0f);
-	m_flBeginTime = m_bTiming ? gpGlobals->time : 0.0f;
+	m_flTime = fmaxf(fmaxf(TimeRemaining(), 0.0f) + time, 0.0f);
+	m_flTotalTime = m_flTime;
+	m_flEndTime = m_bTiming ? gpGlobals->time + m_flTime : 0.0f;
 	if (TimeRemaining() > 0)
 		m_bOvertime = FALSE;
 }
 
 float CRoundTimer::TimeRemaining(void)
 {
-	return TimeTotal() - TimeElapsed();
+	return m_bTiming ? m_flEndTime - gpGlobals->time : m_flTime;
 }
 
 float CRoundTimer::TimeElapsed(void)
 {
-	return m_bTiming ? gpGlobals->time - m_flBeginTime : 0.0f;
+	return TimeTotal() - TimeRemaining();
 }
 
 float CRoundTimer::TimeTotal(void)

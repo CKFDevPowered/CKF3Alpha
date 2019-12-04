@@ -541,6 +541,12 @@
 
 @PointClass base(color_trigger) base(Targetname, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundtimer : "Round Timer"
 [
+	team(choices) : "队伍" : 0 =
+	[
+		0: "双方"
+		1: "红队"
+		2: "蓝队"
+	]
 	timeoutaction(choices)  : "超时后的动作" : 3 =
 	[
 		0: "无动作(默认)"
@@ -550,12 +556,6 @@
 	]
 	trigontimeout(string) : "超时后引发" : ""
 	hudpos(integer) : "HUD图标位置" : 0
-	hudteam(choices) : "HUD队伍" : 0 =
-	[
-		0: "双方"
-		1: "红队"
-		2: "蓝队"
-	]
     totaltime(string) : "总时间(秒)" : 300
 	announcetime(choices) : "播报时间" : 1 =
 	[

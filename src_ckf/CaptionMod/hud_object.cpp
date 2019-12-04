@@ -381,7 +381,7 @@ void DrawTimers(void)
 			int spacing = g_xywhTimerPanel.w * 1.25;
 			int offset = (g_RoundTimers.Count() % 2 == 0 ? -spacing / 2 : 0) + g_RoundTimers[i].iHudPosition * spacing;
 			int status = g_RoundTimers[i].bOvertime ? TIMERSTATUS_OVERTIME : TIMERSTATUS_NORMAL;
-			int team = g_RoundTimers[i].iHudTeam == 0 ? g_iTeam : g_RoundTimers[i].iHudTeam;
+			int team = g_RoundTimers[i].iTeam == 0 ? g_iTeam : g_RoundTimers[i].iTeam;
 			int total = g_RoundTimers[i].flTotalTime;
 			int time = max(min(g_RoundTimers[i].bLocked ? g_RoundTimers[i].flTime : g_RoundTimers[i].flEndTime - g_flClientTime, total), 0);
 

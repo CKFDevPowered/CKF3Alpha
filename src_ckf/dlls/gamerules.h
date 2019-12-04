@@ -299,7 +299,7 @@ public:
 	void BuildKilled(CBaseBuildable *pVictim, entvars_t *pKiller, entvars_t *pInflictor);//WTF
 	void BuildDeathNotice(CBaseEntity *pVictim, entvars_t *pevKiller, entvars_t *pevInflictor);
 	void AnnounceRoundTime(void);
-	BOOL CPCheckOvertime(void);
+	BOOL CPCheckOvertime(int iTeam);
 	void CalcPoints(CBasePlayer *pAttacker, entvars_t *pevInflictor, CBasePlayer *pKilled);
 	void UpdateTimeLimit(void);
 	void DominateNemesis(CBasePlayer *pKiller, CBasePlayer *pVictim);

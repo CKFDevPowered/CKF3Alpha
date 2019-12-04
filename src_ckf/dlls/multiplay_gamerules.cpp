@@ -1337,8 +1337,6 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 	if (m_iRoundStatus != ROUND_NORMAL)
 		return;
 
-	BOOL bOverTime = CPCheckOvertime();
-
 	for (int i = 0; i < m_RoundTimers.Count(); i++)
 	{
 		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
@@ -1348,6 +1346,8 @@ void CHalfLifeMultiplay::CheckRoundTimeExpired(void)
 
 		if (pTimer->TimeRemaining() > 0)
 			continue;
+
+		BOOL bOverTime = CPCheckOvertime(pTimer->pev->team);
 
 		if (bOverTime)
 		{
@@ -3470,12 +3470,14 @@ void CHalfLifeMultiplay::CPResetAll(void)
 	}
 }
 
-BOOL CHalfLifeMultiplay::CPCheckOvertime(void)
+BOOL CHalfLifeMultiplay::CPCheckOvertime(int iTeamNeedDominated)
 {
 	for(int i = 0; i < m_ControlPoints.Count(); ++i)
 	{
 		CControlPoint *pPoint = (CControlPoint *)CBaseEntity::Instance(m_ControlPoints[i]);
-		if(pPoint->m_flProgress > 0)
+		if (pPoint->m_flProgress > 0)
+			return TRUE;
+		if (iTeamNeedDominated != TEAM_UNASSIGNED && pPoint->pev->team != iTeamNeedDominated)
 			return TRUE;
 	}
 	return FALSE;
@@ -3662,8 +3664,8 @@ void CHalfLifeMultiplay::RTSendInit(CBasePlayer *pPlayer)
 	for (int i = 0; i < count; ++i)
 	{
 		CRoundTimer *pTimer = (CRoundTimer *)CBaseEntity::Instance(m_RoundTimers[i]);
+		WRITE_CHAR(pTimer->pev->team);
 		WRITE_CHAR(pTimer->m_iHUDPosition);
-		WRITE_CHAR(pTimer->m_iHUDTeam);
 	}
 	MESSAGE_END();
 }

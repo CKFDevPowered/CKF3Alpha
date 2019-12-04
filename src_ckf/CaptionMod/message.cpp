@@ -1313,8 +1313,8 @@ int MsgFunc_RTInit(const char *pszName, int iSize, void *pbuf)
 
 	for (int i = 0; i < iNumTimers; ++i)
 	{
+		g_RoundTimers[i].iTeam = READ_CHAR();
 		g_RoundTimers[i].iHudPosition = READ_CHAR();
-		g_RoundTimers[i].iHudTeam = READ_CHAR();
 	}
 
 	return 1;

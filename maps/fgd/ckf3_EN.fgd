@@ -537,6 +537,12 @@
 
 @PointClass base(color_trigger) base(Targetname, Appearflags) iconsprite("sprites/CS/TriggerChangetarget.spr") = trigger_roundtimer : "Round Timer"
 [
+	team(choices) : "Team" : 0 =
+	[
+		0: "Both"
+		1: "Red"
+		2: "Blue"
+	]
 	timeoutaction(choices)  : "Action when timeout" : 3 =
 	[
 		0: "No Action(Default)"
@@ -546,12 +552,6 @@
 	]
 	trigontimeout(string) : "Triggered when timeout" : ""
 	hudpos(integer) : "HUD icon position" : 0
-	hudteam(choices) : "HUD team" : 0 =
-	[
-		0: "Both"
-		1: "Red"
-		2: "Blue"
-	]
     totaltime(string) : "Total time(sec.)" : 300
 	announcetime(choices) : "Announce time" : 1 =
 	[

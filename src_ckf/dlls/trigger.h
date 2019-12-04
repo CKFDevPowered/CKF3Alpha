@@ -120,7 +120,6 @@ public:
 		m_iTimeoutAction = 0;
 		m_iTrigOnTimeout = 0;
 		m_iHUDPosition = 0;
-		m_iHUDTeam = 0;
 		m_flOriginTotalTime = 0.0f;
 		m_bAnnounceTime = FALSE;
 		m_bOriginLocked = FALSE;
@@ -129,8 +128,9 @@ public:
 
 		m_bTiming = FALSE;
 		m_bOvertime = FALSE;
+		m_flTime = 0.0f;
 		m_flTotalTime = 0.0f;
-		m_flBeginTime = 0.0f;
+		m_flEndTime = 0.0f;
 		m_bLocked = FALSE;
 		m_bDisabled = FALSE;
 		m_iLastAnnounceTime = -1;
@@ -155,7 +155,6 @@ public:
 	int m_iTimeoutAction;
 	string_t m_iTrigOnTimeout;
 	int m_iHUDPosition;
-	int m_iHUDTeam;
 	float m_flOriginTotalTime;
 	BOOL m_bAnnounceTime;
 	BOOL m_bOriginLocked;
@@ -164,8 +163,9 @@ public:
 public:
 	BOOL m_bTiming;
 	BOOL m_bOvertime;
+	float m_flTime;
 	float m_flTotalTime;
-	float m_flBeginTime;
+	float m_flEndTime;
 	BOOL m_bLocked;
 	BOOL m_bDisabled;
 	int m_iLastAnnounceTime;

@@ -248,8 +248,8 @@ typedef struct
 
 typedef struct
 {
+	int iTeam;
 	int iHudPosition;
-	int iHudTeam;
 	BOOL bLocked;
 	BOOL bDisabled;
 	BOOL bOvertime;
