@@ -1,4 +1,5 @@
 game "Chicken Fortress 3"
+icon "game.tga"
 url_info "http://www.moddb.com/mods/chicken-fortress-3"
 url_dl ""
 version "3.04"
