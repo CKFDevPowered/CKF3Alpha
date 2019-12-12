@@ -1,7 +1,7 @@
 #include <winresrc.h>
 #include "resource.h"
 
-101 ICON "CSBTE.ico"
+101 ICON "..\CSBTE.ico"
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION 1,0,0,3

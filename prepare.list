@@ -6,3 +6,4 @@ src_ckf\dlls\develop\prepare
 src\develop\prepare
 src\ClientProxy\develop\prepare
 src\MetaHook\develop\prepare
+src\Launcher\develop\prepare
