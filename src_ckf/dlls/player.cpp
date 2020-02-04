@@ -5043,6 +5043,7 @@ void CBasePlayer::UpdateClientData(void)
 		FireTargets("game_playerspawn", this, this, USE_TOGGLE, 0);
 
 		SyncRoundTimer();
+		g_pGameRules->UpdateTimeLimit(this);
 		g_pGameRules->CPSendInit(this);
 		g_pGameRules->CPSendState(this);
 		g_pGameRules->RTSendInit(this);

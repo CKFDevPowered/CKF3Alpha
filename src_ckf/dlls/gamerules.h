@@ -302,6 +302,7 @@ public:
 	BOOL CPCheckOvertime(int iTeam);
 	void CalcPoints(CBasePlayer *pAttacker, entvars_t *pevInflictor, CBasePlayer *pKilled);
 	void UpdateTimeLimit(void);
+	void UpdateTimeLimit(CBasePlayer *pPlayer);
 	void DominateNemesis(CBasePlayer *pKiller, CBasePlayer *pVictim);
 	CBasePlayer *GetAssister(CBasePlayer *pKiller, CBasePlayer *pVictim);
 	void Cmd_AddCondition(CBasePlayer *pPlayer);

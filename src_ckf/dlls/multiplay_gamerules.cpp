@@ -3616,6 +3616,16 @@ void CHalfLifeMultiplay::UpdateTimeLimit(void)
 	MESSAGE_END();
 }
 
+void CHalfLifeMultiplay::UpdateTimeLimit(CBasePlayer *pPlayer)
+{
+	MESSAGE_BEGIN(MSG_ONE, gmsgTimeLimit, NULL, pPlayer->pev);
+	if (!timelimit.value)
+		WRITE_SHORT(0);
+	else
+		WRITE_SHORT((int)(g_flTimeLimit - gpGlobals->time));
+	MESSAGE_END();
+}
+
 BOOL CHalfLifeMultiplay::IsRoundSetup(void)
 {
 	return (m_iRoundStatus >= ROUND_WAIT && m_iRoundStatus <= ROUND_SETUP);
