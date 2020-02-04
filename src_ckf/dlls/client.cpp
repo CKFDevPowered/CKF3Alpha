@@ -1211,8 +1211,7 @@ void Radio3(CBasePlayer *pPlayer, int keys)
 	}
 }
 
-float g_flTimeLimit = 0;
-float g_flResetTime = 0;
+extern float g_flTimeLimit;
 
 extern int GetMapCount(void);
 extern int gmsgNVGToggle;

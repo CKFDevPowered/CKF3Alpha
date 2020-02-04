@@ -19,8 +19,8 @@
 
 extern DLL_GLOBAL CHalfLifeMultiplay *g_pGameRules;
 extern DLL_GLOBAL BOOL g_fGameOver;
-extern float g_flTimeLimit;
-extern float g_flResetTime;
+
+float g_flTimeLimit = NAN;
 
 extern int gmsgDeathMsg;
 extern int gmsgBuildDeath;
@@ -908,8 +908,6 @@ void CHalfLifeMultiplay::RestartRound(void)
 		if (timelimit.value < 0)
 			CVAR_SET_FLOAT("mp_timelimit", 0);
 
-		g_flResetTime = gpGlobals->time;
-
 		if (timelimit.value)
 		{			
 			g_flTimeLimit = gpGlobals->time + timelimit.value * 60;
@@ -1472,22 +1470,12 @@ BOOL CHalfLifeMultiplay::CheckTimeLimit(void)
 	if(m_iRoundStatus != ROUND_END)
 		return FALSE;
 
-	if (timelimit.value >= 0)
+	if (!isnan(g_flTimeLimit) && g_flTimeLimit <= gpGlobals->time)
 	{
-		if (timelimit.value)
-		{
-			g_flTimeLimit = g_flResetTime + timelimit.value * 60;
-
-			if (g_flTimeLimit <= gpGlobals->time)
-			{
-				ALERT(at_console, "Changing maps because time limit has been met\n");
-				GoToIntermission();
-				return TRUE;
-			}
-		}
+		ALERT(at_console, "Changing maps because time limit has been met\n");
+		GoToIntermission();
+		return TRUE;
 	}
-	else
-		CVAR_SET_FLOAT("mp_timelimit", 0);
 
 	return FALSE;
 }
